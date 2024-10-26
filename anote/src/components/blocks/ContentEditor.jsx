@@ -242,16 +242,18 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
             onChange={(items) => updateBlock(block.id, { items })}
           />
         );
+      case BlockType.FILE:
+        return <FileBlock key={block.id} file={block} />;
       default:
         return null;
     }
   };
   const BlockControls = ({ index }) => (
-    <div className="absolute left-0 top-0 bottom-0 -ml-12 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100">
+    <div className="absolute left-0 -bottom-8 flex flex-row items-center opacity-0 group-hover:opacity-100">
       {/* Delete button */}
       <button
         onClick={() => deleteBlock(index)}
-        className="p-2 text-red-500 hover:bg-red-50 rounded-full mb-2"
+        className="p-2 text-red-500 hover:bg-red-50 rounded-full mr-1"
       >
         <Trash2 className="w-4 h-4" />
       </button>
@@ -341,10 +343,9 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
 
       {/* Blocks */}
       {blocks.map((block, index) => (
-        <div key={block.id} className="relative group mb-4">
-          {console.log('Rendering blocks:', blocks)}
-          <BlockControls index={index} />
+        <div key={block.id} className="relative group mb-8"> {/* Increased margin-bottom for controls */}
           {renderBlock(block)}
+          <BlockControls index={index} />
         </div>
       ))}
 

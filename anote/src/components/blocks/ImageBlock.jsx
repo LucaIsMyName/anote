@@ -52,7 +52,7 @@ const ImageBlock = ({ src, caption, onChange }) => {
             value={caption || ''}
             onChange={(e) => onChange({ src, caption: e.target.value })}
             placeholder="Add a caption..."
-            className="w-full p-2 text-sm text-gray-600 border rounded"
+            className="w-full bg-transparent text-sm text-gray-600"
           />
         </div>
       ) : (

@@ -68,8 +68,8 @@ export const BlockMenu = ({ onSelect, trigger = undefined }) => {
 // Individual Block Components
 export const ParagraphBlock = ({ content, onChange }) => (
   <div className="mb-4">
-    <textarea
-      className="w-full p-2 min-h-[100px] rounded border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+    <input
+      className="w-full bg-transparent focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
       placeholder="Type something..."
       value={content}
       onChange={(e) => onChange(e.target.value)}
