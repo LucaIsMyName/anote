@@ -1,35 +1,48 @@
-import React, { useState } from 'react';
-import { Plus, Type, Heading1, Table, Image, ListTodo } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, Type, Heading1, Table, Image, ListTodo, FileText } from 'lucide-react'; // Changed File to FileText
 
-// Block types enum
 export const BlockType = {
   PARAGRAPH: 'paragraph',
   HEADING: 'heading',
   TABLE: 'table',
   IMAGE: 'image',
+  FILE: 'file',
   TODO: 'todo'
 };
 
-// Block Menu Component
-export const BlockMenu = ({ onSelect }) => {
+export const BlockMenu = ({ onSelect, trigger = undefined }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef(null);
 
   const blockTypes = [
     { type: BlockType.PARAGRAPH, icon: Type, label: 'Text' },
     { type: BlockType.HEADING, icon: Heading1, label: 'Heading' },
     { type: BlockType.TABLE, icon: Table, label: 'Table' },
     { type: BlockType.IMAGE, icon: Image, label: 'Image' },
+    { type: BlockType.FILE, icon: FileText, label: 'File' }, // Using FileText instead of File
     { type: BlockType.TODO, icon: ListTodo, label: 'To-do List' }
   ];
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 hover:bg-gray-100 rounded-full"
-      >
-        <Plus className="w-4 h-4 text-gray-600" />
-      </button>
+    <div className="relative" ref={menuRef}>
+      <div onClick={() => setIsOpen(!isOpen)}>
+        {trigger || (
+          <button className="p-2 hover:bg-gray-100 rounded-full">
+            <Plus className="w-4 h-4 text-gray-600" />
+          </button>
+        )}
+      </div>
 
       {isOpen && (
         <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">

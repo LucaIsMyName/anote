@@ -5,15 +5,15 @@ const HANDLE_KEY = 'current_handle';
 export class WorkspaceService {
   static async initDB() {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(WORKSPACE_DB, 1);
+      const request = indexedDB.open('anote_workspace_db', 1);
       
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result);
       
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
-        if (!db.objectStoreNames.contains(WORKSPACE_STORE)) {
-          db.createObjectStore(WORKSPACE_STORE);
+        if (!db.objectStoreNames.contains('workspace_handles')) {
+          db.createObjectStore('workspace_handles');
         }
       };
     });
@@ -29,6 +29,7 @@ export class WorkspaceService {
     }
     return false;
   }
+
 
   static async getDirectoryHandle() {
     try {
@@ -47,9 +48,9 @@ export class WorkspaceService {
   static async saveWorkspaceHandle(handle) {
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction(WORKSPACE_STORE, 'readwrite');
-      const store = transaction.objectStore(WORKSPACE_STORE);
-      const request = store.put(handle, HANDLE_KEY);
+      const transaction = db.transaction('workspace_handles', 'readwrite');
+      const store = transaction.objectStore('workspace_handles');
+      const request = store.put(handle, 'current_handle');
       
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
@@ -59,9 +60,9 @@ export class WorkspaceService {
   static async getStoredWorkspaceHandle() {
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction(WORKSPACE_STORE, 'readonly');
-      const store = transaction.objectStore(WORKSPACE_STORE);
-      const request = store.get(HANDLE_KEY);
+      const transaction = db.transaction('workspace_handles', 'readonly');
+      const store = transaction.objectStore('workspace_handles');
+      const request = store.get('current_handle');
       
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -71,9 +72,9 @@ export class WorkspaceService {
   static async clearStoredWorkspace() {
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction(WORKSPACE_STORE, 'readwrite');
-      const store = transaction.objectStore(WORKSPACE_STORE);
-      const request = store.delete(HANDLE_KEY);
+      const transaction = db.transaction('workspace_handles', 'readwrite');
+      const store = transaction.objectStore('workspace_handles');
+      const request = store.delete('current_handle');
       
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
@@ -82,11 +83,17 @@ export class WorkspaceService {
 
   static async checkWorkspaceStructure(dirHandle) {
     try {
-      const entries = [];
-      for await (const entry of dirHandle.values()) {
-        entries.push(entry.name);
+      // Only check if we have write access and if assets folder exists
+      const hasPermission = await this.verifyPermission(dirHandle);
+      if (!hasPermission) return false;
+
+      // Check for assets directory
+      try {
+        await dirHandle.getDirectoryHandle('assets');
+        return true;
+      } catch {
+        return false;
       }
-      return entries.includes('pages') && entries.includes('assets');
     } catch (error) {
       console.error('Error checking workspace structure:', error);
       return false;
@@ -95,27 +102,8 @@ export class WorkspaceService {
 
   static async createWorkspaceStructure(dirHandle) {
     try {
-      // Create directories
-      const pagesHandle = await dirHandle.getDirectoryHandle('pages', { create: true });
-      const assetsHandle = await dirHandle.getDirectoryHandle('assets', { create: true });
-
-      // Create welcome file
-      const welcomeFileHandle = await pagesHandle.getFileHandle('welcome.md', { create: true });
-      const writableStream = await welcomeFileHandle.createWritable();
-      
-      const welcomeContent = `# Welcome to Your Workspace!
-
-This is your new note-taking workspace. Here's how to get started:
-
-1. Create new pages using the + button in the sidebar
-2. Upload images and files to the assets folder
-3. Organize your content using the sidebar
-
-Enjoy taking notes!`;
-
-      await writableStream.write(welcomeContent);
-      await writableStream.close();
-
+      // Only create assets directory
+      await dirHandle.getDirectoryHandle('assets', { create: true });
       return true;
     } catch (error) {
       console.error('Error creating workspace structure:', error);

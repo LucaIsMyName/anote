@@ -226,24 +226,51 @@ export class FileService {
     }
   }
 
+  static async saveFile(dirHandle, file) {
+    try {
+      // Get assets directory
+      const assetsHandle = await dirHandle.getDirectoryHandle('assets', { create: true });
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const fileName = `${timestamp}-${file.name}`;
+
+      // Save file to assets
+      const fileHandle = await assetsHandle.getFileHandle(fileName, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(file.data);
+      await writable.close();
+
+      return {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        path: `/assets/${fileName}`
+      };
+    } catch (error) {
+      console.error('Error saving file:', error);
+      throw error;
+    }
+  }
+
   static async createPage(dirHandle, path) {
     try {
+      // Prevent creation of "assets" folder as a page
       const pathParts = path.split('/').filter(Boolean);
-      let currentHandle = dirHandle;
-
-      // Navigate/create parent directories
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        currentHandle = await currentHandle.getDirectoryHandle(pathParts[i], { create: true });
+      if (pathParts.includes('assets')) {
+        throw new Error('Cannot create a page named "assets"');
       }
 
-      // Create the page directory
-      const pageName = pathParts[pathParts.length - 1];
-      const pageHandle = await currentHandle.getDirectoryHandle(pageName, { create: true });
+      let currentHandle = dirHandle;
+      // Create directory path
+      for (const part of pathParts) {
+        currentHandle = await currentHandle.getDirectoryHandle(part, { create: true });
+      }
 
-      // Create an index.md file in the page directory
-      const fileHandle = await pageHandle.getFileHandle('index.md', { create: true });
+      // Create index.md with default content
+      const fileHandle = await currentHandle.getFileHandle('index.md', { create: true });
       const writable = await fileHandle.createWritable();
-      await writable.write(`# ${pageName}\n`);
+      await writable.write(`# ${pathParts[pathParts.length - 1]}\n`);
       await writable.close();
 
       return true;
@@ -263,12 +290,20 @@ export class FileService {
         currentHandle = await currentHandle.getDirectoryHandle(part);
       }
 
-      // Read the index.md file
-      const fileHandle = await currentHandle.getFileHandle('index.md');
-      const file = await fileHandle.getFile();
-      const content = await file.text();
-
-      return this.parseMarkdownToBlocks(content);
+      // Try to read index.md
+      try {
+        const fileHandle = await currentHandle.getFileHandle('index.md');
+        const file = await fileHandle.getFile();
+        const content = await file.text();
+        return this.parseMarkdownToBlocks(content);
+      } catch (error) {
+        // If index.md doesn't exist, create it with a default title
+        const writable = await (await currentHandle.getFileHandle('index.md', { create: true })).createWritable();
+        const defaultContent = `# ${pathParts[pathParts.length - 1]}\n`;
+        await writable.write(defaultContent);
+        await writable.close();
+        return this.parseMarkdownToBlocks(defaultContent);
+      }
     } catch (error) {
       console.error('Error reading page:', error);
       throw error;
@@ -315,41 +350,34 @@ export class FileService {
 
       // List all entries
       for await (const entry of currentHandle.values()) {
-        // Skip system files and the assets directory
-        if (entry.name.startsWith('.') || entry.name === 'assets') continue;
+        // Skip assets directory and system files
+        if (entry.name === 'assets' || entry.name.startsWith('.')) continue;
 
         if (entry.kind === 'directory') {
-          // Recursively get children
-          const children = await this.listPages(currentHandle, entry.name);
-          pages.push({
-            name: entry.name,
-            type: 'directory',
-            children
-          });
-        } else if (entry.name === 'index.md') {
-          // Skip index.md files as they're part of their parent directory
-          continue;
-        } else if (entry.name.endsWith('.md')) {
-          pages.push({
-            name: entry.name.replace('.md', ''),
-            type: 'file',
-            children: []
-          });
+          // Check if directory has index.md
+          try {
+            await entry.getFileHandle('index.md');
+            // Recursively get children
+            const children = await this.listPages(currentHandle, entry.name);
+            pages.push({
+              name: entry.name,
+              type: 'directory',
+              children
+            });
+          } catch {
+            // Skip directories without index.md
+            continue;
+          }
         }
       }
 
-      return pages.sort((a, b) => {
-        // Sort directories first, then by name
-        if (a.type === 'directory' && b.type !== 'directory') return -1;
-        if (a.type !== 'directory' && b.type === 'directory') return 1;
-        return a.name.localeCompare(b.name);
-      });
+      return pages.sort((a, b) => a.name.localeCompare(b.name));
     } catch (error) {
       console.error('Error listing pages:', error);
       throw error;
     }
   }
-
+  
   static blocksToMarkdown(blocks) {
     let markdown = '';
 

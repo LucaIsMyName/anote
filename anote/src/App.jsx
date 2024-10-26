@@ -7,10 +7,15 @@ import { WorkspaceService } from './services/workspaceService';
 
 const App = () => {
   const [workspace, setWorkspace] = useState(null);
+  const [currentPage, setCurrentPage] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleWorkspaceReady = (handle) => {
     setWorkspace(handle);
+  };
+
+  const handlePageSelect = (path) => {
+    setCurrentPage(path);
   };
 
   if (!workspace) {
@@ -19,10 +24,18 @@ const App = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar workspace={workspace} />
+      <Sidebar 
+        workspace={workspace}
+        currentPath={currentPage}
+        onPageSelect={handlePageSelect}
+      />
       
       <div className="flex-1 overflow-auto">
-        <ContentEditor workspace={workspace} />
+        <ContentEditor 
+          workspace={workspace}
+          currentPath={currentPage}
+          onPathChange={handlePageSelect} // Updated to match ContentEditor's prop name
+        />
       </div>
 
       <button 
