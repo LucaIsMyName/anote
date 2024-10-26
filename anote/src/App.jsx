@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from './components/layout/Sidebar';
 import ContentEditor from './components/blocks/ContentEditor';
 import WorkspaceSelector from './components/workspace/WorkspaceSelector';
-import { Settings } from 'lucide-react';
+import { Settings, CircleX } from 'lucide-react'; // Ensure Close is imported
 import { WorkspaceService } from './services/workspaceService';
 
 const App = () => {
@@ -24,21 +24,21 @@ const App = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar 
+      <Sidebar
         workspace={workspace}
         currentPath={currentPage}
         onPageSelect={handlePageSelect}
       />
-      
+
       <div className="flex-1 overflow-auto">
-        <ContentEditor 
+        <ContentEditor
           workspace={workspace}
           currentPath={currentPage}
           onPathChange={handlePageSelect} // Updated to match ContentEditor's prop name
         />
       </div>
 
-      <button 
+      <button
         onClick={() => setIsSettingsOpen(true)}
         className="fixed bottom-4 right-4 p-2 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow"
       >
@@ -46,7 +46,7 @@ const App = () => {
       </button>
 
       {isSettingsOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-lg flex items-center justify-center">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h2 className="text-xl font-bold mb-4">Workspace Settings</h2>
             <p className="text-gray-600 mb-4">
@@ -58,15 +58,15 @@ const App = () => {
                 setWorkspace(null);
                 setIsSettingsOpen(false);
               }}
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              className="w-full block px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
             >
               Change Workspace
             </button>
             <button
               onClick={() => setIsSettingsOpen(false)}
-              className="px-4 py-2 ml-2 border rounded hover:bg-gray-50"
+              className="absolute top-4 right-4 block p-2 text-white"
             >
-              Close
+              <CircleX className="w-6 h-6 text-white" />
             </button>
           </div>
         </div>
