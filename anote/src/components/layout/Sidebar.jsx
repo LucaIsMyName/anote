@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ChevronRight, ChevronDown, PlusSquare, Edit2, Trash2 } from 'lucide-react';
+import { FolderPlus, Plus, ChevronRight, ChevronDown, PlusSquare, Edit2, Trash2 } from 'lucide-react';
 import { FileService } from '../../services/fileService';
 
 const EXPANDED_PATHS_KEY = 'anote_expanded_paths';
@@ -132,7 +132,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
     try {
       await FileService.renamePage(workspace, oldPath, newName);
       await loadPages();
-  
+
       // Update current path if we renamed the current page
       if (currentPath === oldPath) {
         // Calculate the new path properly
@@ -309,7 +309,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
     };
 
     return (
-      <form onSubmit={handleSubmit} className="p-2">
+      <form onSubmit={handleSubmit} className="px-4 py-2">
         <input
           type="text"
           value={pageName}
@@ -327,36 +327,43 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
       </form>
     );
   };
+
   return (
     <div className="w-64 bg-white border-r border-gray-200 h-screen overflow-hidden flex flex-col">
-      <div className="p-4 flex items-center justify-between">
-        <h2 className="font-semibold text-lg">Workspace</h2>
-        <button
-          onClick={() => {
-            setIsCreatingPage(true);
-            setNewPageParentPath('');
-          }}
-          className="p-1 hover:bg-gray-100 rounded"
-        >
-          <Plus className="w-5 h-5" />
-        </button>
+      {/* Header with title and new page button */}
+      <div className="p-4 border-b border-gray-200">
+        <h2 className="font-semibold text-lg mb-2">Workspace</h2>
+
+        {/* Always visible new page button */}
+        {isCreatingPage && !newPageParentPath ? (
+          <PageCreationDialog />
+        ) : (
+          <button
+            onClick={() => {
+              setIsCreatingPage(true);
+              setNewPageParentPath('');
+            }}
+            className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md"
+          >
+            <FolderPlus className="w-4 h-4" />
+            <span>New Page</span>
+          </button>
+        )}
       </div>
 
+      {/* Pages list */}
       <div className="flex-1 overflow-auto p-2">
         {pages.map((page) => (
           <PageItem key={page.name} page={page} />
         ))}
-        {pages.length === 0 && (
+        {pages.length === 0 && !isCreatingPage && (
           <div className="text-center text-gray-500 mt-4">
-            No pages yet. Create one to get started!
+            No pages yet. Create your first page using the button above!
           </div>
         )}
       </div>
     </div>
   );
-
-
-
 };
 
 export default Sidebar;

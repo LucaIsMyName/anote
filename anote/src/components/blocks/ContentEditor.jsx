@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, FolderPlus, Calendar, Save } from 'lucide-react';
 import { BlockMenu, BlockType, ParagraphBlock, HeadingBlock, TodoBlock } from "./BlockMenu";
 import TableBlock from "./TableBlock";
 import ImageBlock from "./ImageBlock";
@@ -8,25 +8,68 @@ import { FileService } from "../../services/fileService";
 
 const CURRENT_PAGE_KEY = 'anote_current_page';
 
-const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }) => { // Added default value
+const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => { // Added default value
   const [blocks, setBlocks] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [pageTitle, setPageTitle] = useState('');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [pageMetadata, setPageMetadata] = useState({
+    createdAt: null,
+    lastEdited: null
+  });
 
   useEffect(() => {
     if (workspace && !currentPath) {
       loadInitialPage();
-    }
-  }, [workspace]);
-
-  useEffect(() => {
-    if (currentPath) {
+    } else if (currentPath) {
       localStorage.setItem(CURRENT_PAGE_KEY, currentPath);
       loadContent();
       const pathParts = currentPath.split('/');
       setPageTitle(pathParts[pathParts.length - 1]);
     }
-  }, [currentPath]);
+  }, [workspace, currentPath]);
+
+  const loadContent = async () => {
+    if (!workspace || !currentPath) {
+      setBlocks([]);
+      return;
+    }
+
+    try {
+      console.log('Loading content for path:', currentPath);
+      const { blocks: loadedBlocks, metadata } = await FileService.readPage(workspace, currentPath);
+      console.log('Loaded content:', { blocks: loadedBlocks, metadata });
+
+      if (Array.isArray(loadedBlocks)) {
+        console.log('Setting blocks:', loadedBlocks);
+        setBlocks(loadedBlocks);
+      } else {
+        console.log('No blocks loaded, setting empty array');
+        setBlocks([]);
+      }
+
+      setPageMetadata(metadata || {
+        createdAt: new Date().toISOString(),
+        lastEdited: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error loading content:', error);
+      setBlocks([]);
+    }
+  };
+
+
+
+  useEffect(() => {
+    if (workspace && !currentPath) {
+      loadInitialPage();
+    } else if (currentPath) {
+      localStorage.setItem(CURRENT_PAGE_KEY, currentPath);
+      loadContent();
+      const pathParts = currentPath.split('/');
+      setPageTitle(pathParts[pathParts.length - 1]);
+    }
+  }, [workspace, currentPath]);
 
   const loadInitialPage = async () => {
     try {
@@ -63,31 +106,24 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }) => {
     return sortedPages[0].name;
   };
 
-  const loadContent = async () => {
-    if (!workspace || !currentPath) return;
-
-    try {
-      const loadedBlocks = await FileService.readPage(workspace, currentPath);
-      setBlocks(loadedBlocks);
-    } catch (error) {
-      console.error('Error loading content:', error);
-      setBlocks([]);
-    }
-  };
-
-
   const saveContent = async () => {
-    if (!workspace || !currentPath) return;
+    if (!workspace || !currentPath || !blocks) return;
 
     try {
       setIsSaving(true);
-      await FileService.writePage(workspace, currentPath, blocks);
+      const updatedMetadata = {
+        ...pageMetadata,
+        lastEdited: new Date().toISOString()
+      };
+      await FileService.writePage(workspace, currentPath, blocks, updatedMetadata);
+      setPageMetadata(updatedMetadata);
     } catch (error) {
       console.error('Error saving content:', error);
     } finally {
       setIsSaving(false);
     }
   };
+
 
 
   // Add debounced auto-save
@@ -113,6 +149,51 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }) => {
     newBlocks.splice(index + 1, 0, newBlock);
     setBlocks(newBlocks);
   };
+
+  const handleTitleChange = async (newTitle) => {
+    if (newTitle.trim() === pageTitle || !newTitle.trim()) {
+      setIsEditingTitle(false);
+      return;
+    }
+
+    try {
+      const pathParts = currentPath.split('/');
+      pathParts[pathParts.length - 1] = newTitle;
+      const newPath = pathParts.join('/');
+
+      await FileService.renamePage(workspace, currentPath, newTitle);
+      onPathChange(newPath);
+      setPageTitle(newTitle);
+      setIsEditingTitle(false);
+    } catch (error) {
+      console.error('Error renaming page:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm(`Are you sure you want to delete "${pageTitle}"?`)) {
+      try {
+        await FileService.deletePage(workspace, currentPath);
+        onPathChange(null);
+      } catch (error) {
+        console.error('Error deleting page:', error);
+      }
+    }
+  };
+
+  const handleCreateSubpage = async () => {
+    try {
+      const name = prompt('Enter new page name:');
+      if (!name) return;
+
+      const newPath = `${currentPath}/${name}`;
+      await FileService.createPage(workspace, newPath);
+      onPathChange(newPath);
+    } catch (error) {
+      console.error('Error creating subpage:', error);
+    }
+  };
+
 
   const deleteBlock = (index) => {
     const newBlocks = blocks.filter((_, i) => i !== index);
@@ -189,11 +270,79 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }) => {
 
   return (
     <div className="max-w-4xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-8">{pageTitle}</h1>
+      {/* Page Header */}
+      <div className="mb-8 space-y-2">
+        <div className="flex items-center justify-between group">
+          {isEditingTitle ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleTitleChange(e.target.title.value);
+              }}
+              className="flex-1"
+            >
+              <input
+                name="title"
+                defaultValue={pageTitle}
+                autoFocus
+                className="text-3xl font-bold w-full border-b border-blue-500 focus:outline-none"
+                onBlur={(e) => handleTitleChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') setIsEditingTitle(false);
+                }}
+              />
+            </form>
+          ) : (
+            <h1
+              className="text-3xl font-bold flex-1 cursor-pointer hover:text-blue-600"
+              onClick={() => setIsEditingTitle(true)}
+            >
+              {pageTitle}
+            </h1>
+          )}
+
+          <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-2">
+            <button
+              onClick={() => setIsEditingTitle(true)}
+              className="p-2 hover:bg-gray-100 rounded-full"
+              title="Rename page"
+            >
+              <Edit2 className="w-4 h-4 text-gray-500" />
+            </button>
+            <button
+              onClick={handleDelete}
+              className="p-2 hover:bg-gray-100 rounded-full"
+              title="Delete page"
+            >
+              <Trash2 className="w-4 h-4 text-red-500" />
+            </button>
+            <button
+              onClick={handleCreateSubpage}
+              className="p-2 hover:bg-gray-100 rounded-full"
+              title="Create subpage"
+            >
+              <FolderPlus className="w-4 h-4 text-blue-500" />
+            </button>
+          </div>
+        </div>
+
+        {/* Page Metadata */}
+        <div className="flex items-center space-x-4 text-sm text-gray-500">
+          <div className="flex items-center space-x-1">
+            <Calendar className="w-4 h-4" />
+            <span>Created: {new Date(pageMetadata.createdAt).toLocaleDateString()}</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Save className="w-4 h-4" />
+            <span>Last edited: {new Date(pageMetadata.lastEdited).toLocaleDateString()}</span>
+          </div>
+        </div>
+      </div>
 
       {/* Blocks */}
       {blocks.map((block, index) => (
         <div key={block.id} className="relative group mb-4">
+          {console.log('Rendering blocks:', blocks)}
           <BlockControls index={index} />
           {renderBlock(block)}
         </div>

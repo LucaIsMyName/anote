@@ -113,16 +113,29 @@ export class FileService {
   }
 
   static async parseMarkdownToBlocks(markdown) {
+    if (!markdown) return [];
+    
     const blocks = [];
     const lines = markdown.split('\n');
     let currentBlock = null;
-
-    for (let line of lines) {
+  
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+  
+      // Skip empty lines unless in a paragraph block
+      if (line.trim() === '') {
+        if (currentBlock && currentBlock.type === 'paragraph') {
+          blocks.push(currentBlock);
+          currentBlock = null;
+        }
+        continue;
+      }
+  
       if (line.startsWith('# ')) {
         if (currentBlock) blocks.push(currentBlock);
         currentBlock = {
           id: Date.now() + Math.random(),
-          type: 'heading',
+          type: 'paragraph', // Changed from 'heading' since we don't want to duplicate the page title
           content: line.substring(2).trim()
         };
         blocks.push(currentBlock);
@@ -167,7 +180,8 @@ export class FileService {
             .map(cell => cell.trim());
           currentBlock.data.push(cells);
         }
-      } else if (line.trim() !== '') {
+      } else {
+        // Regular text content
         if (!currentBlock || currentBlock.type !== 'paragraph') {
           if (currentBlock) blocks.push(currentBlock);
           currentBlock = {
@@ -176,15 +190,17 @@ export class FileService {
             content: line
           };
         } else {
+          // Append to existing paragraph
           currentBlock.content += '\n' + line;
         }
-      } else if (currentBlock) {
-        blocks.push(currentBlock);
-        currentBlock = null;
       }
     }
-
-    if (currentBlock) blocks.push(currentBlock);
+  
+    // Don't forget the last block
+    if (currentBlock) {
+      blocks.push(currentBlock);
+    }
+  
     return blocks;
   }
 
@@ -282,52 +298,85 @@ export class FileService {
 
   static async readPage(dirHandle, path) {
     try {
+      if (!path) return { 
+        blocks: [], 
+        metadata: { 
+          createdAt: new Date().toISOString(), 
+          lastEdited: new Date().toISOString() 
+        } 
+      };
+  
       const pathParts = path.split('/').filter(Boolean);
       let currentHandle = dirHandle;
-
+  
       // Navigate to the page directory
       for (const part of pathParts) {
         currentHandle = await currentHandle.getDirectoryHandle(part);
       }
-
-      // Try to read index.md
-      try {
-        const fileHandle = await currentHandle.getFileHandle('index.md');
-        const file = await fileHandle.getFile();
-        const content = await file.text();
-        return this.parseMarkdownToBlocks(content);
-      } catch (error) {
-        // If index.md doesn't exist, create it with a default title
-        const writable = await (await currentHandle.getFileHandle('index.md', { create: true })).createWritable();
-        const defaultContent = `# ${pathParts[pathParts.length - 1]}\n`;
-        await writable.write(defaultContent);
-        await writable.close();
-        return this.parseMarkdownToBlocks(defaultContent);
+  
+      // Read index.md from the directory
+      const fileHandle = await currentHandle.getFileHandle('index.md');
+      const file = await fileHandle.getFile();
+      const content = await file.text();
+  
+      // Extract metadata if present
+      let metadata = {
+        createdAt: new Date().toISOString(),
+        lastEdited: new Date().toISOString()
+      };
+      let markdownContent = content;
+  
+      const metadataMatch = content.match(/^<!--\n([\s\S]*?)\n-->\n\n/);
+      if (metadataMatch) {
+        try {
+          metadata = JSON.parse(metadataMatch[1]);
+          markdownContent = content.replace(metadataMatch[0], '');
+        } catch (e) {
+          console.error('Error parsing metadata:', e);
+        }
       }
+  
+      // Wait for blocks to be parsed
+      const blocks = await this.parseMarkdownToBlocks(markdownContent);
+      console.log('Parsed blocks:', blocks); // Debug log
+  
+      return { blocks, metadata };
     } catch (error) {
       console.error('Error reading page:', error);
       throw error;
     }
   }
-
-  static async writePage(dirHandle, path, blocks) {
+  
+  
+  static async writePage(dirHandle, path, blocks, metadata = null) {
     try {
+      if (!path) return false;
+  
       const pathParts = path.split('/').filter(Boolean);
       let currentHandle = dirHandle;
-
-      // Navigate to the page directory
+  
+      // Create/navigate to the page directory
       for (const part of pathParts) {
         currentHandle = await currentHandle.getDirectoryHandle(part, { create: true });
       }
-
+  
+      // Create the markdown content
+      const defaultMetadata = {
+        createdAt: new Date().toISOString(),
+        lastEdited: new Date().toISOString()
+      };
+  
+      const metadataToWrite = metadata || defaultMetadata;
+      const metadataString = JSON.stringify(metadataToWrite, null, 2);
+      const markdownContent = this.blocksToMarkdown(blocks);
+      const fullContent = `<!--\n${metadataString}\n-->\n\n${markdownContent}`;
+  
       // Write to index.md
       const fileHandle = await currentHandle.getFileHandle('index.md', { create: true });
       const writable = await fileHandle.createWritable();
-
-      const markdown = this.blocksToMarkdown(blocks);
-      await writable.write(markdown);
+      await writable.write(fullContent);
       await writable.close();
-
+  
       return true;
     } catch (error) {
       console.error('Error writing page:', error);
@@ -377,22 +426,23 @@ export class FileService {
       throw error;
     }
   }
-  
-  static blocksToMarkdown(blocks) {
-    let markdown = '';
 
+  static blocksToMarkdown(blocks) {
+    if (!Array.isArray(blocks)) return '';
+    
+    let markdown = '';
+  
     for (const block of blocks) {
       switch (block.type) {
-        case 'heading':
-          markdown += `# ${block.content}\n\n`;
-          break;
         case 'paragraph':
           markdown += `${block.content}\n\n`;
           break;
         case 'todo':
-          markdown += block.items.map(item =>
-            `- [${item.completed ? 'x' : ' '}] ${item.text}`
-          ).join('\n') + '\n\n';
+          if (block.items && Array.isArray(block.items)) {
+            markdown += block.items.map(item =>
+              `- [${item.completed ? 'x' : ' '}] ${item.text}`
+            ).join('\n') + '\n\n';
+          }
           break;
         case 'table':
           if (block.data && block.data.length > 0) {
@@ -411,9 +461,10 @@ export class FileService {
           break;
       }
     }
-
+  
     return markdown;
   }
+
   static async deletePage(dirHandle, path) {
     try {
       const pathParts = path.split('/').filter(Boolean);
