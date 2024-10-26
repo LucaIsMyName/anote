@@ -165,6 +165,8 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
       onPathChange(newPath);
       setPageTitle(newTitle);
       setIsEditingTitle(false);
+
+      
     } catch (error) {
       console.error('Error renaming page:', error);
     }

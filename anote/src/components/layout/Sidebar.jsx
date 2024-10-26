@@ -39,6 +39,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
     }
   };
 
+
   const handleDragStart = (e, item, path) => {
     setDraggedItem({ item, path });
     e.dataTransfer.effectAllowed = 'move';
@@ -151,7 +152,6 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
     const fullPath = parentPath ? `${parentPath}/${page.name}` : page.name;
     const isExpanded = expandedPaths[fullPath];
     const isDropTarget = dropTarget === fullPath;
-
     return (
       <div
         draggable
