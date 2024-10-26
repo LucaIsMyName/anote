@@ -114,7 +114,7 @@ export const TodoBlock = ({ items, onChange }) => {
             type="text"
             value={item.text}
             onChange={(e) => updateItem(item.id, { text: e.target.value })}
-            className="flex-1 p-2 border border-gray-200 rounded"
+            className="flex-1 p-0 bg-transparent"
             placeholder="To-do item..."
           />
         </div>

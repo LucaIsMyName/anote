@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FolderPlus, Plus, ChevronRight, ChevronDown, PlusSquare, Edit2, Trash2 } from 'lucide-react';
+import { FolderPlus, Plus, ChevronRight, ChevronDown, Edit2, Trash2 } from 'lucide-react';
 import { FileService } from '../../services/fileService';
 
 const EXPANDED_PATHS_KEY = 'anote_expanded_paths';
@@ -249,7 +249,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
               className="p-1 hover:bg-gray-200 rounded"
               title="Add subpage"
             >
-              <PlusSquare className="w-4 h-4 text-gray-400" />
+              <Plus className="w-4 h-4 text-gray-400" />
             </button>
           </div>
         </div>
