@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Edit2, FolderPlus, Calendar, Save } from 'lucide-react';
+import { Plus, Trash2, Edit2, FolderPlus, Calendar, Save, GripVertical } from 'lucide-react';
 import { BlockMenu, BlockType, ParagraphBlock, HeadingBlock, TodoBlock } from "./BlockMenu";
 import TableBlock from "./TableBlock";
 import ImageBlock from "./ImageBlock";
@@ -17,6 +17,93 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
     createdAt: null,
     lastEdited: null
   });
+  const [draggedBlockIndex, setDraggedBlockIndex] = useState(null);
+  const [dragOverBlockIndex, setDragOverBlockIndex] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragStart = (e, index) => {
+    setIsDragging(true);
+    setDraggedBlockIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    
+    // Set a transparent drag image to improve visual feedback
+    const dragImage = document.createElement('div');
+    dragImage.style.opacity = '0';
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+    setTimeout(() => document.body.removeChild(dragImage), 0);
+  };
+
+  const handleDragEnd = (e) => {
+    setIsDragging(false);
+    setDraggedBlockIndex(null);
+    setDragOverBlockIndex(null);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (draggedBlockIndex === null || draggedBlockIndex === index) return;
+
+    const draggedBlock = blocks[draggedBlockIndex];
+    if (!draggedBlock) return;
+
+    // Only update if we're actually changing position
+    if (dragOverBlockIndex !== index) {
+      setDragOverBlockIndex(index);
+      
+      const newBlocks = [...blocks];
+      newBlocks.splice(draggedBlockIndex, 1);
+      newBlocks.splice(index, 0, draggedBlock);
+      
+      setDraggedBlockIndex(index);
+      setBlocks(newBlocks);
+    }
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const BlockWrapper = ({ block, index, children }) => {
+    const isDraggedBlock = draggedBlockIndex === index;
+    const isOverBlock = dragOverBlockIndex === index;
+    
+    return (
+      <div
+        className={`
+          relative group mb-8 transition-all duration-200 ease-in-out
+          ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
+          ${isDraggedBlock ? 'opacity-50 scale-98' : 'opacity-100'}
+          ${isOverBlock ? 'border-t-2 border-blue-500' : 'border-t-2 border-transparent'}
+        `}
+        draggable="true"
+        onDragStart={(e) => handleDragStart(e, index)}
+        onDragEnd={handleDragEnd}
+        onDragOver={(e) => handleDragOver(e, index)}
+        onDragLeave={handleDragLeave}
+      >
+        {/* Larger drag handle area */}
+        <div 
+          className="absolute left-0 top-0 bottom-0 w-12 -translate-x-full 
+                     opacity-0 group-hover:opacity-100 flex items-center 
+                     justify-center cursor-grab active:cursor-grabbing"
+        >
+          <div className="p-2 rounded hover:bg-gray-100">
+            <GripVertical className="w-5 h-5 text-gray-400" />
+          </div>
+        </div>
+        
+        <div className={`relative ${isDragging ? 'pointer-events-none' : ''}`}>
+          {children}
+        </div>
+        
+        <BlockControls index={index} />
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (workspace && !currentPath) {
@@ -166,7 +253,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
       setPageTitle(newTitle);
       setIsEditingTitle(false);
 
-      
+
     } catch (error) {
       console.error('Error renaming page:', error);
     }
@@ -250,16 +337,9 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
         return null;
     }
   };
-  const BlockControls = ({ index }) => (
-    <div className="absolute left-0 -bottom-8 flex flex-row items-center opacity-0 group-hover:opacity-100">
-      {/* Delete button */}
-      <button
-        onClick={() => deleteBlock(index)}
-        className="p-2 text-red-500 hover:bg-red-50 rounded-full mr-1"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
 
+  const BlockControls = ({ index }) => (
+    <div className="absolute w-full left-0 -bottom-8 flex flex-row items-center justify-between opacity-0 group-hover:opacity-100">
       {/* Add block button */}
       <BlockMenu
         onSelect={(type) => addBlock(type, index)}
@@ -269,6 +349,14 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
           </button>
         }
       />
+  
+      {/* Delete button */}
+      <button
+        onClick={() => deleteBlock(index)}
+        className="p-2 text-red-500 hover:bg-red-50 rounded-full mr-1"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
     </div>
   );
 
@@ -344,12 +432,24 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
       </div>
 
       {/* Blocks */}
-      {blocks.map((block, index) => (
-        <div key={block.id} className="relative group mb-8"> {/* Increased margin-bottom for controls */}
-          {renderBlock(block)}
-          <BlockControls index={index} />
-        </div>
-      ))}
+      <div className="px-6 relative"> {/* Increased padding for larger drag handle */}
+        {blocks.map((block, index) => (
+          <BlockWrapper key={block.id} block={block} index={index}>
+            {renderBlock(block)}
+          </BlockWrapper>
+        ))}
+
+        {/* Drop indicator line */}
+        {isDragging && (
+          <div
+            className="absolute left-0 right-0 h-0.5 bg-blue-500 transform transition-all duration-200"
+            style={{
+              top: `${(dragOverBlockIndex + 1) * 100}%`,
+              opacity: dragOverBlockIndex !== null ? 1 : 0
+            }}
+          />
+        )}
+      </div>
 
       {/* Add first block */}
       {blocks.length === 0 && (

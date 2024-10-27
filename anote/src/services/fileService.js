@@ -449,6 +449,9 @@ export class FileService {
         case 'paragraph':
           markdown += `${block.content}\n\n`;
           break;
+        case 'heading':
+          markdown += `## ${block.content}\n\n`;
+          break;
         case 'todo':
           if (block.items && Array.isArray(block.items)) {
             markdown += block.items.map(item =>
