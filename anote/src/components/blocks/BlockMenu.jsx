@@ -16,6 +16,8 @@ export const BlockType = {
  * @param {Function} onSelect
  * @param {React.Component} trigger 
  * @returns 
+ * @description A block menu component that displays a list of block types
+ * for users to select when adding a new block to a page.
  */
 export const BlockMenu = ({ onSelect, trigger = undefined }) => {
   const [isOpen, setIsOpen] = useState(false);

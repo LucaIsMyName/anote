@@ -31,6 +31,16 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
   const [dragOverBlockIndex, setDragOverBlockIndex] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  /**
+   * 
+   * @param {number} index 
+   * @returns
+   * @description Handles copying a block by 
+   * creating a new block with a unique ID
+   * and inserting it after the original block.
+   * This function is called when the user clicks the 
+   * copy button in the block controls.
+   */
   const handleCopyBlock = (index) => {
     const blockToCopy = blocks[index];
     const copiedBlock = { ...blockToCopy, id: Date.now() }; // Create a new block with a unique ID
@@ -38,6 +48,17 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
     newBlocks.splice(index + 1, 0, copiedBlock); // Insert the copied block after the original
     setBlocks(newBlocks);
   };
+
+  /**
+   * @param {Event} e 
+   * @param {number} index 
+   * @returns 
+   * @description Handles the start of a drag operation by setting the dragged block index
+   * and setting a transparent drag image to improve visual feedback.
+   * This function is called when the user starts dragging a block.
+   * The dragged block index is set to the index of the block being dragged.
+   * A transparent drag image is created and set to the drag event to improve visual feedback.
+   */
   const handleDragStart = (e, index) => {
     setIsDragging(true);
     setDraggedBlockIndex(index);
@@ -51,12 +72,31 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
     setTimeout(() => document.body.removeChild(dragImage), 0);
   };
 
+  /**
+   * 
+   * @param {Event} e 
+   * @returns
+   * @description Handles the end of a drag operation by resetting the dragged block index
+   * and the drag over block index.
+   * This function is called when the user stops dragging a block.
+   * The dragged block index and drag over block index are reset to null.
+   */
   const handleDragEnd = (e) => {
     setIsDragging(false);
     setDraggedBlockIndex(null);
     setDragOverBlockIndex(null);
   };
 
+  /**
+   * 
+   * @param {Event} e 
+   * @param {number} index 
+   * @returns 
+   * @description Handles the drag over event by preventing the default behavior
+   * and updating the drag over block index.
+   * This function is called when the user drags a block over another block.
+   * The drag over block index is updated to the index of the block being dragged over.
+   */
   const handleDragOver = (e, index) => {
     e.preventDefault();
     e.stopPropagation();
@@ -79,11 +119,35 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
     }
   };
 
+  /**
+   * 
+   * @param {Event} e 
+   * @param {number} index
+   * @returns
+   * @description Handles the drag leave event by preventing the default behavior
+   * and stopping the event propagation.
+   * This function is called when the user drags a block out of another block.
+   * The drag over block index is reset to null.
+   */
   const handleDragLeave = (e) => {
     e.preventDefault();
     e.stopPropagation();
   };
 
+  /**
+   * 
+   * @param {React.Component} block
+   * @param {number} index
+   * @param {ReactNode} children 
+   * @returns {React.JSX.Element}
+   * @description A wrapper component that adds drag and drop functionality
+   * to a block by handling drag events and rendering drag handles.
+   * This component is used to wrap each block in the content editor.
+   * It adds drag and drop functionality to the block by handling drag events
+   * and rendering drag handles for reordering blocks.
+   * The block is wrapped in a div that listens for drag events and renders a larger
+   * drag handle area on the left side of the block.
+   */
   const BlockWrapper = ({ block, index, children }) => {
     const isDraggedBlock = draggedBlockIndex === index;
     const isOverBlock = dragOverBlockIndex === index;
@@ -98,9 +162,9 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
         `}
         draggable="true"
         onDragStart={(e) => handleDragStart(e, index)}
-        onDragEnd={handleDragEnd}
+        onDragEnd={(e) => handleDragEnd(e)}
         onDragOver={(e) => handleDragOver(e, index)}
-        onDragLeave={handleDragLeave}
+        onDragLeave={(e) => handleDragLeave(e)}
       >
         {/* Larger drag handle area */}
         <div
@@ -340,6 +404,15 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
     }
   };
 
+  /**
+   * 
+   * @param {number} index
+   * @returns 
+   * @description Block controls component that renders buttons for adding, copying, and deleting blocks.
+   * This component is displayed at the bottom of each block and is only visible when the user hovers over the block.
+   * It renders buttons for adding a new block, copying the current block, and deleting the current block.
+   * The add block button opens a block menu when clicked, allowing the user to select a block type to add.
+   */
   const BlockControls = ({ index }) => (
     <div className="absolute w-full left-0 -bottom-8 flex flex-row items-center justify-start opacity-0 group-hover:opacity-100">
       {/* Add block button */}
