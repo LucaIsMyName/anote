@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, memo } from 'react';
-import { Plus, Type, Heading1, Table, Image, ListTodo, FileText } from 'lucide-react'; // Changed File to FileText
+import { Plus, Type, Heading1, Table, Image, ListTodo, FileText, ChevronDown } from 'lucide-react'; // Changed File to FileText
 import PageMentionMenu from './PageMentionMenu';
 
 export const BlockType = {
@@ -14,6 +14,8 @@ export const BlockType = {
 export const BlockMenu = ({ onSelect, trigger = undefined }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
+
+
 
   const blockTypes = [
     { type: BlockType.PARAGRAPH, icon: Type, label: 'Text' },
@@ -172,7 +174,7 @@ export const ParagraphBlock = memo(({ content, onChange, workspace, onPageClick 
         onKeyDown={handleKeyDown}
         onClick={handleClick}
       />
-      
+
       <PageMentionMenu
         isOpen={mentionState.isOpen}
         searchTerm={mentionState.searchTerm}
@@ -185,17 +187,58 @@ export const ParagraphBlock = memo(({ content, onChange, workspace, onPageClick 
   );
 });
 
-export const HeadingBlock = ({ content, onChange }) => (
-  <div className="mb-4">
-    <input
-      type="text"
-      className="w-full bg-transparent text-2xl font-bold focus:border-blue-500 focus:ring-0"
-      placeholder="Heading"
-      value={content}
-      onChange={(e) => onChange(e.target.value)}
-    />
-  </div>
-);
+export const HeadingBlock = ({ content, onChange }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [headingLevel, setHeadingLevel] = useState(2); // Default to H2
+  const dropdownRef = useRef(null);
+
+  const handleSelectLevel = (level) => {
+    setHeadingLevel(level);
+    setIsDropdownOpen(false);
+    // Update content to include the heading level
+    const newContent = `#${level} ${content.replace(/^#\d\s/, '')}`;
+    onChange(newContent);
+  };
+
+  const handleContentChange = (e) => {
+    const newText = e.target.value;
+    onChange(`${headingLevel} ${newText}`);
+  };
+
+  return (
+    <div className="flex items-center flex-row-reverse space-x-2 relative">
+      <button
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        className="flex items-center space-x-1 bg-gray-100 px-3 py-1 rounded text-gray-700 hover:bg-gray-200"
+      >
+        <span>{`H${headingLevel}`}</span>
+        <ChevronDown className="w-4 h-4" />
+      </button>
+
+      {isDropdownOpen && (
+        <div ref={dropdownRef} className="absolute top-full right-0 mt-1 w-20 bg-white border rounded shadow-lg z-10">
+          {[2, 3, 4, 5, 6].map(level => (
+            <button
+              key={level}
+              onClick={() => handleSelectLevel(level)}
+              className="w-full text-left px-4 py-2 hover:bg-gray-100"
+            >
+              {`H${level}`}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <input
+        type="text"
+        value={content.replace(/^#\d\s/, '')} // Remove the level indicator from display
+        onChange={handleContentChange}
+        className="w-full bg-transparent text-lg font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
+        placeholder="Heading text..."
+      />
+    </div>
+  );
+};
 
 export const TodoBlock = ({ items, onChange }) => {
   const addItem = () => {
