@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FileText } from 'lucide-react';
 
-const PageMentionMenu = ({ 
+export const PageMentionMenu = ({ 
   isOpen, 
   searchTerm, 
   onSelect, 

@@ -42,9 +42,9 @@ export class FileService {
             break;
 
           case 'file':
-            if (block.fileData && block.fileData.name) {
-              const assetPath = await this.saveAssetFile(dirHandle, block.fileData.name, block.fileData.data);
-              markdown += `[FILE-BLOCK][${block.fileData.name}](${block.fileData.data})[/FILE-BLOCK]`;
+            if (block.fileData) {
+              const { name, base64 } = block.fileData;
+              markdown += `[FILE-BLOCK]\n${JSON.stringify({ name, base64 })}\n[/FILE-BLOCK]\n\n`;
             }
             break;
         }
@@ -193,17 +193,15 @@ export class FileService {
           currentBlock.data.push(cells);
         }
       } else if (line.startsWith('[FILE-BLOCK]')) {
-
         if (currentBlock) blocks.push(currentBlock);
-        const end = lines.indexOf('[/FILE-BLOCK]');
-        const fileData = lines.slice(i + 1, end).join('\n');
+        const end = lines.indexOf('[/FILE-BLOCK]', i);
+        const fileData = JSON.parse(lines.slice(i + 1, end).join('\n')); // Parse base64 JSON
         currentBlock = {
           id: Date.now() + Math.random(),
           type: 'file',
-          fileData: JSON.parse(fileData)
+          fileData // Attach fileData to display in FileBlock
         };
-        i = end;  // Skip to end of file block
-
+        i = end;
       } else {
         // Regular text content
         if (!currentBlock || currentBlock.type !== 'paragraph') {
