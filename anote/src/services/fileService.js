@@ -1,4 +1,10 @@
 export class FileService {
+  /**
+   * 
+   * @param {string} dirHandle 
+   * @param {string} path 
+   * @param {Array<any>} blocks 
+   */
   static async writeMarkdownFile(dirHandle, path, blocks) {
     try {
       // Convert blocks to markdown
@@ -73,6 +79,12 @@ export class FileService {
     }
   }
 
+  /**
+   * 
+   * @param {string} dirHandle 
+   * @param {string} path 
+   * @returns {Promise<Array<any>>} 
+   */
   static async readMarkdownFile(dirHandle, path) {
     try {
       // Navigate to the correct directory
@@ -100,6 +112,14 @@ export class FileService {
     }
   }
 
+  /**
+   * 
+   * @param {string} dirHandle 
+   * @param {string} fileName 
+   * @param {string} dataUrl 
+   * @returns {Promise<string>}
+   * @throws {Error}
+   */
   static async saveAssetFile(dirHandle, fileName, dataUrl) {
     try {
       // Get assets directory
@@ -122,6 +142,11 @@ export class FileService {
     }
   }
 
+  /**
+   * @param {string} markdown
+   * @returns {Array<any>}
+   * @throws {Error}
+   */
   static async parseMarkdownToBlocks(markdown) {
     if (!markdown) return [];
 

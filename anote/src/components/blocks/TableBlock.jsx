@@ -1,6 +1,16 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Plus, Trash } from 'lucide-react';
 
+/**
+ * 
+ * @param {any} data
+ * @param {Function} onChange
+ * @param {number} id 
+ * @returns 
+ * @description A table block component that allows users to
+ * add, remove, and edit rows and columns in a table.
+ * 
+ */
 const TableBlock = ({ data, onChange, id }) => {
   const [columnWidths, setColumnWidths] = useState({});
   const [headers, setHeaders] = useState([]);

@@ -4,10 +4,20 @@ import { BlockMenu, BlockType, ParagraphBlock, HeadingBlock, TodoBlock } from ".
 import TableBlock from "./TableBlock";
 import ImageBlock from "./ImageBlock";
 import FileBlock from "./FileBlock";
+import TableOfContents from "./TableOfContents";
 import { FileService } from "../../services/FileService";
 
 const CURRENT_PAGE_KEY = 'anote_current_page';
 
+/**
+ * 
+ * @param {string} workspace
+ * @param {string} currentPath
+ * @param {Function} onPathChange 
+ * @returns 
+ * @description A content editor component that allows users to
+ * create, edit, and delete blocks of content in a page.
+ */
 const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => { // Added default value
   const [blocks, setBlocks] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -433,7 +443,6 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
           </div>
         </div>
       </div>
-
       {/* Blocks */}
       <div className="max-w-4xl mx-auto px-6 relative">
         {blocks.map((block, index) => (

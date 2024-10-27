@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Folder, AlertTriangle } from 'lucide-react';
 import { WorkspaceService } from '../../services/workspaceService';
 
+/**
+ * 
+ * @param {boolean} onWorkspaceReady
+ * @description A component that prompts the user to select a workspace folder
+ * and creates a new workspace or loads an existing one.
+ */
 const WorkspaceSelector = ({ onWorkspaceReady }) => {
   const [status, setStatus] = useState('checking');
   const [errorMessage, setErrorMessage] = useState('');

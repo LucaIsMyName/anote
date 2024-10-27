@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { FileService } from '../../services/FileService';
 
+/**
+ * 
+ * @param {any} fileData
+ * @param {Function} onChange 
+ * @returns 
+ * @description A file block component that allows users to
+ * upload a file by dragging and dropping or selecting a file.
+ */
 const FileBlock = ({ fileData, onChange }) => {
   const [base64Data, setBase64Data] = useState(fileData?.base64 || '');
 

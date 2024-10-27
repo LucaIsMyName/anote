@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { Image as ImageIcon, Upload } from 'lucide-react';
 
+/**
+ * 
+ * @param {string} src
+ * @param {string} caption
+ * @param {Function} onChange 
+ * @returns 
+ * @description An image block component that allows users to
+ * upload an image by dragging and dropping or selecting a file.
+ */
 const ImageBlock = ({ src, caption, onChange }) => {
   const [isDragging, setIsDragging] = useState(false);
 

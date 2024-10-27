@@ -11,6 +11,12 @@ export const BlockType = {
   TODO: 'todo'
 };
 
+/**
+ * 
+ * @param {Function} onSelect
+ * @param {React.Component} trigger 
+ * @returns 
+ */
 export const BlockMenu = ({ onSelect, trigger = undefined }) => {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
@@ -68,7 +74,17 @@ export const BlockMenu = ({ onSelect, trigger = undefined }) => {
   );
 };
 
-// Individual Block Components
+/**
+ * @param {string} content
+ * @param {Function} onChange
+ * @param {string} workspace
+ * @param {Function} onPageClick
+ * @returns
+ * @description Paragraph block component that allows users to input text
+ * and mention other pages using double square brackets.
+ * Example: [[Page Name]]
+ * When a page is mentioned, it will be highlighted and clickable.
+ */
 export const ParagraphBlock = memo(({ content, onChange, workspace, onPageClick }) => {
   const [mentionState, setMentionState] = useState({
     isOpen: false,
@@ -187,6 +203,14 @@ export const ParagraphBlock = memo(({ content, onChange, workspace, onPageClick 
   );
 });
 
+/**
+ * 
+ * @param {string} content
+ * @param {Function} onChange 
+ * @returns 
+ * @description Heading block component that allows users to select
+ * a heading level and input heading text.
+ */
 export const HeadingBlock = ({ content, onChange }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [headingLevel, setHeadingLevel] = useState(2); // Default to H2
@@ -240,6 +264,13 @@ export const HeadingBlock = ({ content, onChange }) => {
   );
 };
 
+/**
+ * 
+ * @param {Array<any>} items
+ * @param {Function} onChange 
+ * @returns 
+ * @description To-do list block
+ */
 export const TodoBlock = ({ items, onChange }) => {
   const addItem = () => {
     onChange([...items, { id: Date.now(), text: '', completed: false }]);

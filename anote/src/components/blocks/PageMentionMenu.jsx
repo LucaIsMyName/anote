@@ -1,6 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FileText } from 'lucide-react';
 
+/**
+ * 
+ * @param {boolean} isOpen 
+ * @param {string} searchTerm
+ * @param {Function} onSelect
+ * @param {Function} onClose
+ * @param {Object} position
+ * @param {Array<string>} pages
+ * @returns 
+ * @description A menu component that displays a list of pages
+ * for users to select when mentioning a page in a block.
+ */
 export const PageMentionMenu = ({ 
   isOpen, 
   searchTerm, 
