@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Edit2, FolderPlus, Calendar, Save, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Edit2, Copy,  FolderPlus, Calendar, Save, GripVertical } from 'lucide-react';
 import { BlockMenu, BlockType, ParagraphBlock, HeadingBlock, TodoBlock } from "./BlockMenu";
 import TableBlock from "./TableBlock";
 import ImageBlock from "./ImageBlock";
 import FileBlock from "./FileBlock";
-import { FileService } from "../../services/fileService";
+import { FileService } from "../../services/FileService";
 
 const CURRENT_PAGE_KEY = 'anote_current_page';
 
@@ -20,12 +20,19 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
   const [draggedBlockIndex, setDraggedBlockIndex] = useState(null);
   const [dragOverBlockIndex, setDragOverBlockIndex] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-  
+
+  const handleCopyBlock = (index) => {
+    const blockToCopy = blocks[index];
+    const copiedBlock = { ...blockToCopy, id: Date.now() }; // Create a new block with a unique ID
+    const newBlocks = [...blocks];
+    newBlocks.splice(index + 1, 0, copiedBlock); // Insert the copied block after the original
+    setBlocks(newBlocks);
+  };
   const handleDragStart = (e, index) => {
     setIsDragging(true);
     setDraggedBlockIndex(index);
     e.dataTransfer.effectAllowed = "move";
-    
+
     // Set a transparent drag image to improve visual feedback
     const dragImage = document.createElement('div');
     dragImage.style.opacity = '0';
@@ -43,7 +50,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
   const handleDragOver = (e, index) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (draggedBlockIndex === null || draggedBlockIndex === index) return;
 
     const draggedBlock = blocks[draggedBlockIndex];
@@ -52,11 +59,11 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
     // Only update if we're actually changing position
     if (dragOverBlockIndex !== index) {
       setDragOverBlockIndex(index);
-      
+
       const newBlocks = [...blocks];
       newBlocks.splice(draggedBlockIndex, 1);
       newBlocks.splice(index, 0, draggedBlock);
-      
+
       setDraggedBlockIndex(index);
       setBlocks(newBlocks);
     }
@@ -70,7 +77,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
   const BlockWrapper = ({ block, index, children }) => {
     const isDraggedBlock = draggedBlockIndex === index;
     const isOverBlock = dragOverBlockIndex === index;
-    
+
     return (
       <div
         className={`
@@ -86,7 +93,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
         onDragLeave={handleDragLeave}
       >
         {/* Larger drag handle area */}
-        <div 
+        <div
           className="absolute left-0 top-0 bottom-0 w-12 -translate-x-full 
                      opacity-0 group-hover:opacity-100 flex items-center 
                      justify-center cursor-grab active:cursor-grabbing"
@@ -95,11 +102,11 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
             <GripVertical className="w-5 h-5 text-gray-400" />
           </div>
         </div>
-        
+
         <div className={`relative ${isDragging ? 'pointer-events-none' : ''}`}>
           {children}
         </div>
-        
+
         <BlockControls index={index} />
       </div>
     );
@@ -123,18 +130,8 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
     }
 
     try {
-      console.log('Loading content for path:', currentPath);
       const { blocks: loadedBlocks, metadata } = await FileService.readPage(workspace, currentPath);
-      console.log('Loaded content:', { blocks: loadedBlocks, metadata });
-
-      if (Array.isArray(loadedBlocks)) {
-        console.log('Setting blocks:', loadedBlocks);
-        setBlocks(loadedBlocks);
-      } else {
-        console.log('No blocks loaded, setting empty array');
-        setBlocks([]);
-      }
-
+      setBlocks(loadedBlocks || []);
       setPageMetadata(metadata || {
         createdAt: new Date().toISOString(),
         lastEdited: new Date().toISOString()
@@ -144,8 +141,6 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
       setBlocks([]);
     }
   };
-
-
 
   useEffect(() => {
     if (workspace && !currentPath) {
@@ -192,7 +187,6 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
     if (sortedPages.length === 0) return null;
     return sortedPages[0].name;
   };
-
   const saveContent = async () => {
     if (!workspace || !currentPath || !blocks) return;
 
@@ -208,6 +202,26 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
       console.error('Error saving content:', error);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleTitleChange = async (newTitle) => {
+    if (newTitle.trim() === pageTitle || !newTitle.trim()) {
+      setIsEditingTitle(false);
+      return;
+    }
+
+    try {
+      const pathParts = currentPath.split('/');
+      pathParts[pathParts.length - 1] = newTitle;
+      const newPath = pathParts.join('/');
+      await FileService.renamePage(workspace, currentPath, newTitle);
+      onPathChange(newPath);
+      setPageTitle(newTitle);
+      localStorage.setItem(CURRENT_PAGE_KEY, newPath);
+      setIsEditingTitle(false);
+    } catch (error) {
+      console.error('Error renaming page:', error);
     }
   };
 
@@ -235,35 +249,6 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
     const newBlocks = [...blocks];
     newBlocks.splice(index + 1, 0, newBlock);
     setBlocks(newBlocks);
-  };
-
-  const handleTitleChange = async (newTitle) => {
-    if (newTitle.trim() === pageTitle || !newTitle.trim()) {
-      setIsEditingTitle(false);
-      return;
-    }
-
-    try {
-      const pathParts = currentPath.split('/');
-      pathParts[pathParts.length - 1] = newTitle;
-      const newPath = pathParts.join('/');
-
-      await FileService.renamePage(workspace, currentPath, newTitle);
-      onPathChange(newPath);
-      setPageTitle(newTitle);
-
-      // Update the current path in localStorage
-
-      localStorage.setItem(CURRENT_PAGE_KEY, newPath);
-
-      // Update the page Title in the sidebar component UI
-      
-      setIsEditingTitle(false);
-
-
-    } catch (error) {
-      console.error('Error renaming page:', error);
-    }
   };
 
   const handleDelete = async () => {
@@ -346,21 +331,32 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
   };
 
   const BlockControls = ({ index }) => (
-    <div className="absolute w-full left-0 -bottom-8 flex flex-row items-center justify-between opacity-0 group-hover:opacity-100">
+    <div className="absolute w-full left-0 -bottom-8 flex flex-row items-center justify-start opacity-0 group-hover:opacity-100">
       {/* Add block button */}
-      <BlockMenu
-        onSelect={(type) => addBlock(type, index)}
-        trigger={
-          <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full">
-            <Plus className="w-4 h-4" />
-          </button>
-        }
-      />
-  
+      <div className="flex items-center">
+        <BlockMenu
+          onSelect={(type) => addBlock(type, index)}
+          trigger={
+            <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full">
+              <Plus className="w-4 h-4" />
+            </button>
+          }
+        />
+        {/* Copy block button */}
+        <button
+          onClick={() => handleCopyBlock(index)}
+          className="p-2 text-blue-500 hover:bg-blue-50 rounded-full"
+          title="Copy Block"
+        >
+          <Copy className="w-4 h-4" />
+        </button>
+      </div>
+
       {/* Delete button */}
       <button
         onClick={() => deleteBlock(index)}
         className="p-2 text-red-500 hover:bg-red-50 rounded-full mr-1"
+        title="Delete Block"
       >
         <Trash2 className="w-4 h-4" />
       </button>
@@ -439,39 +435,13 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
       </div>
 
       {/* Blocks */}
-      <div className="max-w-4xl mx-auto px-6 relative"> {/* Increased padding for larger drag handle */}
+      <div className="max-w-4xl mx-auto px-6 relative">
         {blocks.map((block, index) => (
           <BlockWrapper key={block.id} block={block} index={index}>
             {renderBlock(block)}
           </BlockWrapper>
         ))}
-
-        {/* Drop indicator line */}
-        {isDragging && (
-          <div
-            className="absolute left-0 right-0 h-0.5 bg-blue-500 transform transition-all duration-200"
-            style={{
-              top: `${(dragOverBlockIndex + 1) * 100}%`,
-              opacity: dragOverBlockIndex !== null ? 1 : 0
-            }}
-          />
-        )}
       </div>
-
-      {/* Add first block */}
-      {blocks.length === 0 && (
-        <div className="p-6">
-          <BlockMenu
-            onSelect={(type) => addBlock(type, -1)}
-            trigger={
-              <button className="p-3 text-blue-500 hover:bg-blue-50 border rounded-full">
-                <Plus className="w-6 h-6" />
-              </button>
-            }
-          />
-          <p className="text-gray-500 mt-2">Click + to add content</p>
-        </div>
-      )}
 
       {/* Saving indicator */}
       {isSaving && (
@@ -481,6 +451,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
       )}
     </div>
   );
+
 };
 
 export default ContentEditor;
