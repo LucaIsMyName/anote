@@ -429,17 +429,17 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
         <div className="flex items-center space-x-4 text-sm text-gray-500">
           <div className="flex items-center space-x-1">
             <Calendar className="w-4 h-4" />
-            <span>Created: {new Date(pageMetadata.createdAt).toLocaleDateString()}</span>
+            <span className="truncate">Created: {new Date(pageMetadata.createdAt).toLocaleDateString()}</span>
           </div>
           <div className="flex items-center space-x-1">
             <Save className="w-4 h-4" />
-            <span>Last edited: {new Date(pageMetadata.lastEdited).toLocaleDateString()}</span>
+            <span className="truncate">Last edited: {new Date(pageMetadata.lastEdited).toLocaleDateString()}</span>
           </div>
         </div>
       </div>
 
       {/* Blocks */}
-      <div className="max-w-4xl px-6 relative"> {/* Increased padding for larger drag handle */}
+      <div className="max-w-4xl mx-auto px-6 relative"> {/* Increased padding for larger drag handle */}
         {blocks.map((block, index) => (
           <BlockWrapper key={block.id} block={block} index={index}>
             {renderBlock(block)}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FileService } from '../../services/FileService';
 
 const FileBlock = ({ fileData, onChange }) => {
   const [base64Data, setBase64Data] = useState(fileData?.base64 || '');
@@ -20,6 +21,7 @@ const FileBlock = ({ fileData, onChange }) => {
         onChange({ type: 'file', fileData: { name: file.name, base64 } });
       };
       reader.readAsDataURL(file);
+
     }
   };
 
