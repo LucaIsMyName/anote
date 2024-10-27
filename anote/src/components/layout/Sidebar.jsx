@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { FolderPlus, Plus, ChevronRight, ChevronDown, Edit2, Trash2 } from 'lucide-react';
+import { FolderPlus, PanelRightClose, Plus, ChevronRight, ChevronDown, Edit2, Trash2 } from 'lucide-react';
 import { FileService } from '../../services/fileService';
 
 const EXPANDED_PATHS_KEY = 'anote_expanded_paths';
+const SIDEBAR_WIDTH_KEY = 'sidebar_width';
+const SIDEBAR_OPEN_KEY = 'sidebar_open';
 
 const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
   const [pages, setPages] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [draggedItem, setDraggedItem] = useState(null);
-  const [dropTarget, setDropTarget] = useState(null);
-  const [isCreatingPage, setIsCreatingPage] = useState(false);
-  const [renamingPage, setRenamingPage] = useState(null);
-  const [newPageParentPath, setNewPageParentPath] = useState('');
   const [expandedPaths, setExpandedPaths] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(EXPANDED_PATHS_KEY) || '{}');
@@ -19,6 +15,13 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
       return {};
     }
   });
+  const [width, setWidth] = useState(localStorage.getItem(SIDEBAR_WIDTH_KEY) || 250);
+  const [isOpen, setIsOpen] = useState(localStorage.getItem(SIDEBAR_OPEN_KEY) === 'true');
+  const [isResizing, setIsResizing] = useState(false);
+  const [dropTarget, setDropTarget] = useState(null);
+  const [renamingPage, setRenamingPage] = useState(null);
+  const [isCreatingPage, setIsCreatingPage] = useState(false);
+  const [newPageParentPath, setNewPageParentPath] = useState('');
 
   useEffect(() => {
     if (workspace) {
@@ -28,7 +31,41 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
 
   useEffect(() => {
     localStorage.setItem(EXPANDED_PATHS_KEY, JSON.stringify(expandedPaths));
-  }, [expandedPaths]);
+    localStorage.setItem(SIDEBAR_WIDTH_KEY, width);
+    localStorage.setItem(SIDEBAR_OPEN_KEY, isOpen);
+  }, [expandedPaths, width, isOpen]);
+
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const handleMouseDown = () => {
+    setIsResizing(true);
+  };
+
+  const handleMouseMove = (e) => {
+    if (isResizing) {
+      const newWidth = Math.max(96, e.clientX);
+      setWidth(newWidth);
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (isResizing) {
+      setIsResizing(false);
+      localStorage.setItem(SIDEBAR_WIDTH_KEY, width);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
 
   const loadPages = async () => {
     try {
@@ -39,86 +76,27 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
     }
   };
 
-
-  const handleDragStart = (e, item, path) => {
-    setDraggedItem({ item, path });
-    e.dataTransfer.effectAllowed = 'move';
-    // Add a subtle visual feedback
-    e.target.style.opacity = '0.5';
-  };
-
-  const handleDragEnd = (e) => {
-    e.target.style.opacity = '1';
-    setDraggedItem(null);
-    setDropTarget(null);
-  };
-
-  const handleDragOver = (e, targetPath) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (draggedItem?.path === targetPath) return;
-
-    // Only allow dropping into directories
-    const targetIsDirectory = pages.find(p => p.path === targetPath)?.type === 'directory';
-    if (!targetIsDirectory) return;
-
-    e.dataTransfer.dropEffect = 'move';
-    setDropTarget(targetPath);
-  };
-
-  const handleDrop = async (e, targetPath) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!draggedItem || draggedItem.path === targetPath) {
-      setDropTarget(null);
-      return;
-    }
-
+  const handleRename = async (oldPath, newName) => {
     try {
-      // Handle file drops from the system
-      if (e.dataTransfer.types.includes('Files')) {
-        const files = Array.from(e.dataTransfer.files);
-        for (const file of files) {
-          if (file.type.startsWith('image/')) {
-            // Handle image files
-            await FileService.saveAssetFile(workspace, file.name, URL.createObjectURL(file));
-          } else {
-            // Handle other files
-            await FileService.saveFile(workspace, {
-              name: file.name,
-              type: file.type,
-              size: file.size,
-              data: await file.arrayBuffer()
-            });
-          }
-        }
-      } else {
-        // Handle internal drag and drop
-        const newPath = `${targetPath}/${draggedItem.item.name}`;
-        await FileService.movePage(workspace, draggedItem.path, newPath);
-
-        // Automatically expand the target directory
-        setExpandedPaths(prev => ({
-          ...prev,
-          [targetPath]: true
-        }));
-      }
-
+      await FileService.renamePage(workspace, oldPath, newName);
       await loadPages();
-    } catch (error) {
-      console.error('Error handling drop:', error);
-    }
 
-    setDraggedItem(null);
-    setDropTarget(null);
+      if (currentPath === oldPath) {
+        const pathParts = oldPath.split('/');
+        pathParts[pathParts.length - 1] = newName;
+        const newPath = pathParts.join('/');
+        onPageSelect(newPath);
+      }
+      setRenamingPage(null);
+    } catch (error) {
+      console.error('Error renaming page:', error);
+    }
   };
+
   const handleDelete = async (path) => {
     if (window.confirm(`Are you sure you want to delete "${path}"?`)) {
       try {
         await FileService.deletePage(workspace, path);
-        // If we're deleting the current page, clear it
         if (currentPath === path) {
           onPageSelect(null);
         }
@@ -129,62 +107,37 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
     }
   };
 
-  const handleRename = async (oldPath, newName) => {
-    try {
-      await FileService.renamePage(workspace, oldPath, newName);
-      await loadPages();
-
-      // Update current path if we renamed the current page
-      if (currentPath === oldPath) {
-        // Calculate the new path properly
-        const pathParts = oldPath.split('/');
-        pathParts[pathParts.length - 1] = newName; // Replace last part with new name
-        const newPath = pathParts.join('/');
-        onPageSelect(newPath);
-      }
-      setRenamingPage(null);
-    } catch (error) {
-      console.error('Error renaming page:', error);
-    }
-  };
-
   const PageItem = ({ page, level = 0, parentPath = '' }) => {
     const fullPath = parentPath ? `${parentPath}/${page.name}` : page.name;
     const isExpanded = expandedPaths[fullPath];
     const isDropTarget = dropTarget === fullPath;
+
     return (
       <div
         draggable
         onDragStart={(e) => handleDragStart(e, page, fullPath)}
-        onDragEnd={handleDragEnd}
-        onDragOver={(e) => handleDragOver(e, fullPath)}
+        onDragEnd={() => setDropTarget(null)}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDropTarget(fullPath);
+        }}
         onDrop={(e) => handleDrop(e, fullPath)}
-        className={`
-          relative group
-          ${isDropTarget ? 'bg-blue-50 border-2 border-blue-200 rounded' : ''}
-        `}
+        className={`relative group ${isDropTarget ? 'bg-blue-50 border-2 border-blue-200 rounded' : ''}`}
       >
         <div
-          className={`
-            flex items-center px-2 py-1 hover:bg-gray-100
-            ${currentPath === fullPath ? 'bg-blue-50' : ''}
-          `}
+          className={`flex items-center px-2 py-1 hover:bg-gray-100 ${currentPath === fullPath ? 'bg-blue-50' : ''}`}
           style={{ paddingLeft: `${level * 1.5}rem` }}
         >
           <button
             onClick={() => {
-              setExpandedPaths(prev => ({
+              setExpandedPaths((prev) => ({
                 ...prev,
                 [fullPath]: !prev[fullPath]
               }));
             }}
             className="ml-2 p-1 hover:bg-gray-200 rounded"
           >
-            {isExpanded ? (
-              <ChevronDown className="w-4 h-4 text-gray-400" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-            )}
+            {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
           </button>
 
           {renamingPage === fullPath ? (
@@ -214,34 +167,23 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
               />
             </form>
           ) : (
-            <span
-              onClick={() => onPageSelect(fullPath)}
-              className="flex-1 px-2 py-1 cursor-pointer truncate"
-            >
+            <span onClick={() => onPageSelect(fullPath)} className="flex-1 px-2 py-1 cursor-pointer truncate">
               {page.name}
             </span>
           )}
 
           <div className="opacity-0 group-hover:opacity-100 flex items-center">
-            <button
-              onClick={() => setRenamingPage(fullPath)}
-              className="p-1 hover:bg-gray-200 rounded"
-              title="Rename"
-            >
+            <button onClick={() => setRenamingPage(fullPath)} className="p-1 hover:bg-gray-200 rounded" title="Rename">
               <Edit2 className="w-4 h-4 text-gray-400" />
             </button>
-            <button
-              onClick={() => handleDelete(fullPath)}
-              className="p-1 hover:bg-gray-200 rounded"
-              title="Delete"
-            >
+            <button onClick={() => handleDelete(fullPath)} className="p-1 hover:bg-gray-200 rounded" title="Delete">
               <Trash2 className="w-4 h-4 text-gray-400" />
             </button>
             <button
               onClick={() => {
                 setIsCreatingPage(true);
                 setNewPageParentPath(fullPath);
-                setExpandedPaths(prev => ({
+                setExpandedPaths((prev) => ({
                   ...prev,
                   [fullPath]: true
                 }));
@@ -254,24 +196,12 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
           </div>
         </div>
 
-        {isExpanded && (
-          <div>
-            {/* Show page creation dialog for this directory */}
-            {isCreatingPage && newPageParentPath === fullPath && (
-              <div style={{ paddingLeft: `${(level + 1) * 1.5}rem` }}>
-                <PageCreationDialog parentPath={fullPath} />
-              </div>
-            )}
+        {isExpanded && page.children?.map((child) => (
+          <PageItem key={child.name} page={child} level={level + 1} parentPath={fullPath} />
+        ))}
 
-            {page.children?.map((child) => (
-              <PageItem
-                key={child.name}
-                page={child}
-                level={level + 1}
-                parentPath={fullPath}
-              />
-            ))}
-          </div>
+        {isExpanded && isCreatingPage && newPageParentPath === fullPath && (
+          <PageCreationDialog parentPath={fullPath} />
         )}
       </div>
     );
@@ -284,9 +214,8 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
       await loadPages();
       onPageSelect(fullPath);
 
-      // Expand parent path if it exists
       if (parentPath) {
-        setExpandedPaths(prev => ({
+        setExpandedPaths((prev) => ({
           ...prev,
           [parentPath]: true
         }));
@@ -329,39 +258,66 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
   };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-screen overflow-hidden flex flex-col">
-      {/* Header with title and new page button */}
-      <div className=" border-gray-200">
-        <h2 className="px-4 pt-4 font-semibold text-lg mb-2">Workspace</h2>
+    <div
+      style={{
+        width: isOpen ? `${width}px` : '48px',
+        transition: 'width 0.3s',
+        position: 'relative',
+      }}
+      className="bg-white border-r border-gray-200 h-screen overflow-hidden flex flex-col"
+    >
+      <div className="flex items-center justify-between w-full px-3 py-2">
+        {isOpen ? <h1 class="font-bold">Workspace</h1> : ''}
+        <button
+          onClick={toggleSidebar}
+          className=" text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
+        >
+          {isOpen ? <PanelRightClose /> : <PanelRightClose />}
 
-        {/* Always visible new page button */}
-        {isCreatingPage && !newPageParentPath ? (
-          <PageCreationDialog />
-        ) : (
-          <button
-            onClick={() => {
-              setIsCreatingPage(true);
-              setNewPageParentPath('');
-            }}
-            className="flex items-center space-x-2 w-full px-3 py-2 text-gray-600 hover:bg-gray-100 "
-          >
-            <Plus className="w-4 h-4" />
-            <span>New Page</span>
-          </button>
-        )}
+        </button>
+
       </div>
 
-      {/* Pages list */}
-      <div className="flex-1 overflow-auto">
-        {pages.map((page) => (
-          <PageItem key={page.name} page={page} />
-        ))}
-        {pages.length === 0 && !isCreatingPage && (
-          <div className="text-center text-gray-500 mt-4">
-            No pages yet. Create your first page using the button above!
+      {isOpen && (
+        <>
+          <div className="border-gray-200">
+            <button
+              onClick={() => {
+                setIsCreatingPage(true);
+                setNewPageParentPath('');
+              }}
+              className="flex items-center space-x-2 w-full px-3 py-2 text-gray-600 hover:bg-gray-100"
+            >
+              <Plus className="w-4 h-4" />
+              <span>New Page</span>
+            </button>
           </div>
-        )}
-      </div>
+
+          <div className="flex-1 overflow-auto">
+            {pages.map((page) => (
+              <PageItem key={page.name} page={page} />
+            ))}
+            {pages.length === 0 && (
+              <div className="text-center text-gray-500 mt-4">
+                No pages yet. Create your first page using the button above!
+              </div>
+            )}
+          </div>
+
+          <div
+            onMouseDown={handleMouseDown}
+            style={{
+              width: '5px',
+              cursor: 'col-resize',
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.1)',
+            }}
+          />
+        </>
+      )}
     </div>
   );
 };

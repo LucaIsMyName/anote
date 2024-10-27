@@ -21,6 +21,8 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
   const [dragOverBlockIndex, setDragOverBlockIndex] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
+
+  
   const handleDragStart = (e, index) => {
     setIsDragging(true);
     setDraggedBlockIndex(index);
@@ -453,11 +455,11 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
 
       {/* Add first block */}
       {blocks.length === 0 && (
-        <div className="text-center py-8">
+        <div className="p-6">
           <BlockMenu
             onSelect={(type) => addBlock(type, -1)}
             trigger={
-              <button className="p-3 text-blue-500 hover:bg-blue-50 rounded-full">
+              <button className="p-3 text-blue-500 hover:bg-blue-50 border rounded-full">
                 <Plus className="w-6 h-6" />
               </button>
             }
