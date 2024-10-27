@@ -166,7 +166,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
       >
         <div
           className={`
-            flex items-center px-2 py-1 rounded-md hover:bg-gray-100
+            flex items-center px-2 py-1 hover:bg-gray-100
             ${currentPath === fullPath ? 'bg-blue-50' : ''}
           `}
           style={{ paddingLeft: `${level * 1.5}rem` }}
@@ -178,7 +178,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
                 [fullPath]: !prev[fullPath]
               }));
             }}
-            className="p-1 hover:bg-gray-200 rounded"
+            className="ml-2 p-1 hover:bg-gray-200 rounded"
           >
             {isExpanded ? (
               <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -331,8 +331,8 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
   return (
     <div className="w-64 bg-white border-r border-gray-200 h-screen overflow-hidden flex flex-col">
       {/* Header with title and new page button */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="font-semibold text-lg mb-2">Workspace</h2>
+      <div className=" border-gray-200">
+        <h2 className="px-4 pt-4 font-semibold text-lg mb-2">Workspace</h2>
 
         {/* Always visible new page button */}
         {isCreatingPage && !newPageParentPath ? (
@@ -343,16 +343,16 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
               setIsCreatingPage(true);
               setNewPageParentPath('');
             }}
-            className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md"
+            className="flex items-center space-x-2 w-full px-3 py-2 text-gray-600 hover:bg-gray-100 "
           >
-            <FolderPlus className="w-4 h-4" />
+            <Plus className="w-4 h-4" />
             <span>New Page</span>
           </button>
         )}
       </div>
 
       {/* Pages list */}
-      <div className="flex-1 overflow-auto p-2">
+      <div className="flex-1 overflow-auto">
         {pages.map((page) => (
           <PageItem key={page.name} page={page} />
         ))}

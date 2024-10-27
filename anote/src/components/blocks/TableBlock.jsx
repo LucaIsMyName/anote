@@ -165,14 +165,14 @@ const TableBlock = ({ data, onChange, id }) => {
                     type="text"
                     value={header}
                     onChange={(e) => updateHeader(colIndex, e.target.value)}
-                    className="block w-full px-4 py-2 text-sm font-semibold bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className=" w-full px-4 py-2 text-sm font-semibold bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
                     placeholder="Column name..."
                   />
                   <button
                     onClick={() => deleteColumn(colIndex)}
-                    className="absolute top-0 right-0 p-1 text-gray-400 hover:text-red-500"
+                    className="p-1 size-[24px] text-gray-400 hover:text-red-500 absolute right-2 top-[calc(50%-12px)]"
                   >
-                    <Trash className="w-4 h-4" />
+                    <Trash className="w-[12px] h-[12px]" />
                   </button>
                   {colIndex < headers.length - 1 && (
                     <div
@@ -203,12 +203,12 @@ const TableBlock = ({ data, onChange, id }) => {
                     />
                   </td>
                 ))}
-                <td className="w-8">
+                <td className="">
                   <button
                     onClick={() => deleteRow(rowIndex)}
-                    className="p-1 text-gray-400 hover:text-red-500"
+                    className=" flex justify-center items-center size-[24px] text-gray-400 hover:text-red-500"
                   >
-                    <Trash className="w-4 h-4" />
+                    <Trash className="w-[12px] h-[12px]" />
                   </button>
                 </td>
               </tr>

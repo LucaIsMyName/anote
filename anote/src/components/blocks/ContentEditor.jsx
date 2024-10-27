@@ -76,8 +76,8 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
         className={`
           relative group mb-8 transition-all duration-200 ease-in-out
           ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
-          ${isDraggedBlock ? 'opacity-50 scale-98' : 'opacity-100'}
-          ${isOverBlock ? 'border-t-2 border-blue-500' : 'border-t-2 border-transparent'}
+          ${isDraggedBlock ? '' : 'opacity-100'}
+          ${isOverBlock ? 'border-t-2 border-blue-500' : 'border-t-0 border-transparent'}
         `}
         draggable="true"
         onDragStart={(e) => handleDragStart(e, index)}
@@ -361,9 +361,9 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
   );
 
   return (
-    <div className="max-w-4xl mx-auto p-8">
+    <div className="mx-auto p-8">
       {/* Page Header */}
-      <div className="mb-8 space-y-2">
+      <div className="mb-8 space-y-2 px-6">
         <div className="flex items-center justify-between group">
           {isEditingTitle ? (
             <form
@@ -432,7 +432,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
       </div>
 
       {/* Blocks */}
-      <div className="px-6 relative"> {/* Increased padding for larger drag handle */}
+      <div className="max-w-4xl px-6 relative"> {/* Increased padding for larger drag handle */}
         {blocks.map((block, index) => (
           <BlockWrapper key={block.id} block={block} index={index}>
             {renderBlock(block)}
