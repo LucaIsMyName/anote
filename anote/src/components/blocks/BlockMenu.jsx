@@ -196,7 +196,7 @@ export const HeadingBlock = ({ content, onChange }) => {
     setHeadingLevel(level);
     setIsDropdownOpen(false);
     // Update content to include the heading level
-    const newContent = `#${level} ${content.replace(/^#\d\s/, '')}`;
+    const newContent = `${content.replace('#', '')}`;
     onChange(newContent);
   };
 
@@ -209,7 +209,7 @@ export const HeadingBlock = ({ content, onChange }) => {
     <div className="flex items-center flex-row-reverse space-x-2 relative">
       <button
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        className="flex items-center space-x-1 bg-gray-100 px-3 py-1 rounded text-gray-700 hover:bg-gray-200"
+        className="flex opacity-25 hover:opacity-100 items-center space-x-1 bg-gray-100 px-3 py-1 rounded text-gray-700 hover:bg-gray-200"
       >
         <span>{`H${headingLevel}`}</span>
         <ChevronDown className="w-4 h-4" />
