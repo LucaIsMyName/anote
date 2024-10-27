@@ -81,7 +81,7 @@ export const HeadingBlock = ({ content, onChange }) => (
   <div className="mb-4">
     <input
       type="text"
-      className="w-full p-2 text-2xl font-bold border-b border-gray-200 focus:border-blue-500 focus:ring-0"
+      className="w-full bg-transparent text-2xl font-bold focus:border-blue-500 focus:ring-0"
       placeholder="Heading"
       value={content}
       onChange={(e) => onChange(e.target.value)}
