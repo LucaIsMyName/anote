@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FolderPlus, PanelRightClose, Plus, ChevronRight, ChevronDown, Edit2, Trash2, PanelRightOpen } from 'lucide-react';
-import { FileService } from '../../services/fileService';
+import { FileService } from '../../services/fileService.ts';
 
 const EXPANDED_PATHS_KEY = 'anote_expanded_paths';
 const SIDEBAR_WIDTH_KEY = 'sidebar_width';
