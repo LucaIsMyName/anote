@@ -1,47 +1,54 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Edit2, Copy,  FolderPlus, Calendar, Save, GripVertical } from 'lucide-react';
-import { BlockMenu, BlockType, ParagraphBlock, HeadingBlock, TodoBlock } from "./BlockMenu";
-import TableBlock from "./TableBlock";
-import ImageBlock from "./ImageBlock";
-import FileBlock from "./FileBlock";
-import TableOfContents from "./TableOfContents";
-import { FileService } from "../../services/FileService";
+import { Plus, Trash2, Edit2, Copy, FolderPlus, Calendar, Save, GripVertical } from "lucide-react";
+import { BlockMenu, BlockType, ParagraphBlock, HeadingBlock, TodoBlock } from "./BlockMenu.tsx";
+import TableBlock from "./TableBlock.tsx";
+import ImageBlock from "./ImageBlock.tsx";
+import FileBlock from "./FileBlock.tsx";
+import TableOfContents from "./TableOfContents.tsx";
+import { FileService } from "../../services/FileService.ts";
 
-const CURRENT_PAGE_KEY = 'anote_current_page';
+const CURRENT_PAGE_KEY = "anote_current_page";
 
 /**
- * 
+ *
  * @param {string} workspace
  * @param {string} currentPath
- * @param {Function} onPathChange 
- * @returns 
+ * @param {Function} onPathChange
+ * @returns
  * @description A content editor component that allows users to
  * create, edit, and delete blocks of content in a page.
  */
-const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => { // Added default value
+
+interface ContentEditorProps {
+  workspace: string;
+  currentPath: string;
+  onPathChange?: (path: string) => void;
+}
+const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: ContentEditorProps) => {
+  // Added default value
   const [blocks, setBlocks] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [pageTitle, setPageTitle] = useState('');
+  const [pageTitle, setPageTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [pageMetadata, setPageMetadata] = useState({
     createdAt: null,
-    lastEdited: null
+    lastEdited: null,
   });
   const [draggedBlockIndex, setDraggedBlockIndex] = useState(null);
   const [dragOverBlockIndex, setDragOverBlockIndex] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
   /**
-   * 
-   * @param {number} index 
+   *
+   * @param {number} index
    * @returns
-   * @description Handles copying a block by 
+   * @description Handles copying a block by
    * creating a new block with a unique ID
    * and inserting it after the original block.
-   * This function is called when the user clicks the 
+   * This function is called when the user clicks the
    * copy button in the block controls.
    */
-  const handleCopyBlock = (index) => {
+  const handleCopyBlock = (index: any) => {
     const blockToCopy = blocks[index];
     const copiedBlock = { ...blockToCopy, id: Date.now() }; // Create a new block with a unique ID
     const newBlocks = [...blocks];
@@ -50,54 +57,54 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
   };
 
   /**
-   * @param {Event} e 
-   * @param {number} index 
-   * @returns 
+   * @param {Event} e
+   * @param {number} index
+   * @returns
    * @description Handles the start of a drag operation by setting the dragged block index
    * and setting a transparent drag image to improve visual feedback.
    * This function is called when the user starts dragging a block.
    * The dragged block index is set to the index of the block being dragged.
    * A transparent drag image is created and set to the drag event to improve visual feedback.
    */
-  const handleDragStart = (e, index) => {
+  const handleDragStart = (e: any, index: any) => {
     setIsDragging(true);
     setDraggedBlockIndex(index);
     e.dataTransfer.effectAllowed = "move";
 
     // Set a transparent drag image to improve visual feedback
-    const dragImage = document.createElement('div');
-    dragImage.style.opacity = '0';
+    const dragImage = document.createElement("div");
+    dragImage.style.opacity = "0";
     document.body.appendChild(dragImage);
     e.dataTransfer.setDragImage(dragImage, 0, 0);
     setTimeout(() => document.body.removeChild(dragImage), 0);
   };
 
   /**
-   * 
-   * @param {Event} e 
+   *
+   * @param {Event} e
    * @returns
    * @description Handles the end of a drag operation by resetting the dragged block index
    * and the drag over block index.
    * This function is called when the user stops dragging a block.
    * The dragged block index and drag over block index are reset to null.
    */
-  const handleDragEnd = (e) => {
+  const handleDragEnd = (e: any) => {
     setIsDragging(false);
     setDraggedBlockIndex(null);
     setDragOverBlockIndex(null);
   };
 
   /**
-   * 
-   * @param {Event} e 
-   * @param {number} index 
-   * @returns 
+   *
+   * @param {Event} e
+   * @param {number} index
+   * @returns
    * @description Handles the drag over event by preventing the default behavior
    * and updating the drag over block index.
    * This function is called when the user drags a block over another block.
    * The drag over block index is updated to the index of the block being dragged over.
    */
-  const handleDragOver = (e, index) => {
+  const handleDragOver = (e: any, index: any) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -120,8 +127,8 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
   };
 
   /**
-   * 
-   * @param {Event} e 
+   *
+   * @param {Event} e
    * @param {number} index
    * @returns
    * @description Handles the drag leave event by preventing the default behavior
@@ -129,16 +136,16 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
    * This function is called when the user drags a block out of another block.
    * The drag over block index is reset to null.
    */
-  const handleDragLeave = (e) => {
+  const handleDragLeave = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
   };
 
   /**
-   * 
+   *
    * @param {React.Component} block
    * @param {number} index
-   * @param {ReactNode} children 
+   * @param {ReactNode} children
    * @returns {React.JSX.Element}
    * @description A wrapper component that adds drag and drop functionality
    * to a block by handling drag events and rendering drag handles.
@@ -148,7 +155,12 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
    * The block is wrapped in a div that listens for drag events and renders a larger
    * drag handle area on the left side of the block.
    */
-  const BlockWrapper = ({ block, index, children }) => {
+  interface BlockWrapperProps {
+    block: any;
+    index: any;
+    children: any;
+  }
+  const BlockWrapper = ({ block, index, children }: BlockWrapperProps) => {
     const isDraggedBlock = draggedBlockIndex === index;
     const isOverBlock = dragOverBlockIndex === index;
 
@@ -156,30 +168,26 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
       <div
         className={`
           relative group mb-8 transition-all duration-200 ease-in-out
-          ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
-          ${isDraggedBlock ? '' : 'opacity-100'}
-          ${isOverBlock ? 'border-t-2 border-blue-500' : 'border-t-0 border-transparent'}
+          ${isDragging ? "cursor-grabbing" : "cursor-grab"}
+          ${isDraggedBlock ? "" : "opacity-100"}
+          ${isOverBlock ? "border-t-2 border-blue-500" : "border-t-0 border-transparent"}
         `}
         draggable="true"
         onDragStart={(e) => handleDragStart(e, index)}
         onDragEnd={(e) => handleDragEnd(e)}
         onDragOver={(e) => handleDragOver(e, index)}
-        onDragLeave={(e) => handleDragLeave(e)}
-      >
+        onDragLeave={(e) => handleDragLeave(e)}>
         {/* Larger drag handle area */}
         <div
           className="absolute left-0 top-0 bottom-0 w-12 -translate-x-full 
                      opacity-0 group-hover:opacity-100 flex items-center 
-                     justify-center cursor-grab active:cursor-grabbing"
-        >
+                     justify-center cursor-grab active:cursor-grabbing">
           <div className="p-2 rounded hover:bg-gray-100">
             <GripVertical className="w-5 h-5 text-gray-400" />
           </div>
         </div>
 
-        <div className={`relative ${isDragging ? 'pointer-events-none' : ''}`}>
-          {children}
-        </div>
+        <div className={`relative ${isDragging ? "pointer-events-none" : ""}`}>{children}</div>
 
         <BlockControls index={index} />
       </div>
@@ -192,7 +200,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
     } else if (currentPath) {
       localStorage.setItem(CURRENT_PAGE_KEY, currentPath);
       loadContent();
-      const pathParts = currentPath.split('/');
+      const pathParts = currentPath.split("/");
       setPageTitle(pathParts[pathParts.length - 1]);
     }
   }, [workspace, currentPath]);
@@ -206,12 +214,14 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
     try {
       const { blocks: loadedBlocks, metadata } = await FileService.readPage(workspace, currentPath);
       setBlocks(loadedBlocks || []);
-      setPageMetadata(metadata || {
-        createdAt: new Date().toISOString(),
-        lastEdited: new Date().toISOString()
-      });
+      setPageMetadata(
+        metadata || {
+          createdAt: new Date().toISOString(),
+          lastEdited: new Date().toISOString(),
+        }
+      );
     } catch (error) {
-      console.error('Error loading content:', error);
+      console.error("Error loading content:", error);
       setBlocks([]);
     }
   };
@@ -222,7 +232,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
     } else if (currentPath) {
       localStorage.setItem(CURRENT_PAGE_KEY, currentPath);
       loadContent();
-      const pathParts = currentPath.split('/');
+      const pathParts = currentPath.split("/");
       setPageTitle(pathParts[pathParts.length - 1]);
     }
   }, [workspace, currentPath]);
@@ -251,11 +261,11 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
         }
       }
     } catch (error) {
-      console.error('Error loading initial page:', error);
+      console.error("Error loading initial page:", error);
     }
   };
 
-  const findFirstPage = (pages) => {
+  const findFirstPage = (pages:any) => {
     // Sort pages alphabetically
     const sortedPages = [...pages].sort((a, b) => a.name.localeCompare(b.name));
     if (sortedPages.length === 0) return null;
@@ -268,12 +278,12 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
       setIsSaving(true);
       const updatedMetadata = {
         ...pageMetadata,
-        lastEdited: new Date().toISOString()
+        lastEdited: new Date().toISOString(),
       };
       await FileService.writePage(workspace, currentPath, blocks, updatedMetadata);
       setPageMetadata(updatedMetadata);
     } catch (error) {
-      console.error('Error saving content:', error);
+      console.error("Error saving content:", error);
     } finally {
       setIsSaving(false);
     }
@@ -286,20 +296,18 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
     }
 
     try {
-      const pathParts = currentPath.split('/');
+      const pathParts = currentPath.split("/");
       pathParts[pathParts.length - 1] = newTitle;
-      const newPath = pathParts.join('/');
+      const newPath = pathParts.join("/");
       await FileService.renamePage(workspace, currentPath, newTitle);
       onPathChange(newPath);
       setPageTitle(newTitle);
       localStorage.setItem(CURRENT_PAGE_KEY, newPath);
       setIsEditingTitle(false);
     } catch (error) {
-      console.error('Error renaming page:', error);
+      console.error("Error renaming page:", error);
     }
   };
-
-
 
   // Add debounced auto-save
   useEffect(() => {
@@ -331,24 +339,23 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
         await FileService.deletePage(workspace, currentPath);
         onPathChange(null);
       } catch (error) {
-        console.error('Error deleting page:', error);
+        console.error("Error deleting page:", error);
       }
     }
   };
 
   const handleCreateSubpage = async () => {
     try {
-      const name = prompt('Enter new page name:');
+      const name = prompt("Enter new page name:");
       if (!name) return;
 
       const newPath = `${currentPath}/${name}`;
       await FileService.createPage(workspace, newPath);
       onPathChange(newPath);
     } catch (error) {
-      console.error('Error creating subpage:', error);
+      console.error("Error creating subpage:", error);
     }
   };
-
 
   const deleteBlock = (index) => {
     const newBlocks = blocks.filter((_, i) => i !== index);
@@ -398,16 +405,21 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
           />
         );
       case BlockType.FILE:
-        return <FileBlock key={block.id} file={block} />;
+        return (
+          <FileBlock
+            key={block.id}
+            file={block}
+          />
+        );
       default:
         return null;
     }
   };
 
   /**
-   * 
+   *
    * @param {number} index
-   * @returns 
+   * @returns
    * @description Block controls component that renders buttons for adding, copying, and deleting blocks.
    * This component is displayed at the bottom of each block and is only visible when the user hovers over the block.
    * It renders buttons for adding a new block, copying the current block, and deleting the current block.
@@ -429,8 +441,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
         <button
           onClick={() => handleCopyBlock(index)}
           className="p-2 text-blue-500 hover:bg-blue-50 rounded-full"
-          title="Copy Block"
-        >
+          title="Copy Block">
           <Copy className="w-4 h-4" />
         </button>
       </div>
@@ -439,8 +450,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
       <button
         onClick={() => deleteBlock(index)}
         className="p-2 text-red-500 hover:bg-red-50 rounded-full mr-1"
-        title="Delete Block"
-      >
+        title="Delete Block">
         <Trash2 className="w-4 h-4" />
       </button>
     </div>
@@ -457,8 +467,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
                 e.preventDefault();
                 handleTitleChange(e.target.title.value);
               }}
-              className="flex-1"
-            >
+              className="flex-1">
               <input
                 name="title"
                 defaultValue={pageTitle}
@@ -466,15 +475,14 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
                 className="text-5xl w-full focus:outline-none bg-transparent mb-4"
                 onBlur={(e) => handleTitleChange(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Escape') setIsEditingTitle(false);
+                  if (e.key === "Escape") setIsEditingTitle(false);
                 }}
               />
             </form>
           ) : (
             <h1
               className="text-5xl flex-1 cursor-pointer hover:text-blue-600 mb-4"
-              onClick={() => setIsEditingTitle(true)}
-            >
+              onClick={() => setIsEditingTitle(true)}>
               {pageTitle}
             </h1>
           )}
@@ -483,22 +491,19 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
             <button
               onClick={() => setIsEditingTitle(true)}
               className="p-2 hover:bg-gray-100 rounded-full"
-              title="Rename page"
-            >
+              title="Rename page">
               <Edit2 className="w-4 h-4 text-gray-500" />
             </button>
             <button
               onClick={handleDelete}
               className="p-2 hover:bg-gray-100 rounded-full"
-              title="Delete page"
-            >
+              title="Delete page">
               <Trash2 className="w-4 h-4 text-red-500" />
             </button>
             <button
               onClick={handleCreateSubpage}
               className="p-2 hover:bg-gray-100 rounded-full"
-              title="Create subpage"
-            >
+              title="Create subpage">
               <FolderPlus className="w-4 h-4 text-blue-500" />
             </button>
           </div>
@@ -519,21 +524,19 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
       {/* Blocks */}
       <div className="max-w-4xl mx-auto px-6 relative">
         {blocks.map((block, index) => (
-          <BlockWrapper key={block.id} block={block} index={index}>
+          <BlockWrapper
+            key={block.id}
+            block={block}
+            index={index}>
             {renderBlock(block)}
           </BlockWrapper>
         ))}
       </div>
 
       {/* Saving indicator */}
-      {isSaving && (
-        <div className="fixed top-4 right-4 bg-blue-500 text-white px-3 py-1 rounded-full text-sm">
-          Saving...
-        </div>
-      )}
+      {isSaving && <div className="fixed top-4 right-4 bg-blue-500 text-white px-3 py-1 rounded-full text-sm">Saving...</div>}
     </div>
   );
-
 };
 
 export default ContentEditor;

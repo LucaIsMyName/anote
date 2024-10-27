@@ -1,17 +1,24 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Plus, Trash } from 'lucide-react';
+import React, { useEffect, useState, useRef } from "react";
+import { Plus, Trash } from "lucide-react";
 
 /**
- * 
+ *
  * @param {any} data
  * @param {Function} onChange
- * @param {number} id 
- * @returns 
+ * @param {number} id
+ * @returns
  * @description A table block component that allows users to
  * add, remove, and edit rows and columns in a table.
- * 
+ *
  */
-const TableBlock = ({ data, onChange, id }) => {
+
+interface TableBlockProps {
+  data: any;
+  onChange: (data: any) => void;
+  id: number;
+}
+
+const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
   const [columnWidths, setColumnWidths] = useState({});
   const [headers, setHeaders] = useState([]);
   const [isResizing, setIsResizing] = useState(false);
@@ -35,7 +42,7 @@ const TableBlock = ({ data, onChange, id }) => {
       if (savedHeaders) {
         setHeaders(JSON.parse(savedHeaders));
       } else {
-        setHeaders(Array(data[0].length).fill(''));
+        setHeaders(Array(data[0].length).fill(""));
       }
     }
   }, [data, id]);
@@ -56,7 +63,7 @@ const TableBlock = ({ data, onChange, id }) => {
     setIsResizing(true);
     setResizeIndex(index);
     setStartX(event.clientX);
-    
+
     // Store the starting widths of both the current and next columns
     const currentWidth = columnWidths[index] || 150; // default width
     const nextWidth = columnWidths[index + 1] || 150;
@@ -68,14 +75,14 @@ const TableBlock = ({ data, onChange, id }) => {
 
     const diff = event.clientX - startX;
     const newWidths = { ...columnWidths };
-    
+
     // Ensure minimum width of 50px for both columns
     const newCurrentWidth = Math.max(50, startWidths.current + diff);
     const newNextWidth = Math.max(50, startWidths.next - diff);
-    
+
     newWidths[resizeIndex] = newCurrentWidth;
     newWidths[resizeIndex + 1] = newNextWidth;
-    
+
     setColumnWidths(newWidths);
     localStorage.setItem(`table-${id}-widths`, JSON.stringify(newWidths));
   };
@@ -89,38 +96,34 @@ const TableBlock = ({ data, onChange, id }) => {
 
   useEffect(() => {
     if (isResizing) {
-      document.addEventListener('mousemove', handleResize);
-      document.addEventListener('mouseup', stopResize);
+      document.addEventListener("mousemove", handleResize);
+      document.addEventListener("mouseup", stopResize);
       return () => {
-        document.removeEventListener('mousemove', handleResize);
-        document.removeEventListener('mouseup', stopResize);
+        document.removeEventListener("mousemove", handleResize);
+        document.removeEventListener("mouseup", stopResize);
       };
     }
   }, [isResizing]);
 
   const addRow = () => {
-    const newRow = Array(data[0]?.length || 3).fill('');
+    const newRow = Array(data[0]?.length || 3).fill("");
     onChange([...data, newRow]);
   };
 
   const addColumn = () => {
-    const newData = data.map(row => [...row, '']);
+    const newData = data.map((row) => [...row, ""]);
     if (newData.length === 0) {
-      newData.push(Array(3).fill('')); // Default 3 columns
+      newData.push(Array(3).fill("")); // Default 3 columns
     }
     onChange(newData);
-    
+
     // Add new header
-    const newHeaders = [...headers, ''];
+    const newHeaders = [...headers, ""];
     saveHeaders(newHeaders);
   };
 
   const updateCell = (rowIndex, colIndex, value) => {
-    const newData = data.map((row, i) =>
-      i === rowIndex
-        ? row.map((cell, j) => (j === colIndex ? value : cell))
-        : row
-    );
+    const newData = data.map((row, i) => (i === rowIndex ? row.map((cell, j) => (j === colIndex ? value : cell)) : row));
     onChange(newData);
   };
 
@@ -129,17 +132,17 @@ const TableBlock = ({ data, onChange, id }) => {
   };
 
   const deleteColumn = (colIndex) => {
-    onChange(data.map(row => row.filter((_, j) => j !== colIndex)));
-    
+    onChange(data.map((row) => row.filter((_, j) => j !== colIndex)));
+
     // Update headers
     const newHeaders = headers.filter((_, i) => i !== colIndex);
     saveHeaders(newHeaders);
-    
+
     // Update column widths
     const newWidths = { ...columnWidths };
     delete newWidths[colIndex];
     // Shift remaining widths
-    Object.keys(newWidths).forEach(key => {
+    Object.keys(newWidths).forEach((key) => {
       if (Number(key) > colIndex) {
         newWidths[key - 1] = newWidths[key];
         delete newWidths[key];
@@ -151,26 +154,23 @@ const TableBlock = ({ data, onChange, id }) => {
 
   if (data.length === 0) {
     // Initialize with a 3x3 table
-    onChange([
-      Array(3).fill(''),
-      Array(3).fill(''),
-      Array(3).fill('')
-    ]);
+    onChange([Array(3).fill(""), Array(3).fill(""), Array(3).fill("")]);
     return null;
   }
 
   return (
     <div className="mb-4 overflow-x-auto">
-      <div className="inline-block min-w-full border rounded-lg" ref={tableRef}>
+      <div
+        className="inline-block min-w-full border rounded-lg"
+        ref={tableRef}>
         <table className="min-w-full divide-y divide-gray-200">
           <thead>
             <tr>
               {headers.map((header, colIndex) => (
-                <th 
-                  key={colIndex} 
+                <th
+                  key={colIndex}
                   className="relative border-b bg-gray-50"
-                  style={{ width: columnWidths[colIndex] || 150 }}
-                >
+                  style={{ width: columnWidths[colIndex] || 150 }}>
                   <input
                     type="text"
                     value={header}
@@ -180,8 +180,7 @@ const TableBlock = ({ data, onChange, id }) => {
                   />
                   <button
                     onClick={() => deleteColumn(colIndex)}
-                    className="p-1 size-[24px] text-gray-400 hover:text-red-500 absolute right-2 top-[calc(50%-12px)]"
-                  >
+                    className="p-1 size-[24px] text-gray-400 hover:text-red-500 absolute right-2 top-[calc(50%-12px)]">
                     <Trash className="w-[12px] h-[12px]" />
                   </button>
                   {colIndex < headers.length - 1 && (
@@ -199,11 +198,10 @@ const TableBlock = ({ data, onChange, id }) => {
             {data.map((row, rowIndex) => (
               <tr key={rowIndex}>
                 {row.map((cell, colIndex) => (
-                  <td 
-                    key={colIndex} 
+                  <td
+                    key={colIndex}
                     className="relative"
-                    style={{ width: columnWidths[colIndex] || 150 }}
-                  >
+                    style={{ width: columnWidths[colIndex] || 150 }}>
                     <input
                       type="text"
                       value={cell}
@@ -216,8 +214,7 @@ const TableBlock = ({ data, onChange, id }) => {
                 <td className="">
                   <button
                     onClick={() => deleteRow(rowIndex)}
-                    className=" flex justify-center items-center size-[24px] text-gray-400 hover:text-red-500"
-                  >
+                    className=" flex justify-center items-center size-[24px] text-gray-400 hover:text-red-500">
                     <Trash className="w-[12px] h-[12px]" />
                   </button>
                 </td>
@@ -225,18 +222,16 @@ const TableBlock = ({ data, onChange, id }) => {
             ))}
           </tbody>
         </table>
-        
+
         <div className="flex border-t">
           <button
             onClick={addRow}
-            className="flex-1 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 flex items-center justify-center"
-          >
+            className="flex-1 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 flex items-center justify-center">
             <Plus className="w-4 h-4 mr-1" /> Add row
           </button>
           <button
             onClick={addColumn}
-            className="flex-1 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 border-l flex items-center justify-center"
-          >
+            className="flex-1 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 border-l flex items-center justify-center">
             <Plus className="w-4 h-4 mr-1" /> Add column
           </button>
         </div>

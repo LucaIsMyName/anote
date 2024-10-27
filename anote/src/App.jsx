@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import Sidebar from './components/layout/Sidebar';
-import ContentEditor from './components/blocks/ContentEditor';
-import WorkspaceSelector from './components/workspace/WorkspaceSelector';
+import Sidebar from './components/layout/Sidebar.tsx';
+import ContentEditor from './components/blocks/ContentEditor.tsx';
+import WorkspaceSelector from './components/workspace/WorkspaceSelector.tsx';
 import { Settings, CircleX } from 'lucide-react'; // Ensure Close is imported
 import { WorkspaceService } from './services/workspaceService';
 

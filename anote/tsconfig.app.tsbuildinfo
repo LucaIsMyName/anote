@@ -1,1 +1,1 @@
-{"root":["./src/vite-env.d.ts"],"version":"5.6.3"}
+{"root":["./src/vite-env.d.ts","./src/components/blocks/blockmenu.tsx","./src/components/blocks/contenteditor.tsx","./src/components/blocks/fileblock.tsx","./src/components/blocks/imageblock.tsx","./src/components/blocks/tableblock.tsx","./src/components/blocks/tableofcontents.tsx","./src/components/layout/sidebar.tsx","./src/components/workspace/workspaceselector.tsx","./src/services/fileservice.ts"],"errors":true,"version":"5.6.3"}

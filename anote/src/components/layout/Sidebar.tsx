@@ -6,6 +6,13 @@ const EXPANDED_PATHS_KEY = 'anote_expanded_paths';
 const SIDEBAR_WIDTH_KEY = 'sidebar_width';
 const SIDEBAR_OPEN_KEY = 'sidebar_open';
 
+interface SidebarProps {
+  workspace: string;
+  onPageSelect: (path: string) => void;
+  currentPath: string;
+  onPageNameChange: (oldName: string, newName: string) => void;
+}
+
 /**
  * 
  * @param {string} workspace
@@ -16,7 +23,7 @@ const SIDEBAR_OPEN_KEY = 'sidebar_open';
  * @description A sidebar component that displays a list of pages
  * in the workspace and allows users to create, rename, and delete pages.
  */
-const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }) => {
+const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }:SidebarProps) => {
   const [expandedPaths, setExpandedPaths] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(EXPANDED_PATHS_KEY) || '{}');

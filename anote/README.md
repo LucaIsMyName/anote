@@ -14,6 +14,7 @@ a note taking and documentation app
 - bug: headings are not stored
 - bug: file upload doesnt work and doesnt get stored
 - bug: global New Page Button not working
+- change: every in typescript
 - feature: dowload images and videos (in more than one size?)
 - feature: add drag and drop to blocks
 - feature: make sidebar resizeable and store to local storage
