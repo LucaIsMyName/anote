@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FolderPlus, PanelRightClose, Plus, ChevronRight, ChevronDown, Edit2, Trash2 } from 'lucide-react';
+import { FolderPlus, PanelRightClose, Plus, ChevronRight, ChevronDown, Edit2, Trash2, PanelRightOpen } from 'lucide-react';
 import { FileService } from '../../services/fileService';
 
 const EXPANDED_PATHS_KEY = 'anote_expanded_paths';
 const SIDEBAR_WIDTH_KEY = 'sidebar_width';
 const SIDEBAR_OPEN_KEY = 'sidebar_open';
 
-const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
-  const [pages, setPages] = useState([]);
+const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }) => {
   const [expandedPaths, setExpandedPaths] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(EXPANDED_PATHS_KEY) || '{}');
@@ -22,6 +21,13 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
   const [renamingPage, setRenamingPage] = useState(null);
   const [isCreatingPage, setIsCreatingPage] = useState(false);
   const [newPageParentPath, setNewPageParentPath] = useState('');
+  const [pages, setPages] = useState([]);
+
+  useEffect(() => {
+    if (workspace) {
+      loadPages();
+    }
+  }, [workspace]);
 
   useEffect(() => {
     if (workspace) {
@@ -47,6 +53,8 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
     if (isResizing) {
       const newWidth = Math.max(96, e.clientX);
       setWidth(newWidth);
+      localStorage.setItem('sidebar_width', newWidth); // Store the updated width in localStorage
+
     }
   };
 
@@ -75,6 +83,15 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
       console.error('Error loading pages:', error);
     }
   };
+  const handlePageNameChange = (oldName, newName) => {
+    setPages((prevPages) =>
+      prevPages.map((page) => (page.name === oldName ? { ...page, name: newName } : page))
+    );
+  };
+
+  useEffect(() => {
+    if (onPageNameChange) onPageNameChange(handlePageNameChange);
+  }, [onPageNameChange]);
 
   const handleRename = async (oldPath, newName) => {
     try {
@@ -122,7 +139,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
           setDropTarget(fullPath);
         }}
         onDrop={(e) => handleDrop(e, fullPath)}
-        className={`relative group ${isDropTarget ? 'bg-blue-50 border-2 border-blue-200 rounded' : ''}`}
+        className={`relative group ${isDropTarget ? 'bg-blue-50border-blue-200 rounded' : ''}`}
       >
         <div
           className={`flex items-center px-2 py-1 hover:bg-gray-100 ${currentPath === fullPath ? 'bg-blue-50' : ''}`}
@@ -260,11 +277,13 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
   return (
     <div
       style={{
+        maxWidth: isOpen ? '640px' : '48px',
+        minWidth: isOpen ? '200px' : '48px',
         width: isOpen ? `${width}px` : '48px',
         transition: 'width 0.3s',
         position: 'relative',
       }}
-      className="bg-white border-r border-gray-200 h-screen overflow-hidden flex flex-col"
+      className="bg-white shadow border-r-2 border-gray-200 h-screen overflow-hidden flex flex-col"
     >
       <div className="flex items-center justify-between w-full px-3 py-2">
         {isOpen ? <h1 class="font-bold">Workspace</h1> : ''}
@@ -272,7 +291,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
           onClick={toggleSidebar}
           className=" text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
         >
-          {isOpen ? <PanelRightClose /> : <PanelRightClose />}
+          {isOpen ? <PanelRightOpen /> : <PanelRightClose />}
 
         </button>
 
@@ -280,7 +299,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
 
       {isOpen && (
         <>
-          <div className="border-gray-200">
+          <div className="border-gray-200 ">
             <button
               onClick={() => {
                 setIsCreatingPage(true);
@@ -317,7 +336,8 @@ const Sidebar = ({ workspace, onPageSelect, currentPath }) => {
             }}
           />
         </>
-      )}
+      )
+      }
     </div>
   );
 };

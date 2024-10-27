@@ -20,8 +20,6 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
   const [draggedBlockIndex, setDraggedBlockIndex] = useState(null);
   const [dragOverBlockIndex, setDragOverBlockIndex] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-
-
   
   const handleDragStart = (e, index) => {
     setIsDragging(true);
@@ -253,6 +251,13 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
       await FileService.renamePage(workspace, currentPath, newTitle);
       onPathChange(newPath);
       setPageTitle(newTitle);
+
+      // Update the current path in localStorage
+
+      localStorage.setItem(CURRENT_PAGE_KEY, newPath);
+
+      // Update the page Title in the sidebar component UI
+      
       setIsEditingTitle(false);
 
 
@@ -379,7 +384,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
                 name="title"
                 defaultValue={pageTitle}
                 autoFocus
-                className="text-3xl font-bold w-full border-b border-blue-500 focus:outline-none"
+                className="text-5xl w-full focus:outline-none bg-transparent mb-4"
                 onBlur={(e) => handleTitleChange(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Escape') setIsEditingTitle(false);
@@ -388,7 +393,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => { } }) => 
             </form>
           ) : (
             <h1
-              className="text-3xl font-bold flex-1 cursor-pointer hover:text-blue-600"
+              className="text-5xl flex-1 cursor-pointer hover:text-blue-600 mb-4"
               onClick={() => setIsEditingTitle(true)}
             >
               {pageTitle}
