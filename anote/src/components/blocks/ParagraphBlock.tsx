@@ -6,6 +6,8 @@ import Input from "./utils/Input.tsx";
 export interface ParagraphBlockProps {
   content: string;
   onChange: (content: string) => void;
+  workspace: string;
+  onPageClick: (pagePath: string) => void;
 }
 
 /**

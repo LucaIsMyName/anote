@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Folder, AlertTriangle } from "lucide-react";
-import { WorkspaceService } from "../../services/workspaceService";
+import { WorkspaceService } from "../../services/WorkspaceService.ts";
 
 /**
  *

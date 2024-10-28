@@ -1,15 +1,16 @@
 import React, { useState, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 import Input from "./utils/Input.tsx";
+
+export interface HeadingBlockProps {
+  content: string;
+  onChange: (content: string) => void;
+}
+
 /**
  * @description Heading block component that allows users to select
  * a heading level and input heading text.
  */
-
-interface HeadingBlockProps {
-  content: string;
-  onChange: (content: string) => void;
-}
 
 const HeadingBlock = ({ content, onChange }: HeadingBlockProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);

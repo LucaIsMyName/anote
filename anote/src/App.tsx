@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import ErrorBoundary from './components/blocks/utils/ErrorBoundary.tsx';
 import Sidebar from './components/layout/Sidebar.tsx';
 import ContentEditor from './components/blocks/ContentEditor.tsx';
 import WorkspaceSelector from './components/workspace/WorkspaceSelector.tsx';
-import { Settings, CircleX } from 'lucide-react'; // Ensure Close is imported
-import { WorkspaceService } from './services/workspaceService';
+import { Settings, CircleX } from 'lucide-react';
+import { WorkspaceService } from './services/workspaceService.ts';
 
 const App = () => {
   const [workspace, setWorkspace] = useState(null);
@@ -24,12 +25,14 @@ const App = () => {
 
   return (
     <div className="flex h-screen bg-white">
-      <Sidebar
-        workspace={workspace}
-        currentPath={currentPage}
-        onPageSelect={handlePageSelect}
-      />
-
+      <ErrorBoundary fallback={<div>Fallback Sidebar</div>}>
+        <Sidebar
+          workspace={workspace}
+          currentPath={currentPage}
+          onPageSelect={handlePageSelect}
+        />
+      </ErrorBoundary>
+      <ErrorBoundary fallback={<div>Fallback Sidebar</div>}>
       <div className="flex-1 overflow-auto">
         <ContentEditor
           workspace={workspace}
@@ -37,7 +40,7 @@ const App = () => {
           onPathChange={handlePageSelect} // Updated to match ContentEditor's prop name
         />
       </div>
-
+      </ErrorBoundary>
       <button
         onClick={() => setIsSettingsOpen(true)}
         className="fixed bottom-4 right-4 p-2 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow"

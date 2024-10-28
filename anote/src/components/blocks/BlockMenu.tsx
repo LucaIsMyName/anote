@@ -10,7 +10,7 @@ export const BlockType = {
   TODO: "todo",
 };
 
-interface BlockMenuProps {
+export interface BlockMenuProps {
   onSelect: (type: string) => void;
   trigger?: React.ReactNode;
 }

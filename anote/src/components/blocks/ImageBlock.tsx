@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { Image as ImageIcon, Upload } from "lucide-react";
 import Input from "./utils/Input.tsx";
 
-interface ImageBlockProps {
+export interface ImageBlockProps {
   src: string | ArrayBuffer | null;
   caption: string | ArrayBuffer | null;
   onChange: (data: { src: string; caption: string }) => void;
 }
+
 /**
  * @description An image block component that allows users to
  * upload an image by dragging and dropping or selecting a file.

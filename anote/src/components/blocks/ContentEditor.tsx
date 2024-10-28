@@ -14,6 +14,12 @@ import { FileService } from "../../services/FileService.ts";
 
 const CURRENT_PAGE_KEY = "anote_current_page";
 
+export interface ContentEditorProps {
+  workspace: string;
+  currentPath: string;
+  onPathChange?: (path: string) => void;
+}
+
 /**
  *
  * @param {string} workspace
@@ -24,11 +30,7 @@ const CURRENT_PAGE_KEY = "anote_current_page";
  * create, edit, and delete blocks of content in a page.
  */
 
-interface ContentEditorProps {
-  workspace: string;
-  currentPath: string;
-  onPathChange?: (path: string) => void;
-}
+
 const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: ContentEditorProps) => {
   // Added default value
   const [blocks, setBlocks] = useState([]);
@@ -62,9 +64,6 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
   };
 
   /**
-   * @param {Event} e
-   * @param {number} index
-   * @returns
    * @description Handles the start of a drag operation by setting the dragged block index
    * and setting a transparent drag image to improve visual feedback.
    * This function is called when the user starts dragging a block.
@@ -85,9 +84,6 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
   };
 
   /**
-   *
-   * @param {Event} e
-   * @returns
    * @description Handles the end of a drag operation by resetting the dragged block index
    * and the drag over block index.
    * This function is called when the user stops dragging a block.
@@ -100,10 +96,6 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
   };
 
   /**
-   *
-   * @param {Event} e
-   * @param {number} index
-   * @returns
    * @description Handles the drag over event by preventing the default behavior
    * and updating the drag over block index.
    * This function is called when the user drags a block over another block.
@@ -132,10 +124,6 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
   };
 
   /**
-   *
-   * @param {Event} e
-   * @param {number} index
-   * @returns
    * @description Handles the drag leave event by preventing the default behavior
    * and stopping the event propagation.
    * This function is called when the user drags a block out of another block.

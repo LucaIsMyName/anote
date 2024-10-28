@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useCallback, memo, useMemo, forwardRef, useRef } from "react";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
+/**
+ * @description A custom input component that wraps the native input element
+ * and provides additional functionality such as focus tracking and cursor position restoration.
+ */
 const Input = memo(
   forwardRef<HTMLInputElement, InputProps>(({ value, onChange, className = "", ...props }, ref) => {
     const uniqueId = useMemo(() => `input-${Math.random().toString(36).slice(2)}-${Date.now()}`, []);
@@ -46,7 +50,9 @@ const Input = memo(
     );
 
     return (
-      <div key={uniqueId} className="w-full">
+      <div
+        key={uniqueId}
+        className="w-full">
         <input
           ref={ref || inputRef}
           value={localValue}

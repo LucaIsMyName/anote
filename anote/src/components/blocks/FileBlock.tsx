@@ -1,12 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { FileService } from '../../services/FileService';
+import React, { useState, useEffect } from "react";
+import { FileService } from "../../services/FileService";
+
+export interface FileBlockProps {
+  fileData: any;
+  onChange: (data: any) => void;
+}
 
 /**
  * @description A file block component that allows users to
  * upload a file by dragging and dropping or selecting a file.
  */
-const FileBlock = ({ fileData, onChange }) => {
-  const [base64Data, setBase64Data] = useState(fileData?.base64 || '');
+const FileBlock = ({ fileData, onChange }: FileBlockProps) => {
+  const [base64Data, setBase64Data] = useState(fileData?.base64 || "");
 
   useEffect(() => {
     if (fileData?.base64) {
@@ -14,7 +19,7 @@ const FileBlock = ({ fileData, onChange }) => {
     }
   }, [fileData]);
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = (e: any) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -22,21 +27,25 @@ const FileBlock = ({ fileData, onChange }) => {
         const base64 = reader.result;
         setBase64Data(base64);
         // Pass structured data with type and fileData fields
-        onChange({ type: 'file', fileData: { name: file.name, base64 } });
+        onChange({ type: "file", fileData: { name: file.name, base64 } });
       };
       reader.readAsDataURL(file);
-
     }
   };
 
   return (
     <div className="p-4 border rounded">
       {base64Data ? (
-        <a href={base64Data} download={fileData?.name || 'download'}>
-          Download {fileData?.name || 'file'}
+        <a
+          href={base64Data}
+          download={fileData?.name || "download"}>
+          Download {fileData?.name || "file"}
         </a>
       ) : (
-        <input type="file" onChange={handleFileUpload} />
+        <input
+          type="file"
+          onChange={handleFileUpload}
+        />
       )}
     </div>
   );

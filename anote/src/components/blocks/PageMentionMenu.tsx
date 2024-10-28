@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FileText } from "lucide-react";
 
-/**
- * @description A menu component that displays a list of pages
- * for users to select when mentioning a page in a block.
- */
-
-interface PageMentionMenuProps {
+export interface PageMentionMenuProps {
   isOpen: boolean;
   searchTerm: string;
   onSelect: (page: string) => void;
@@ -14,6 +9,13 @@ interface PageMentionMenuProps {
   position: { top: number; left: number };
   pages: string[];
 }
+
+/**
+ * @description A menu component that displays a list of pages
+ * for users to select when mentioning a page in a block.
+ */
+
+
 const PageMentionMenu = ({ isOpen, searchTerm, onSelect, onClose, position, pages }: PageMentionMenuProps) => {
   const menuRef = useRef(null);
   const [filteredPages, setFilteredPages] = useState([]);
