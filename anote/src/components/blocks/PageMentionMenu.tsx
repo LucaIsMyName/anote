@@ -1,35 +1,27 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FileText } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import { FileText } from "lucide-react";
 
 /**
- * 
- * @param {boolean} isOpen 
- * @param {string} searchTerm
- * @param {Function} onSelect
- * @param {Function} onClose
- * @param {Object} position
- * @param {Array<string>} pages
- * @returns 
  * @description A menu component that displays a list of pages
  * for users to select when mentioning a page in a block.
  */
-export const PageMentionMenu = ({ 
-  isOpen, 
-  searchTerm, 
-  onSelect, 
-  onClose, 
-  position, 
-  pages 
-}) => {
+
+interface PageMentionMenuProps {
+  isOpen: boolean;
+  searchTerm: string;
+  onSelect: (page: string) => void;
+  onClose: () => void;
+  position: { top: number; left: number };
+  pages: string[];
+}
+const PageMentionMenu = ({ isOpen, searchTerm, onSelect, onClose, position, pages }: PageMentionMenuProps) => {
   const menuRef = useRef(null);
   const [filteredPages, setFilteredPages] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   useEffect(() => {
     if (searchTerm) {
-      const filtered = pages.filter(page => 
-        page.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const filtered = pages.filter((page) => page.toLowerCase().includes(searchTerm.toLowerCase()));
       setFilteredPages(filtered);
       setSelectedIndex(0);
     } else {
@@ -45,11 +37,11 @@ export const PageMentionMenu = ({
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen, onClose]);
 
@@ -57,23 +49,21 @@ export const PageMentionMenu = ({
     if (!isOpen) return;
 
     switch (e.key) {
-      case 'ArrowDown':
+      case "ArrowDown":
         e.preventDefault();
-        setSelectedIndex(prev => 
-          prev < filteredPages.length - 1 ? prev + 1 : prev
-        );
+        setSelectedIndex((prev) => (prev < filteredPages.length - 1 ? prev + 1 : prev));
         break;
-      case 'ArrowUp':
+      case "ArrowUp":
         e.preventDefault();
-        setSelectedIndex(prev => prev > 0 ? prev - 1 : prev);
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
         break;
-      case 'Enter':
+      case "Enter":
         e.preventDefault();
         if (filteredPages[selectedIndex]) {
           onSelect(filteredPages[selectedIndex]);
         }
         break;
-      case 'Escape':
+      case "Escape":
         e.preventDefault();
         onClose();
         break;
@@ -86,32 +76,26 @@ export const PageMentionMenu = ({
     <div
       ref={menuRef}
       className="absolute z-50 w-64 bg-white rounded-lg shadow-lg border border-gray-200 max-h-64 overflow-y-auto"
-      style={{ 
+      style={{
         top: position.top + 24,
-        left: position.left 
+        left: position.left,
       }}
-      onKeyDown={handleKeyDown}
-    >
+      onKeyDown={handleKeyDown}>
       {filteredPages.length > 0 ? (
         <div className="py-1">
           {filteredPages.map((page, index) => (
             <button
               key={page}
-              className={`w-full px-4 py-2 flex items-center space-x-2 text-left hover:bg-gray-100 ${
-                index === selectedIndex ? 'bg-gray-100' : ''
-              }`}
+              className={`w-full px-4 py-2 flex items-center space-x-2 text-left hover:bg-gray-100 ${index === selectedIndex ? "bg-gray-100" : ""}`}
               onClick={() => onSelect(page)}
-              onMouseEnter={() => setSelectedIndex(index)}
-            >
+              onMouseEnter={() => setSelectedIndex(index)}>
               <FileText className="w-4 h-4 text-gray-500" />
               <span className="flex-1 truncate">{page}</span>
             </button>
           ))}
         </div>
       ) : (
-        <div className="px-4 py-2 text-sm text-gray-500">
-          No pages found
-        </div>
+        <div className="px-4 py-2 text-sm text-gray-500">No pages found</div>
       )}
     </div>
   );

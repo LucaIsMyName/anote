@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo, useCallback } from "react";
 import { Plus, Trash2, Edit2, Copy, FolderPlus, Calendar, Save, GripVertical } from "lucide-react";
-import { BlockMenu, BlockType, ParagraphBlock, HeadingBlock, TodoBlock } from "./BlockMenu.tsx";
+import { BlockMenu, BlockType } from "./BlockMenu.tsx";
 import TableBlock from "./TableBlock.tsx";
+import HeadingBlock from "./HeadingBlock.tsx";
+import ParagraphBlock from "./ParagraphBlock.tsx";
 import ImageBlock from "./ImageBlock.tsx";
 import FileBlock from "./FileBlock.tsx";
+
 import TableOfContents from "./TableOfContents.tsx";
+import TodoBlock from "./TodoBlock.tsx";
+import Input from "./utils/Input.tsx";
 import { FileService } from "../../services/FileService.ts";
 
 const CURRENT_PAGE_KEY = "anote_current_page";
@@ -265,7 +270,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
     }
   };
 
-  const findFirstPage = (pages:any) => {
+  const findFirstPage = (pages: any) => {
     // Sort pages alphabetically
     const sortedPages = [...pages].sort((a, b) => a.name.localeCompare(b.name));
     if (sortedPages.length === 0) return null;
@@ -362,11 +367,11 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
     setBlocks(newBlocks);
   };
 
-  const updateBlock = (id, updates) => {
+  const updateBlock = (id: number, updates: any) => {
     setBlocks(blocks.map((block) => (block.id === id ? { ...block, ...updates } : block)));
   };
 
-  const renderBlock = (block) => {
+  const renderBlock = (block: React.JSX.Element) => {
     switch (block.type) {
       case BlockType.PARAGRAPH:
         return (
@@ -385,6 +390,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
       case BlockType.TABLE:
         return (
           <TableBlock
+            id={block.id}
             data={block.data || []}
             onChange={(data) => updateBlock(block.id, { data })}
           />
@@ -468,10 +474,9 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
                 handleTitleChange(e.target.title.value);
               }}
               className="flex-1">
-              <input
+              <Input
                 name="title"
                 defaultValue={pageTitle}
-                autoFocus
                 className="text-5xl w-full focus:outline-none bg-transparent mb-4"
                 onBlur={(e) => handleTitleChange(e.target.value)}
                 onKeyDown={(e) => {

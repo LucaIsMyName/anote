@@ -1,18 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Plus, Trash } from "lucide-react";
+import Input from "./utils/Input.tsx";
 
 /**
- *
- * @param {any} data
- * @param {Function} onChange
- * @param {number} id
- * @returns
  * @description A table block component that allows users to
  * add, remove, and edit rows and columns in a table.
- *
  */
 
-interface TableBlockProps {
+export interface TableBlockProps {
   data: any;
   onChange: (data: any) => void;
   id: number;
@@ -171,7 +166,7 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
                   key={colIndex}
                   className="relative border-b bg-gray-50"
                   style={{ width: columnWidths[colIndex] || 150 }}>
-                  <input
+                  <Input
                     type="text"
                     value={header}
                     onChange={(e) => updateHeader(colIndex, e.target.value)}
@@ -202,7 +197,7 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
                     key={colIndex}
                     className="relative"
                     style={{ width: columnWidths[colIndex] || 150 }}>
-                    <input
+                    <Input
                       type="text"
                       value={cell}
                       onChange={(e) => updateCell(rowIndex, colIndex, e.target.value)}

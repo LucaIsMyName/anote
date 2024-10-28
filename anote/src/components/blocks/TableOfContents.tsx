@@ -1,13 +1,9 @@
 import React, { useCallback, useRef, memo } from "react";
 
 /**
- *
- * @param {Array<string>} headings
- * @returns {React.Component}
  * @description A sticky table of contents component
  * that displays a list of headings and scrolls to the
  * selected heading when clicked.
- *
  */
 
 interface TableOfContentsProps {

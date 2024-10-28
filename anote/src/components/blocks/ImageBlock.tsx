@@ -1,19 +1,20 @@
-import React, { useState } from 'react';
-import { Image as ImageIcon, Upload } from 'lucide-react';
+import React, { useState } from "react";
+import { Image as ImageIcon, Upload } from "lucide-react";
+import Input from "./utils/Input.tsx";
 
+interface ImageBlockProps {
+  src: string | ArrayBuffer | null;
+  caption: string | ArrayBuffer | null;
+  onChange: (data: { src: string; caption: string }) => void;
+}
 /**
- * 
- * @param {string} src
- * @param {string} caption
- * @param {Function} onChange 
- * @returns 
  * @description An image block component that allows users to
  * upload an image by dragging and dropping or selecting a file.
  */
-const ImageBlock = ({ src, caption, onChange }) => {
+const ImageBlock = ({ src, caption, onChange }: ImageBlockProps) => {
   const [isDragging, setIsDragging] = useState(false);
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e: any) => {
     e.preventDefault();
     setIsDragging(true);
   };
@@ -22,12 +23,12 @@ const ImageBlock = ({ src, caption, onChange }) => {
     setIsDragging(false);
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: any) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onload = (event) => {
         onChange({ src: event.target.result, caption });
@@ -36,7 +37,7 @@ const ImageBlock = ({ src, caption, onChange }) => {
     }
   };
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = (e: any) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -53,12 +54,12 @@ const ImageBlock = ({ src, caption, onChange }) => {
         <div className="space-y-2">
           <img
             src={src}
-            alt={caption || 'Uploaded image'}
+            alt={caption || "Uploaded image"}
             className="max-w-full h-auto rounded-lg"
           />
           <input
             type="text"
-            value={caption || ''}
+            value={caption || ""}
             onChange={(e) => onChange({ src, caption: e.target.value })}
             placeholder="Add a caption..."
             className="w-full bg-transparent text-sm text-gray-600"
@@ -71,9 +72,8 @@ const ImageBlock = ({ src, caption, onChange }) => {
           onDrop={handleDrop}
           className={`
             border-2 border-dashed rounded-lg p-8
-            ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}
-          `}
-        >
+            ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"}
+          `}>
           <div className="flex flex-col items-center space-y-4">
             <div className="p-4 bg-gray-100 rounded-full">
               <ImageIcon className="w-8 h-8 text-gray-400" />
@@ -83,7 +83,8 @@ const ImageBlock = ({ src, caption, onChange }) => {
               <label className="inline-flex items-center mt-2 px-4 py-2 bg-white border rounded-md cursor-pointer hover:bg-gray-50">
                 <Upload className="w-4 h-4 mr-2" />
                 <span>Choose file</span>
-                <input
+                <Input
+                  value=""
                   type="file"
                   className="hidden"
                   accept="image/*"
