@@ -170,7 +170,7 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
                     type="text"
                     value={header}
                     onChange={(e) => updateHeader(colIndex, e.target.value)}
-                    className=" w-full px-4 py-2 text-sm font-semibold bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className=" w-full px-4 py-2 text-sm font-semibold bg-transparent focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded"
                     placeholder="Column name..."
                   />
                   <button

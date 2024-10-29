@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, memo } from "react";
 import PageMentionMenu from "./PageMentionMenu.tsx";
 import Input from "./utils/Input.tsx";
+import Textarea from "./utils/Textarea.tsx";
 
 
 export interface ParagraphBlockProps {
@@ -110,8 +111,8 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick }: Pa
 
   return (
     <div className="relative">
-      <Input
-        className="w-full bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500"
+      <Textarea
+        className="w-full bg-transparent focus:ring-offset-2 focus:outline-4 outline-offset-2	rounded"
         placeholder="Type something..."
         value={content}
         onChange={handleInput}

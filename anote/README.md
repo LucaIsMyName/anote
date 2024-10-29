@@ -8,7 +8,7 @@ a note taking and documentation app
 
 ## to do
 
-- bug: input fields lose focus after 1 keystroke (in ContentEditor.tsx)
+- bug (fixed): input fields lose focus after 1 keystroke (in ContentEditor.tsx) -> Splitting out into seperate Components did the trick
 - bug: table id's and saving the width for each column
 - bug: table header when columns are added and removed get messed up
 - bug: two tables behind each other get merged into 1 on reload/save

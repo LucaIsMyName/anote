@@ -58,12 +58,12 @@ const ImageBlock = ({ src, caption, onChange }: ImageBlockProps) => {
             alt={caption || "Uploaded image"}
             className="max-w-full h-auto rounded-lg"
           />
-          <input
+          <Input
             type="text"
             value={caption || ""}
             onChange={(e) => onChange({ src, caption: e.target.value })}
             placeholder="Add a caption..."
-            className="w-full bg-transparent text-sm text-gray-600"
+            className="w-full bg-transparent text-sm text-gray-600 focus:ring-offset-2 focus:outline-4 outline-offset-2	rounded"
           />
         </div>
       ) : (

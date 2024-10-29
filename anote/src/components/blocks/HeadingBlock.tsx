@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { ChevronDown } from "lucide-react";
-import Input from "./utils/Input.tsx";
+import Textarea from "./utils/Textarea.tsx";
 
 export interface HeadingBlockProps {
   content: string;
@@ -55,11 +55,11 @@ const HeadingBlock = ({ content, onChange }: HeadingBlockProps) => {
         </div>
       )}
 
-      <Input
+      <Textarea
         type="text"
-        value={content.replace(/^#\d\s/, "")} // Remove the level indicator from display
+        value={content.replace(/*/^#\d\s/ */'#', "")} // Remove the level indicator from display
         onChange={handleContentChange}
-        className="m-0 w-full bg-transparent text-lg font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
+        className="m-0 w-full bg-transparent text-lg font-bold focus:ring-1 focus:ring-blue-500 focus:ring-offset-2 focus:outline-4 outline-offset-2	rounded"
         placeholder="Heading text..."
       />
     </div>
