@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo, useCallback } from "react";
+import React, { useState, useEffect, memo, useRef, useCallback } from "react";
 import { Plus, Trash2, Edit2, Copy, FolderPlus, Calendar, Save, GripVertical } from "lucide-react";
 import { BlockMenu, BlockType } from "./BlockMenu.tsx";
 import TableBlock from "./TableBlock.tsx";
@@ -6,7 +6,6 @@ import HeadingBlock from "./HeadingBlock.tsx";
 import ParagraphBlock from "./ParagraphBlock.tsx";
 import ImageBlock from "./ImageBlock.tsx";
 import FileBlock from "./FileBlock.tsx";
-
 import BlockControls from "./BlockControls.tsx";
 import BlockWrapper from "./BlockWrapper.tsx";
 import TableOfContents from "./TableOfContents.tsx";
@@ -22,6 +21,39 @@ export interface ContentEditorProps {
   onPathChange?: (path: string) => void;
 }
 
+
+const EmptyPageBlock = ({ onAddBlock: any }) => {
+  const [showMenu, setShowMenu] = useState(false);
+  const buttonRef = useRef(null);
+
+  const handleAddBlock = (type) => {
+    onAddBlock(type, -1); // -1 as index since it's the first block
+    setShowMenu(false);
+  };
+
+  return (
+    <div className="text-center py-8">
+      <div className="relative inline-block">
+        <button
+          ref={buttonRef}
+          onClick={() => setShowMenu(!showMenu)}
+          className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded border border-gray-300 transition-colors">
+          <Plus className="w-4 h-4" />
+          <span>Add Block</span>
+        </button>
+
+        {showMenu && (
+          <BlockMenu
+            anchorEl={buttonRef.current}
+            onClose={() => setShowMenu(false)}
+            onSelect={handleAddBlock}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
 /**
  *
  * @param {string} workspace
@@ -31,6 +63,7 @@ export interface ContentEditorProps {
  * @description A content editor component that allows users to
  * create, edit, and delete blocks of content in a page.
  */
+
 
 const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: ContentEditorProps) => {
   // Added default value
@@ -56,13 +89,16 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
    * This function is called when the user clicks the
    * copy button in the block controls.
    */
-  const handleCopyBlock = useCallback((index: number) => {
-    const blockToCopy = blocks[index];
-    const copiedBlock = { ...blockToCopy, id: Date.now() };
-    const newBlocks = [...blocks];
-    newBlocks.splice(index + 1, 0, copiedBlock);
-    setBlocks(newBlocks);
-  }, [blocks]);
+  const handleCopyBlock = useCallback(
+    (index: number) => {
+      const blockToCopy = blocks[index];
+      const copiedBlock = { ...blockToCopy, id: Date.now() };
+      const newBlocks = [...blocks];
+      newBlocks.splice(index + 1, 0, copiedBlock);
+      setBlocks(newBlocks);
+    },
+    [blocks]
+  );
 
   /**
    * @description Handles the start of a drag operation by setting the dragged block index
@@ -159,7 +195,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
         metadata || {
           createdAt: new Date().toISOString(),
           lastEdited: new Date().toISOString(),
-        }:
+        }
       );
     } catch (error) {
       console.error("Error loading content:", error);
@@ -266,9 +302,19 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
       id: Date.now(),
       type,
       content: "",
+      createdAt: new Date().toISOString(),
+      lastEdited: new Date().toISOString(),
       items: type === BlockType.TODO ? [] : undefined,
       data: type === BlockType.TABLE ? [] : undefined,
     };
+  
+    // Handle adding first block
+    if (index === -1) {
+      setBlocks([newBlock]);
+      return;
+    }
+  
+    // Handle adding block at specific index
     const newBlocks = [...blocks];
     newBlocks.splice(index + 1, 0, newBlock);
     setBlocks(newBlocks);
@@ -277,8 +323,10 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
   const handleDelete = async () => {
     if (window.confirm(`Are you sure you want to delete "${pageTitle}"?`)) {
       try {
-        await FileService.deletePage(workspace, currentPath);
-        onPathChange(null);
+        const newPagePath = await FileService.deletePage(workspace, currentPath);
+        // If newPagePath is returned, it means a new initial page was created
+        // Update the current path to the new page
+        onPathChange(newPagePath || null);
       } catch (error) {
         console.error("Error deleting page:", error);
       }
@@ -367,15 +415,18 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
    * It renders buttons for adding a new block, copying the current block, and deleting the current block.
    * The add block button opens a block menu when clicked, allowing the user to select a block type to add.
    */
-  
-  const renderBlockControls = useCallback((index: number) => (
-    <BlockControls 
-      index={index}
-      onAddBlock={addBlock}
-      onCopyBlock={handleCopyBlock}
-      onDeleteBlock={deleteBlock}
-    />
-  ), [addBlock, handleCopyBlock, deleteBlock]);
+
+  const renderBlockControls = useCallback(
+    (index: number) => (
+      <BlockControls
+        index={index}
+        onAddBlock={addBlock}
+        onCopyBlock={handleCopyBlock}
+        onDeleteBlock={deleteBlock}
+      />
+    ),
+    [addBlock, handleCopyBlock, deleteBlock]
+  );
   return (
     <div className="mx-auto p-8">
       {/* Page Header */}
@@ -442,22 +493,26 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
       </div>
       {/* Blocks */}
       <div className="max-w-4xl mx-auto px-6 relative">
-        {blocks.map((block, index) => (
-          <BlockWrapper
-            key={block.id}
-            block={block}
-            index={index}
-            isDragging={isDragging}
-            draggedBlockIndex={draggedBlockIndex}
-            dragOverBlockIndex={dragOverBlockIndex}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            renderBlockControls={renderBlockControls}>
-            {renderBlock(block)}
-          </BlockWrapper>
-        ))}
+        {blocks.length === 0 ? (
+          <EmptyPageBlock onAddBlock={addBlock} />
+        ) : (
+          blocks.map((block, index) => (
+            <BlockWrapper
+              key={block.id}
+              block={block}
+              index={index}
+              isDragging={isDragging}
+              draggedBlockIndex={draggedBlockIndex}
+              dragOverBlockIndex={dragOverBlockIndex}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              renderBlockControls={renderBlockControls}>
+              {renderBlock(block)}
+            </BlockWrapper>
+          ))
+        )}
       </div>
 
       {/* Saving indicator */}

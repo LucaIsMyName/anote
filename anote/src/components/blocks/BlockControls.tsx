@@ -4,7 +4,7 @@ import React, { memo } from 'react';
 import { Plus, Copy, Trash2 } from 'lucide-react';
 import { BlockMenu } from './BlockMenu.tsx';
 
-interface BlockControlsProps {
+export interface BlockControlsProps {
   index: number;
   onAddBlock: (type: string, index: number) => void;
   onCopyBlock: (index: number) => void;
