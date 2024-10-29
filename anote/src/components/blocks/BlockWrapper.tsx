@@ -3,20 +3,7 @@
 import React, { memo } from "react";
 import { GripVertical } from "lucide-react";
 
-interface BlockWrapperProps {
-  block: any;
-  index: any;
-  children: any;
-  isDragging: any;
-  draggedBlockIndex: any;
-  dragOverBlockIndex: any;
-  onDragStart: any;
-  onDragEnd: any;
-  onDragOver: any;
-  onDragLeave: any;
-}
-
-interface BlockWrapperProps {
+export interface BlockWrapperProps {
   block: any;
   index: number;
   children: React.ReactNode;

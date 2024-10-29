@@ -135,55 +135,6 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
     e.stopPropagation();
   };
 
-  /**
-   *
-   * @param {React.Component} block
-   * @param {number} index
-   * @param {ReactNode} children
-   * @returns {React.JSX.Element}
-   * @description A wrapper component that adds drag and drop functionality
-   * to a block by handling drag events and rendering drag handles.
-   * This component is used to wrap each block in the content editor.
-   * It adds drag and drop functionality to the block by handling drag events
-   * and rendering drag handles for reordering blocks.
-   * The block is wrapped in a div that listens for drag events and renders a larger
-   * drag handle area on the left side of the block.
-   */
-
-  // const BlockWrapper = ({ block, index, children }: BlockWrapperProps) => {
-  //   const isDraggedBlock = draggedBlockIndex === index;
-  //   const isOverBlock = dragOverBlockIndex === index;
-
-  //   return (
-  //     <div
-  //       className={`
-  //         relative group mb-8 transition-all duration-200 ease-in-out
-  //         ${isDragging ? "cursor-grabbing" : "cursor-grab"}
-  //         ${isDraggedBlock ? "" : "opacity-100"}
-  //         ${isOverBlock ? "border-t-2 border-blue-500" : "border-t-0 border-transparent"}
-  //       `}
-  //       draggable="true"
-  //       onDragStart={(e) => handleDragStart(e, index)}
-  //       onDragEnd={(e) => handleDragEnd(e)}
-  //       onDragOver={(e) => handleDragOver(e, index)}
-  //       onDragLeave={(e) => handleDragLeave(e)}>
-  //       {/* Larger drag handle area */}
-  //       <div
-  //         className="absolute left-0 top-0 bottom-0 w-12 -translate-x-full
-  //                    opacity-0 group-hover:opacity-100 flex items-center
-  //                    justify-center cursor-grab active:cursor-grabbing">
-  //         <div className="p-2 rounded hover:bg-gray-100">
-  //           <GripVertical className="w-5 h-5 text-gray-400" />
-  //         </div>
-  //       </div>
-
-  //       <div className={`relative ${isDragging ? "pointer-events-none" : ""}`}>{children}</div>
-
-  //       <BlockControls index={index} />
-  //     </div>
-  //   );
-  // };
-
   useEffect(() => {
     if (workspace && !currentPath) {
       loadInitialPage();
@@ -208,7 +159,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
         metadata || {
           createdAt: new Date().toISOString(),
           lastEdited: new Date().toISOString(),
-        }
+        }:
       );
     } catch (error) {
       console.error("Error loading content:", error);
