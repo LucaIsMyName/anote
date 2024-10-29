@@ -1,5 +1,6 @@
 import JSZip from "jszip";
-import { WorkspaceService } from "./WorkspaceService";
+import { WorkspaceService } from "./WorkspaceService.ts";
+import {FileService} from "./FileService.ts";
 
 export class ImportExportService {
 
