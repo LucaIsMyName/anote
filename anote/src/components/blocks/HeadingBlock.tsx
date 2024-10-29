@@ -32,7 +32,7 @@ const HeadingBlock = ({ content, onChange }: HeadingBlockProps) => {
   };
 
   return (
-    <div className="flex items-center flex-row-reverse space-x-2 relative">
+    <div className="flex items-center flex-row-reverse relative">
       <button
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         className="flex opacity-25 hover:opacity-100 items-center space-x-1 bg-gray-100 px-3 py-1 rounded text-gray-700 hover:bg-gray-200">
@@ -59,7 +59,7 @@ const HeadingBlock = ({ content, onChange }: HeadingBlockProps) => {
         type="text"
         value={content.replace(/^#\d\s/, "")} // Remove the level indicator from display
         onChange={handleContentChange}
-        className="w-full bg-transparent text-lg font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="m-0 w-full bg-transparent text-lg font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-1"
         placeholder="Heading text..."
       />
     </div>

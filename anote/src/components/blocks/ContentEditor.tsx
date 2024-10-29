@@ -7,6 +7,8 @@ import ParagraphBlock from "./ParagraphBlock.tsx";
 import ImageBlock from "./ImageBlock.tsx";
 import FileBlock from "./FileBlock.tsx";
 
+import BlockControls from "./BlockControls.tsx";
+import BlockWrapper from "./BlockWrapper.tsx";
 import TableOfContents from "./TableOfContents.tsx";
 import TodoBlock from "./TodoBlock.tsx";
 import Input from "./utils/Input.tsx";
@@ -29,7 +31,6 @@ export interface ContentEditorProps {
  * @description A content editor component that allows users to
  * create, edit, and delete blocks of content in a page.
  */
-
 
 const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: ContentEditorProps) => {
   // Added default value
@@ -55,13 +56,13 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
    * This function is called when the user clicks the
    * copy button in the block controls.
    */
-  const handleCopyBlock = (index: any) => {
+  const handleCopyBlock = useCallback((index: number) => {
     const blockToCopy = blocks[index];
-    const copiedBlock = { ...blockToCopy, id: Date.now() }; // Create a new block with a unique ID
+    const copiedBlock = { ...blockToCopy, id: Date.now() };
     const newBlocks = [...blocks];
-    newBlocks.splice(index + 1, 0, copiedBlock); // Insert the copied block after the original
+    newBlocks.splice(index + 1, 0, copiedBlock);
     setBlocks(newBlocks);
-  };
+  }, [blocks]);
 
   /**
    * @description Handles the start of a drag operation by setting the dragged block index
@@ -148,44 +149,40 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
    * The block is wrapped in a div that listens for drag events and renders a larger
    * drag handle area on the left side of the block.
    */
-  interface BlockWrapperProps {
-    block: any;
-    index: any;
-    children: any;
-  }
-  const BlockWrapper = ({ block, index, children }: BlockWrapperProps) => {
-    const isDraggedBlock = draggedBlockIndex === index;
-    const isOverBlock = dragOverBlockIndex === index;
 
-    return (
-      <div
-        className={`
-          relative group mb-8 transition-all duration-200 ease-in-out
-          ${isDragging ? "cursor-grabbing" : "cursor-grab"}
-          ${isDraggedBlock ? "" : "opacity-100"}
-          ${isOverBlock ? "border-t-2 border-blue-500" : "border-t-0 border-transparent"}
-        `}
-        draggable="true"
-        onDragStart={(e) => handleDragStart(e, index)}
-        onDragEnd={(e) => handleDragEnd(e)}
-        onDragOver={(e) => handleDragOver(e, index)}
-        onDragLeave={(e) => handleDragLeave(e)}>
-        {/* Larger drag handle area */}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-12 -translate-x-full 
-                     opacity-0 group-hover:opacity-100 flex items-center 
-                     justify-center cursor-grab active:cursor-grabbing">
-          <div className="p-2 rounded hover:bg-gray-100">
-            <GripVertical className="w-5 h-5 text-gray-400" />
-          </div>
-        </div>
+  // const BlockWrapper = ({ block, index, children }: BlockWrapperProps) => {
+  //   const isDraggedBlock = draggedBlockIndex === index;
+  //   const isOverBlock = dragOverBlockIndex === index;
 
-        <div className={`relative ${isDragging ? "pointer-events-none" : ""}`}>{children}</div>
+  //   return (
+  //     <div
+  //       className={`
+  //         relative group mb-8 transition-all duration-200 ease-in-out
+  //         ${isDragging ? "cursor-grabbing" : "cursor-grab"}
+  //         ${isDraggedBlock ? "" : "opacity-100"}
+  //         ${isOverBlock ? "border-t-2 border-blue-500" : "border-t-0 border-transparent"}
+  //       `}
+  //       draggable="true"
+  //       onDragStart={(e) => handleDragStart(e, index)}
+  //       onDragEnd={(e) => handleDragEnd(e)}
+  //       onDragOver={(e) => handleDragOver(e, index)}
+  //       onDragLeave={(e) => handleDragLeave(e)}>
+  //       {/* Larger drag handle area */}
+  //       <div
+  //         className="absolute left-0 top-0 bottom-0 w-12 -translate-x-full
+  //                    opacity-0 group-hover:opacity-100 flex items-center
+  //                    justify-center cursor-grab active:cursor-grabbing">
+  //         <div className="p-2 rounded hover:bg-gray-100">
+  //           <GripVertical className="w-5 h-5 text-gray-400" />
+  //         </div>
+  //       </div>
 
-        <BlockControls index={index} />
-      </div>
-    );
-  };
+  //       <div className={`relative ${isDragging ? "pointer-events-none" : ""}`}>{children}</div>
+
+  //       <BlockControls index={index} />
+  //     </div>
+  //   );
+  // };
 
   useEffect(() => {
     if (workspace && !currentPath) {
@@ -313,7 +310,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
     return () => clearTimeout(timer);
   }, [blocks]);
 
-  const addBlock = (type, index) => {
+  const addBlock = useCallback((type, index) => {
     const newBlock = {
       id: Date.now(),
       type,
@@ -324,7 +321,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
     const newBlocks = [...blocks];
     newBlocks.splice(index + 1, 0, newBlock);
     setBlocks(newBlocks);
-  };
+  }, [blocks]);
 
   const handleDelete = async () => {
     if (window.confirm(`Are you sure you want to delete "${pageTitle}"?`)) {
@@ -419,37 +416,15 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
    * It renders buttons for adding a new block, copying the current block, and deleting the current block.
    * The add block button opens a block menu when clicked, allowing the user to select a block type to add.
    */
-  const BlockControls = ({ index }) => (
-    <div className="absolute w-full left-0 -bottom-8 flex flex-row items-center justify-start opacity-0 group-hover:opacity-100">
-      {/* Add block button */}
-      <div className="flex items-center">
-        <BlockMenu
-          onSelect={(type) => addBlock(type, index)}
-          trigger={
-            <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full">
-              <Plus className="w-4 h-4" />
-            </button>
-          }
-        />
-        {/* Copy block button */}
-        <button
-          onClick={() => handleCopyBlock(index)}
-          className="p-2 text-blue-500 hover:bg-blue-50 rounded-full"
-          title="Copy Block">
-          <Copy className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Delete button */}
-      <button
-        onClick={() => deleteBlock(index)}
-        className="p-2 text-red-500 hover:bg-red-50 rounded-full mr-1"
-        title="Delete Block">
-        <Trash2 className="w-4 h-4" />
-      </button>
-    </div>
-  );
-
+  
+  const renderBlockControls = useCallback((index: number) => (
+    <BlockControls 
+      index={index}
+      onAddBlock={addBlock}
+      onCopyBlock={handleCopyBlock}
+      onDeleteBlock={deleteBlock}
+    />
+  ), [addBlock, handleCopyBlock, deleteBlock]);
   return (
     <div className="mx-auto p-8">
       {/* Page Header */}
@@ -520,7 +495,15 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
           <BlockWrapper
             key={block.id}
             block={block}
-            index={index}>
+            index={index}
+            isDragging={isDragging}
+            draggedBlockIndex={draggedBlockIndex}
+            dragOverBlockIndex={dragOverBlockIndex}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            renderBlockControls={renderBlockControls}>
             {renderBlock(block)}
           </BlockWrapper>
         ))}
