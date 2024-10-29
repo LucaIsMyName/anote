@@ -1,53 +1,90 @@
-import JSZip from 'jszip';
+import JSZip from "jszip";
+import { WorkspaceService } from "./WorkspaceService";
 
 export class ImportExportService {
-  static async importFromDirectory(dirHandle) {
-    const entries = [];
-    for await (const [name, handle] of dirHandle.entries()) {
-      if (handle.kind === 'file') {
-        entries.push({ name, handle });
+
+  /**
+   * 
+   * @param handle 
+   * @returns 
+   * @description
+   * This function takes a directory handle and returns a JSZip object containing the contents of the directory.
+   * The JSZip object can then be used to export the contents of the directory to a zip file.
+   */
+  private static getDirectoryEntries(handle: any) {
+    return new Promise(async (resolve, reject) => {
+      const entries = [];
+      for await (const entry of handle.values()) {
+        entries.push(entry);
       }
-    }
-    return entries;
-  }
-
-  static async exportToFile(dirHandle, fileName, data) {
-    const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
-    const writable = await fileHandle.createWritable();
-    await writable.write(data);
-    await writable.close();
-  }
-
-  static async exportToJson(dirHandle, fileName, data) {
-    const json = JSON.stringify(data, null, 2);
-    await this.exportToFile(dirHandle, fileName, json);
-  }
-
-  static async importFromJson(dirHandle, fileName) {
-    const fileHandle = await dirHandle.getFileHandle(fileName);
-    const file = await fileHandle.getFile();
-    const json = await file.text();
-    return JSON.parse(json);
-  }
-
-  static async exportToZip(dirHandle, fileName, entries) {
-    const zip = new JSZip();
-    entries.forEach(({ name, handle }) => {
-      zip.file(name, handle.getFile());
+      resolve(entries);
     });
-    const blob = await zip.generateAsync({ type: 'blob' });
-    await this.exportToFile(dirHandle, fileName, blob);
   }
 
-  static async importFromZip(dirHandle, fileName) {
-    const fileHandle = await dirHandle.getFileHandle(fileName);
-    const file = await fileHandle.getFile();
-    const blob = await file.arrayBuffer();
-    const zip = await JSZip.loadAsync(blob);
-    const entries = [];
-    zip.forEach((name, zipEntry) => {
-      entries.push({ name, handle: zipEntry });
+  /**
+   * 
+   * @param zip 
+   * @param entry 
+   * @param parentHandle 
+   * @returns 
+   * @description
+   * This function takes a JSZip object, an entry from a directory handle, and the parent directory handle.
+   * It adds the entry to the JSZip object.
+   */
+  private static addEntryToZip(zip: any, entry: any, parentHandle: any) {
+    return new Promise(async (resolve, reject) => {
+      if (entry.kind === "file") {
+        const fileHandle = await parentHandle.getFileHandle(entry.name);
+        const file = await fileHandle.getFile();
+        const fileData = await file.arrayBuffer();
+        zip.file(entry.name, fileData);
+        resolve(void 0);
+      } else if (entry.kind === "directory") {
+        const dirHandle = await parentHandle.getDirectoryHandle(entry.name);
+        const dirZip = zip.folder(entry.name);
+        const dirEntries = await this.getDirectoryEntries(dirHandle);
+        dirEntries.forEach((dirEntry: any) => {
+          this.addEntryToZip(dirZip, dirEntry, dirHandle);
+        });
+        resolve(void 0);
+      }
     });
-    return entries;
+  }
+
+  static exportWorkspaceToZip() {
+  }
+
+  static importWorkspaceFromZip(zipBlob: any) {
+  }
+
+  static async importWorkspaceFromJson(json:JSON) {
+  }
+
+  static async exportWorkspaceToJson(workspace:any) {
+  }
+
+  static exportPagetreeToJson(directory:string) {
+  }
+
+  static exportPagetreeToZip(directory:string) {
+  }
+
+  static importPagetreeFromJson(json:JSON) {
+  }
+
+  static importPagetreeFromZip(json:JSON) {
+  }
+
+  static exportPageToJson(directory:string) {
+  }
+  }
+
+  static importPageFromJson(json:JSON) {
+  }
+
+  static importPageFromMd(md:string) {
+  }
+
+  static exportPageToMd(directory:string) {
   }
 }

@@ -8,7 +8,9 @@ a note taking and documentation app
 
 ## to do
 
-- bug (fixed): input fields lose focus after 1 keystroke (in ContentEditor.tsx) -> Splitting out into seperate Components did the trick
+- feature: use `tippy-js` for tooltips instead coding them myself
+- bug: delete the tbale header rows --> Use normal Table woithout header or footer row
+- feature: add DataBlock with tables framework, store them as JSON insoide the and retrieve JSON from there instead of MD table 
 - bug: table id's and saving the width for each column
 - bug: table header when columns are added and removed get messed up
 - bug: two tables behind each other get merged into 1 on reload/save
