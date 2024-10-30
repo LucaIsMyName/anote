@@ -53,41 +53,38 @@ export class FileService {
     try {
       // Don't move if source and target are the same
       if (sourcePath === targetPath) return;
-  
+
       // Create target directory structure
-      const targetParts = targetPath.split('/').filter(Boolean);
+      const targetParts = targetPath.split("/").filter(Boolean);
       let currentHandle = dirHandle;
       for (let i = 0; i < targetParts.length - 1; i++) {
         currentHandle = await currentHandle.getDirectoryHandle(targetParts[i], { create: true });
       }
-  
+
       // Copy content to new location
-      await this.copyDirectory(
-        await this.getDirectoryHandle(dirHandle, sourcePath),
-        await this.getDirectoryHandle(dirHandle, targetPath)
-      );
-  
+      await this.copyDirectory(await this.getDirectoryHandle(dirHandle, sourcePath), await this.getDirectoryHandle(dirHandle, targetPath));
+
       // Delete old location
       await this.deletePage(dirHandle, sourcePath);
-  
+
       return true;
     } catch (error) {
-      console.error('Error moving page:', error);
+      console.error("Error moving page:", error);
       throw error;
     }
   }
-  
+
   static async findPagePathById(dirHandle: string, pageId: string): Promise<string | null> {
     const searchDirectory = async (handle: FileSystemDirectoryHandle, path = ""): Promise<string | null> => {
       for await (const entry of handle.values()) {
         if (entry.name === "assets" || entry.name.startsWith(".")) continue;
-        
+
         if (entry.kind === "directory") {
           try {
             const fileHandle = await entry.getFileHandle("index.md");
             const file = await fileHandle.getFile();
             const content = await file.text();
-            
+
             const pageMetadataMatch = content.match(/<page-metadata>([\s\S]*?)<\/page-metadata>/);
             if (pageMetadataMatch) {
               const metadata = JSON.parse(pageMetadataMatch[1]);
@@ -95,7 +92,7 @@ export class FileService {
                 return path ? `${path}/${entry.name}` : entry.name;
               }
             }
-            
+
             // Search recursively
             const nestedPath = path ? `${path}/${entry.name}` : entry.name;
             const result = await searchDirectory(entry, nestedPath);
@@ -153,6 +150,8 @@ export class FileService {
           case "image":
             content += `![${block.caption || ""}](${block.src})\n`;
             break;
+          case "file":
+            content += `[FILE_BLOCK]![${block.caption || ""}](${block.data})[/FILE_BLOCK]\n`;
         }
         content += ":::\n";
       }
@@ -262,6 +261,14 @@ export class FileService {
               if (imageMatch) {
                 block.caption = imageMatch[1];
                 block.src = imageMatch[2];
+              }
+              break;
+
+            case "file":
+              const fileMatch = blockContent.match(/\[FILE_BLOCK\]!\[(.*?)\]\((.*?)\)\[\/FILE_BLOCK\]/);
+              if (fileMatch) {
+                block.caption = fileMatch[1];
+                block.data = fileMatch[2];
               }
               break;
           }

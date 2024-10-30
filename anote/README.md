@@ -9,7 +9,7 @@ a note taking and documentation app
 ## to do
 
 - feature: use `tippy-js` for tooltips instead coding them myself
-- bug: delete the tbale header rows --> Use normal Table woithout header or footer row
 - feature: add DataBlock with tables framework, store them as JSON insoide the and retrieve JSON from there instead of MD table 
-- bug: blocks get deleted randomly & fast (hint: odd ones get deleted from outside in-ish)
-- bug: 
+- feature: finish implement routing!
+- featuire: to-do -> add first item on newly created empty list automatically! -> focus and select the word!
+- feature: implement hit "Enter" on Paragraph, Heading, Image, Table or any other Text based inputs Components
