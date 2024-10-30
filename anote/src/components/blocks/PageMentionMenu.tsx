@@ -1,20 +1,25 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FileText } from "lucide-react";
 
-export interface PageMentionMenuProps {
+interface PageInfo {
+  name: string;
+  id: string;
+  path: string;
+}
+
+interface PageMentionMenuProps {
   isOpen: boolean;
   searchTerm: string;
-  onSelect: (page: string) => void;
+  onSelect: (pageInfo: PageInfo) => void;
   onClose: () => void;
   position: { top: number; left: number };
-  pages: string[];
+  pages: PageInfo[];
 }
 
 /**
  * @description A menu component that displays a list of pages
  * for users to select when mentioning a page in a block.
  */
-
 
 const PageMentionMenu = ({ isOpen, searchTerm, onSelect, onClose, position, pages }: PageMentionMenuProps) => {
   const menuRef = useRef(null);
@@ -87,12 +92,11 @@ const PageMentionMenu = ({ isOpen, searchTerm, onSelect, onClose, position, page
         <div className="py-1">
           {filteredPages.map((page, index) => (
             <button
-              key={page}
-              className={`w-full px-4 py-2 flex items-center space-x-2 text-left hover:bg-gray-100 ${index === selectedIndex ? "bg-gray-100" : ""}`}
-              onClick={() => onSelect(page)}
-              onMouseEnter={() => setSelectedIndex(index)}>
-              <FileText className="w-4 h-4 text-gray-500" />
-              <span className="flex-1 truncate">{page}</span>
+              key={page.id}
+              className={`w-full px-4 py-2 flex items-center ${index === selectedIndex ? "bg-gray-100" : ""}`}
+              onClick={() => onSelect(page)}>
+              <FileText className="w-4 h-4 mr-2 text-gray-500" />
+              <span>{page.name}</span>
             </button>
           ))}
         </div>

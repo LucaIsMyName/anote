@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, memo } from "react";
+import { Navigate } from "react-router-dom";
 import PageMentionMenu from "./PageMentionMenu.tsx";
 import Input from "./utils/Input.tsx";
 import Textarea from "./utils/Textarea.tsx";
@@ -80,10 +81,10 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick }: Pa
     }
   };
 
-  const handlePageSelect = (pagePath: string) => {
+  const handlePageSelect = (pageInfo: PageInfo) => {
     const before = content.slice(0, mentionState.startPosition - 1);
     const after = content.slice(inputRef.current.selectionStart);
-    const pageLink = `[[${pagePath}]]`;
+    const pageLink = `[[${pageInfo.name}|${pageInfo.id}]]`; // Include ID in link
 
     onChange(before + pageLink + after);
     setMentionState((prev) => ({ ...prev, isOpen: false }));
@@ -92,18 +93,16 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick }: Pa
   const handleClick = (e: any) => {
     const text = e.target?.value.toString();
     const clickPosition = e.target?.selectionStart;
-
-    // Find any page links around the click position
-    const linkRegex = /\[\[(.*?)\]\]/g;
+    const linkRegex = /\[\[(.*?)\|(.*?)\]\]/g; // Updated regex to capture ID
     let match;
 
     while ((match = linkRegex.exec(text)) !== null) {
+      const [_, name, id] = match;
       const startIndex = match.index;
       const endIndex = startIndex + match[0].length;
 
       if (clickPosition >= startIndex && clickPosition <= endIndex) {
-        const pagePath = match[1];
-        onPageClick(pagePath);
+        Navigate(`/page/${id}`); // Use react-router navigation
         break;
       }
     }

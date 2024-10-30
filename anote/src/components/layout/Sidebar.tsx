@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { FolderPlus, PanelRightClose, Plus, ChevronRight, ChevronDown, Edit2, Trash2, PanelRightOpen } from "lucide-react";
 import { FileService } from "../../services/FileService.ts";
-
+import Input from "../blocks/utils/Input.tsx";
 const EXPANDED_PATHS_KEY = "anote_expanded_paths";
 const SIDEBAR_WIDTH_KEY = "sidebar_width";
 const SIDEBAR_OPEN_KEY = "sidebar_open";
+
+interface DragItem {
+  type: string;
+  path: string;
+  name: string;
+}
 
 interface SidebarProps {
   workspace: string;
@@ -24,14 +30,28 @@ const PageCreationDialog = ({ workspace, parentPath = "", onSubmit, onClose }) =
   };
 
   return (
-    <div className="px-4 py-2 border-t">
+    <div className="flex items-center gap-3">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="lucide lucide-plus w-4 h-4">
+        <path d="M5 12h14"></path>
+        <path d="M12 5v14"></path>
+      </svg>
       <form onSubmit={handleSubmit}>
-        <input
+        <Input
           type="text"
           value={pageName}
           onChange={(e) => setPageName(e.target.value)}
           placeholder="Enter page name..."
-          className="w-full px-2 py-1 text-sm border rounded"
+          className="w-full flex-1 bg-transparent"
           autoFocus
           onKeyDown={(e) => {
             if (e.key === "Escape") {
@@ -72,7 +92,9 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
   const [width, setWidth] = useState(localStorage.getItem(SIDEBAR_WIDTH_KEY) || 250);
   const [isOpen, setIsOpen] = useState(localStorage.getItem(SIDEBAR_OPEN_KEY) === "true");
   const [isResizing, setIsResizing] = useState(false);
-  const [dropTarget, setDropTarget] = useState(null);
+  const [draggedItem, setDraggedItem] = useState<DragItem | null>(null);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [dropPosition, setDropPosition] = useState<"inside" | "above" | "below">("inside");
   const [renamingPage, setRenamingPage] = useState(null);
   const [isCreatingPage, setIsCreatingPage] = useState(false);
   const [newPageParentPath, setNewPageParentPath] = useState("");
@@ -196,22 +218,125 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
     }
   };
 
+  // In Sidebar.tsx, update the PageItem component
+
+  // In Sidebar.tsx, modify the button click handler and update PageItem component
+
   const PageItem = ({ page, level = 0, parentPath = "" }) => {
     const fullPath = parentPath ? `${parentPath}/${page.name}` : page.name;
     const isExpanded = expandedPaths[fullPath];
+    const isDragging = draggedItem?.path === fullPath;
     const isDropTarget = dropTarget === fullPath;
+    let dropIndicatorClass = "";
+    if (isDropTarget && !isDragging) {
+      switch (dropPosition) {
+        case "above":
+          dropIndicatorClass = "before:absolute before:left-0 before:right-0 before:top-0 before:h-0.5 before:bg-blue-500";
+          break;
+        case "below":
+          dropIndicatorClass = "after:absolute after:left-0 after:right-0 after:bottom-0 after:h-0.5 after:bg-blue-500";
+          break;
+        case "inside":
+          dropIndicatorClass = "bg-blue-50 border-2 border-blue-500";
+          break;
+      }
+    }
+    const handleCreateSubpage = () => {
+      // First ensure the parent page is expanded
+      setExpandedPaths((prev) => ({
+        ...prev,
+        [fullPath]: true,
+      }));
+      // Then set the creation state
+      setIsCreatingPage(true);
+      setNewPageParentPath(fullPath);
+    };
+
+    const handleDragStart = (e: React.DragEvent, page: any, path: string) => {
+      setDraggedItem({
+        type: "page",
+        path,
+        name: page.name,
+      });
+      e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleDragOver = (e: React.DragEvent, targetPath: string) => {
+      e.preventDefault();
+      if (!draggedItem || draggedItem.path === targetPath) return;
+
+      const rect = (e.target as HTMLElement).getBoundingClientRect();
+      const y = e.clientY - rect.top;
+
+      // Determine drop position based on mouse position
+      if (y < rect.height * 0.25) {
+        setDropPosition("above");
+      } else if (y > rect.height * 0.75) {
+        setDropPosition("below");
+      } else {
+        setDropPosition("inside");
+      }
+
+      setDropTarget(targetPath);
+    };
+
+    const handleDrop = async (e: React.DragEvent, targetPath: string) => {
+      e.preventDefault();
+      if (!draggedItem || draggedItem.path === targetPath) {
+        resetDragState();
+        return;
+      }
+
+      // Get target directory path based on drop position
+      const targetDir = dropPosition === "inside" ? targetPath : targetPath.split("/").slice(0, -1).join("/");
+
+      // Optimistically update UI
+      const updatedPages = movePageInTree(pages, draggedItem.path, targetPath, dropPosition);
+      setPages(updatedPages);
+
+      try {
+        // Perform the actual file system operation
+        await FileService.movePage(workspace, draggedItem.path, `${targetDir}/${draggedItem.name}`);
+
+        // Refresh pages to ensure consistency
+        loadPages();
+      } catch (error) {
+        console.error("Error moving page:", error);
+        // Revert UI on error
+        loadPages();
+      }
+
+      resetDragState();
+    };
+
+    const resetDragState = () => {
+      setDraggedItem(null);
+      setDropTarget(null);
+      setDropPosition("inside");
+    };
+
+    const movePageInTree = (pages: any[], sourcePath: string, targetPath: string, position: string) => {
+      const newPages = [...pages];
+      const sourcePathParts = sourcePath.split("/");
+      const targetPathParts = targetPath.split("/");
+
+      // Find and remove source page
+      const sourcePage = removePageFromTree(newPages, sourcePathParts);
+      if (!sourcePage) return newPages;
+
+      // Add page to new location
+      return insertPageInTree(newPages, targetPathParts, sourcePage, position);
+    };
 
     return (
       <div
         draggable
         onDragStart={(e) => handleDragStart(e, page, fullPath)}
-        onDragEnd={() => setDropTarget(null)}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDropTarget(fullPath);
-        }}
+        onDragEnd={resetDragState}
+        onDragOver={(e) => handleDragOver(e, fullPath)}
+        onDragEnter={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e, fullPath)}
-        className={`relative group ${isDropTarget ? "bg-blue-50 border-blue-200 rounded" : ""}`}>
+        className={`relative group ${isDragging ? "opacity-50" : ""} ${dropIndicatorClass}`}>
         <div
           className={`flex items-center px-2 py-1 hover:bg-gray-100 ${currentPath === fullPath ? "bg-blue-50" : ""}`}
           style={{ paddingLeft: `${level * 1.5}rem` }}>
@@ -259,20 +384,41 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
             </span>
           )}
 
-          <div className="opacity-0 group-hover:opacity-100 flex items-center">{/* ... existing buttons ... */}</div>
+          {/* Action Buttons */}
+          <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1">
+            <button
+              onClick={() => setRenamingPage(fullPath)}
+              className="p-1 hover:bg-gray-200 rounded"
+              title="Rename page">
+              <Edit2 className="w-3.5 h-3.5 text-gray-500" />
+            </button>
+            <button
+              onClick={handleCreateSubpage}
+              className="p-1 hover:bg-gray-200 rounded"
+              title="Create subpage">
+              <FolderPlus className="w-3.5 h-3.5 text-blue-500" />
+            </button>
+            <button
+              onClick={() => handleDelete(fullPath)}
+              className="p-1 hover:bg-gray-200 rounded"
+              title="Delete page">
+              <Trash2 className="w-3.5 h-3.5 text-red-500" />
+            </button>
+          </div>
         </div>
 
-        {isExpanded && (
-          <>
-            {page.children?.map((child) => (
-              <PageItem
-                key={child.name}
-                page={child}
-                level={level + 1}
-                parentPath={fullPath}
-              />
-            ))}
-            {isCreatingPage && newPageParentPath === fullPath && (
+        {/* Child pages and creation dialog */}
+        <div className={isExpanded ? "" : "hidden"}>
+          {page.children?.map((child) => (
+            <PageItem
+              key={child.name}
+              page={child}
+              level={level + 1}
+              parentPath={fullPath}
+            />
+          ))}
+          {isCreatingPage && newPageParentPath === fullPath && (
+            <div className="ml-8">
               <PageCreationDialog
                 workspace={workspace}
                 parentPath={fullPath}
@@ -282,9 +428,9 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
                   setNewPageParentPath("");
                 }}
               />
-            )}
-          </>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     );
   };

@@ -1,5 +1,6 @@
 import matter from "gray-matter";
 import { marked } from "marked";
+import { v4 as uuidv4 } from "uuid";
 
 interface File {
   name: string;
@@ -39,7 +40,76 @@ interface PageNode {
   children: Array<PageNode>;
 }
 
+interface PageMetadata {
+  id: string;
+  title: string;
+  createdAt: string;
+  lastEdited: string;
+  tags: string[];
+}
+
 export class FileService {
+  static async movePage(dirHandle: string, sourcePath: string, targetPath: string) {
+    try {
+      // Don't move if source and target are the same
+      if (sourcePath === targetPath) return;
+  
+      // Create target directory structure
+      const targetParts = targetPath.split('/').filter(Boolean);
+      let currentHandle = dirHandle;
+      for (let i = 0; i < targetParts.length - 1; i++) {
+        currentHandle = await currentHandle.getDirectoryHandle(targetParts[i], { create: true });
+      }
+  
+      // Copy content to new location
+      await this.copyDirectory(
+        await this.getDirectoryHandle(dirHandle, sourcePath),
+        await this.getDirectoryHandle(dirHandle, targetPath)
+      );
+  
+      // Delete old location
+      await this.deletePage(dirHandle, sourcePath);
+  
+      return true;
+    } catch (error) {
+      console.error('Error moving page:', error);
+      throw error;
+    }
+  }
+  
+  static async findPagePathById(dirHandle: string, pageId: string): Promise<string | null> {
+    const searchDirectory = async (handle: FileSystemDirectoryHandle, path = ""): Promise<string | null> => {
+      for await (const entry of handle.values()) {
+        if (entry.name === "assets" || entry.name.startsWith(".")) continue;
+        
+        if (entry.kind === "directory") {
+          try {
+            const fileHandle = await entry.getFileHandle("index.md");
+            const file = await fileHandle.getFile();
+            const content = await file.text();
+            
+            const pageMetadataMatch = content.match(/<page-metadata>([\s\S]*?)<\/page-metadata>/);
+            if (pageMetadataMatch) {
+              const metadata = JSON.parse(pageMetadataMatch[1]);
+              if (metadata.id === pageId) {
+                return path ? `${path}/${entry.name}` : entry.name;
+              }
+            }
+            
+            // Search recursively
+            const nestedPath = path ? `${path}/${entry.name}` : entry.name;
+            const result = await searchDirectory(entry, nestedPath);
+            if (result) return result;
+          } catch (error) {
+            continue;
+          }
+        }
+      }
+      return null;
+    };
+
+    return searchDirectory(dirHandle);
+  }
   /**
    *
    * @param {string} dirHandle
@@ -378,29 +448,27 @@ export class FileService {
 
   static async createPage(dirHandle: string, path: string) {
     try {
-      // Prevent creation of "assets" folder as a page
       const pathParts = path.split("/").filter(Boolean);
       if (pathParts.includes("assets")) {
         throw new Error('Cannot create a page named "assets"');
       }
 
       let currentHandle = dirHandle;
-      // Create directory path
       for (const part of pathParts) {
         currentHandle = await currentHandle.getDirectoryHandle(part, { create: true });
       }
 
       const timestamp = new Date().toISOString();
+      const pageId = uuidv4(); // Generate unique ID
 
-      // Create initial page metadata
       const pageMetadata = {
+        id: pageId,
         title: pathParts[pathParts.length - 1],
         createdAt: timestamp,
         lastEdited: timestamp,
         tags: ["general"],
       };
 
-      // Create initial blocks with metadata
       const initialBlocks = [
         {
           id: Date.now(),
@@ -419,10 +487,8 @@ export class FileService {
         },
       ];
 
-      // Write the page with metadata and blocks
       await this.writePage(dirHandle, path, initialBlocks, pageMetadata);
-
-      return true;
+      return pageId;
     } catch (error) {
       console.error("Error creating page:", error);
       throw error;
