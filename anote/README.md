@@ -13,3 +13,5 @@ a note taking and documentation app
 - feature: finish implement routing!
 - featuire: to-do -> add first item on newly created empty list automatically! -> focus and select the word!
 - feature: implement hit "Enter" on Paragraph, Heading, Image, Table or any other Text based inputs Components
+- bug: make FileBlock Component store and retrieve from/to MD file (like image!)
+- bug: fix image component if nothing is uplaoded on initial insert of block
