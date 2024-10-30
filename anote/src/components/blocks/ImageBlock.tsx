@@ -79,15 +79,15 @@ const ImageBlock = ({ src, caption, onChange }: ImageBlockProps) => {
             <div className="p-4 bg-gray-100 rounded-full">
               <ImageIcon className="w-8 h-8 text-gray-400" />
             </div>
-            <div className="text-center">
+            <div className="">
               <p className="text-gray-600">Drag and drop an image, or</p>
-              <label className="inline-flex items-center mt-2 px-4 py-2 bg-white border rounded-md cursor-pointer hover:bg-gray-50">
-                <Upload className="w-4 h-4 mr-2" />
-                <span>Choose file</span>
+              <label className="flex items-center mt-2 px-4 py-2 bg-white border rounded-md cursor-pointer hover:bg-gray-50">
+                <Upload className="w-8 h-8 size-8 mr-2" />
+                <span className="truncate block w-full">Choose file</span>
                 <Input
                   value=""
                   type="file"
-                  className="hidden"
+                  className="hidden screen-reader-text"
                   accept="image/*"
                   onChange={handleFileSelect}
                 />

@@ -32,7 +32,7 @@ const EmptyPageBlock = ({ onAddBlock: any }) => {
   };
 
   return (
-    <div className="text-center py-8">
+    <div className="text-left py-4">
       <div className="relative inline-block">
         <button
           ref={buttonRef}
