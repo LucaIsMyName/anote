@@ -1,3 +1,6 @@
+import matter from "gray-matter";
+import { marked } from "marked";
+
 interface File {
   name: string;
   type: string;
@@ -14,10 +17,6 @@ interface Block {
   src?: string;
   caption?: string;
   data?: Array<Array<string>>;
-  fileData?: {
-    name: string;
-    base64: string;
-  };
 }
 
 interface TodoItem {
@@ -49,61 +48,55 @@ export class FileService {
    */
   static async writeMarkdownFile(dirHandle: string, path: string, blocks: Block[]) {
     try {
-      // Convert blocks to markdown
-      let markdown = "";
+      // Convert blocks to markdown with front matter
+      const metadata = {
+        title: path.split("/").pop(),
+        createdAt: new Date().toISOString(),
+        lastEdited: new Date().toISOString(),
+        tags: ["general"],
+      };
 
+      let content = "";
       for (const block of blocks) {
+        content += `\n::: block ${JSON.stringify({
+          type: block.type,
+          id: block.id,
+          createdAt: block.createdAt,
+          lastEdited: new Date().toISOString(),
+        })}\n`;
+
         switch (block.type) {
           case "heading":
-            const level = block.level || 1; // Default to 1 if no level specified
-            console.log("Adding heading block:", block.content);
-            markdown += `${"#".repeat(level)} ${block.content}\n\n`;
+            content += `${"#".repeat(block.level || 1)} ${block.content}\n`;
             break;
-
           case "paragraph":
-            markdown += `${block.content}\n\n`;
+            content += `${block.content}\n`;
             break;
-
           case "todo":
-            markdown += block.items?.map((item) => `- [${item.completed ? "x" : " "}] ${item.text}`).join("\n") + "\n\n";
+            content += block.items?.map((item) => `- [${item.completed ? "x" : " "}] ${item.text}`).join("\n") + "\n";
             break;
-
-          case "image":
-            if (block.src && block.src.startsWith("data:")) {
-              const fileName = `image-${Date.now()}.png`;
-              const assetPath = await this.saveAssetFile(dirHandle, fileName, block.src);
-              markdown += `![${block.caption || ""}](${assetPath})\n\n`;
-            } else if (block.src) {
-              markdown += `![${block.caption || ""}](${block.src})\n\n`;
-            }
-            break;
-
           case "table":
-            if (block.data && block.data.length > 0) {
-              markdown += "| " + block.data[0].map(() => "---").join(" | ") + " |\n";
-              markdown += block.data.map((row) => "| " + row.map((cell) => cell || "").join(" | ") + " |").join("\n") + "\n\n";
+            if (block.data?.length) {
+              content += block.data.map((row) => `| ${row.join(" | ")} |`).join("\n") + "\n";
             }
             break;
-
-          case "file":
-            if (block.fileData) {
-              const { name, base64 } = block.fileData;
-              markdown += `[FILE-BLOCK]\n${JSON.stringify({ name, base64 })}\n[/FILE-BLOCK]\n\n`;
-            }
+          case "image":
+            content += `![${block.caption || ""}](${block.src})\n`;
             break;
         }
+        content += ":::\n";
       }
 
-      // Ensure the directory exists
+      // Create markdown with front matter
+      const markdown = matter.stringify(content, metadata);
+
+      // Save to file
       const pathParts = path.split("/").filter(Boolean);
       let currentHandle = dirHandle;
-
-      // Create directories if they don't exist
       for (let i = 0; i < pathParts.length - 1; i++) {
         currentHandle = await currentHandle.getDirectoryHandle(pathParts[i], { create: true });
       }
 
-      // Create or update the markdown file
       const fileName = `${pathParts[pathParts.length - 1]}.md`;
       const fileHandle = await currentHandle.getFileHandle(fileName, { create: true });
       const writable = await fileHandle.createWritable();
@@ -123,27 +116,93 @@ export class FileService {
    * @param {string} path
    * @returns {Promise<Array<any>>}
    */
-  static async readMarkdownFile(dirHandle, path) {
+  static async readMarkdownFile(dirHandle: string, path: string) {
     try {
-      // Navigate to the correct directory
       const pathParts = path.split("/").filter(Boolean);
       let currentHandle = dirHandle;
 
-      // Navigate through directories
       for (let i = 0; i < pathParts.length - 1; i++) {
         currentHandle = await currentHandle.getDirectoryHandle(pathParts[i]);
       }
 
-      // Get the file
       const fileName = `${pathParts[pathParts.length - 1]}.md`;
       const fileHandle = await currentHandle.getFileHandle(fileName);
       const file = await fileHandle.getFile();
       const content = await file.text();
 
-      // Parse markdown to blocks (basic implementation)
-      const blocks = await this.parseMarkdownToBlocks(content);
+      // Parse front matter and content
+      const { data: metadata, content: markdownContent } = matter(content);
 
-      return blocks;
+      // Parse blocks
+      const blocks: Block[] = [];
+      let currentBlock: any = null;
+
+      const blockRegex = /^:::[\s]*block[\s]*(.*?)$([\s\S]*?)^:::$/gm;
+      let match;
+
+      while ((match = blockRegex.exec(markdownContent)) !== null) {
+        try {
+          const blockMetadata = JSON.parse(match[1]);
+          const blockContent = match[2].trim();
+
+          const block = {
+            id: blockMetadata.id,
+            type: blockMetadata.type,
+            createdAt: blockMetadata.createdAt,
+            lastEdited: blockMetadata.lastEdited,
+          };
+
+          // Parse block content based on type
+          switch (block.type) {
+            case "heading":
+              const headingMatch = blockContent.match(/^(#{1,6})\s+(.+)$/);
+              if (headingMatch) {
+                block.level = headingMatch[1].length;
+                block.content = headingMatch[2];
+              }
+              break;
+            case "paragraph":
+              block.content = blockContent;
+              break;
+            case "todo":
+              block.items = blockContent
+                .split("\n")
+                .map((line) => {
+                  const todoMatch = line.match(/^-\s*\[([ x])\]\s*(.+)$/);
+                  return todoMatch
+                    ? {
+                        id: Date.now() + Math.random(),
+                        completed: todoMatch[1] === "x",
+                        text: todoMatch[2],
+                      }
+                    : null;
+                })
+                .filter(Boolean);
+              break;
+            case "table":
+              block.data = blockContent.split("\n").map((row) =>
+                row
+                  .replace(/^\||\|$/g, "")
+                  .split("|")
+                  .map((cell) => cell.trim())
+              );
+              break;
+            case "image":
+              const imageMatch = blockContent.match(/!\[(.*?)\]\((.*?)\)/);
+              if (imageMatch) {
+                block.caption = imageMatch[1];
+                block.src = imageMatch[2];
+              }
+              break;
+          }
+
+          blocks.push(block);
+        } catch (error) {
+          console.error("Error parsing block:", error);
+        }
+      }
+
+      return { blocks, metadata };
     } catch (error) {
       console.error("Error reading markdown file:", error);
       throw error;
@@ -185,141 +244,108 @@ export class FileService {
    * @returns {Array<any>}
    * @throws {Error}
    */
+  // In FileService.ts, modify parseMarkdownToBlocks and writePage
+
   static async parseMarkdownToBlocks(markdown: string) {
     if (!markdown) return { blocks: [], metadata: null };
-  
+
     const blocks: Block[] = [];
     let pageMetadata = null;
-    let currentBlock: any = null;
-    let collectingContent = false;
-    
-    const lines = markdown.split("\n");
-    let i = 0;
-  
-    while (i < lines.length) {
-      const line = lines[i].trim();
-  
-      // Handle metadata/block comments
-      if (line.startsWith("<!--")) {
-        collectingContent = false; // Stop collecting content when we hit a comment
-        let metadataContent = "";
-        i++; // Skip opening <!--
-  
-        // Collect metadata until end of comment
-        while (i < lines.length && !lines[i].trim().endsWith("-->")) {
-          metadataContent += lines[i];
-          i++;
-        }
-        if (i < lines.length) {
-          metadataContent += lines[i].replace("-->", "");
-        }
-        i++;
-  
-        try {
-          console.log("Parsing metadata:", metadataContent);
-          // Extract JSON from the metadata content
-          const jsonStart = metadataContent.indexOf('{');
-          const jsonEnd = metadataContent.lastIndexOf('}') + 1;
-          if (jsonStart !== -1 && jsonEnd > jsonStart) {
-        
-            const metadata = JSON.parse(metadataContent.substring(jsonStart, jsonEnd));
-            console.log("Parsed metadata:", metadata);
-            if (metadata.type) {
-              // If we had a previous block, save it
-              if (currentBlock && currentBlock.content) {
-                blocks.push({...currentBlock});
-              }
-  
-              // Start new block
-              currentBlock = {
-                id: metadata.id,
-                type: metadata.type,
-                createdAt: metadata.createdAt,
-                lastEdited: metadata.lastEdited,
-                content: "",
-                level: metadata.type === "heading" ? 1 : undefined,
-                items: metadata.type === "todo" ? [] : undefined,
-                data: metadata.type === "table" ? [] : undefined,
-              };
-              collectingContent = true; // Start collecting content for the new block
-            } else {
-              pageMetadata = metadata;
-            }
-          }
-        } catch (e) {
-          console.error("Error parsing metadata:", e);
-        }
-        continue;
-      }
-  
-      // Handle block content
-      if (currentBlock && collectingContent && line !== "") {
-        switch (currentBlock.type) {
-          case "paragraph":
-            currentBlock.content = currentBlock.content ? 
-              `${currentBlock.content}\n${line}` : line;
-            break;
-  
-          case "heading":
-            const match = line.match(/^(#{1,6})\s+(.+)$/);
-            if (match) {
-              currentBlock.level = match[1].length;
-              currentBlock.content = match[2];
-            }
-            break;
-  
-          case "todo":
-            const todoMatch = line.match(/^-\s*\[([ x])\]\s*(.+)$/);
-            if (todoMatch) {
-              if (!currentBlock.items) currentBlock.items = [];
-              currentBlock.items.push({
-                id: Date.now() + Math.random(),
-                completed: todoMatch[1] === "x",
-                text: todoMatch[2]
-              });
-            }
-            break;
-  
-          case "table":
-            if (line.startsWith("|") && !line.includes("---")) {
-              if (!currentBlock.data) currentBlock.data = [];
-              const cells = line
-                .split("|")
-                .slice(1, -1)
-                .map(cell => cell.trim());
-              currentBlock.data.push(cells);
-            }
-            break;
 
-        case "file":
-          const fileMatch = line.match(/^\[FILE-BLOCK\]({.*})\[\/FILE-BLOCK\]$/);
-          if (fileMatch) {
-            try {
-              const { name, base64 } = JSON.parse(fileMatch[1]);
-              currentBlock.fileData = { name, base64 };
-            } catch (e) {
-              console.error("Error parsing file block:", e);
-            }
-          }
-          break;
-        case "image": 
-          const imageMatch = line.match(/^!\[(.*)\]\((.*)\)$/);
-          if (imageMatch) {
-            currentBlock.src = imageMatch[2];
-            currentBlock.caption = imageMatch[1];
-          }
-        }
+    const pageMetadataMatch = markdown.match(/<page-metadata>([\s\S]*?)<\/page-metadata>/);
+    if (pageMetadataMatch) {
+      try {
+        pageMetadata = JSON.parse(pageMetadataMatch[1]);
+      } catch (e) {
+        console.error("Error parsing page metadata:", e);
       }
-  
-      i++;
     }
-  
-    // Don't forget the last block
-    if (currentBlock && (currentBlock.content || currentBlock.items?.length || currentBlock.data?.length)) {
-      blocks.push({...currentBlock});
+
+    const blockSections = markdown.split("<block-metadata>");
+
+    for (let i = 1; i < blockSections.length; i++) {
+      const section = blockSections[i];
+      const metadataEndIndex = section.indexOf("</block-metadata>");
+
+      if (metadataEndIndex === -1) continue;
+
+      try {
+        const metadata = JSON.parse(section.substring(0, metadataEndIndex));
+        let content = section.substring(metadataEndIndex + 16).trim();
+
+        if (metadata.type === "heading") {
+          // Remove all markdown heading markers and clean content
+          const cleanContent = content
+            .replace(/^#{1,6}\s+/, "")
+            .replace(/^>+\s*/, "")
+            .trim();
+          blocks.push({
+            ...metadata,
+            content: cleanContent,
+            level: metadata.level || 2, // Use metadata level or default to 2
+          });
+        } else if (metadata.type === "image") {
+          const imgMatch = content.match(/!\[(.*?)\]\((.*?)\)/);
+          if (imgMatch) {
+            blocks.push({
+              ...metadata,
+              caption: imgMatch[1],
+              src: imgMatch[2],
+            });
+          }
+        } else if (metadata.type === "todo") {
+          // Parse todo items
+          const items = content.split("\n").map((line) => {
+            const todoMatch = line.match(/^-\s*\[([ x])\]\s*(.+)$/);
+            return todoMatch
+              ? {
+                  id: Date.now() + Math.random(),
+                  completed: todoMatch[1] === "x",
+                  text: todoMatch[2],
+                }
+              : null;
+          });
+          blocks.push({
+            ...metadata,
+            items: items.filter(Boolean),
+          });
+        } else if (metadata.type === "table") {
+          // Parse table data
+          const cleanLines = content
+            .split("\n")
+            .filter((line) => line.trim() && !line.match(/^\|?\s*>\s*\|?$/))
+            .map((line) => line.replace(/^>+\s*/, "").trim());
+
+          if (cleanLines.length > 0) {
+            // Filter out separator rows (containing only dashes)
+            const dataRows = cleanLines.filter((row) => !row.match(/^\|?\s*[-|]+\s*\|?$/));
+            const data = dataRows.map((row) =>
+              row
+                .replace(/^\||\|$/g, "") // Remove leading/trailing pipes
+                .split("|")
+                .map((cell) => cell.trim())
+            );
+
+            blocks.push({
+              ...metadata,
+              data,
+            });
+          }
+        } else {
+          // Handle other block types
+          blocks.push({
+            ...metadata,
+            content: content.replace(/^>+\s*/, "").trim(),
+            level: undefined,
+            items: metadata.type === "todo" ? [] : undefined,
+            data: metadata.type === "table" ? [] : undefined,
+          });
+        }
+      } catch (e) {
+        console.error("Error parsing block metadata:", e);
+      }
     }
-  
-    console.log("Parsed blocks:", blocks);
+
     return { blocks, metadata: pageMetadata };
   }
 
@@ -403,7 +429,7 @@ export class FileService {
     }
   }
 
-  static async readPage(dirHandle, path) {
+  static async readPage(dirHandle: string, path: string) {
     try {
       if (!path) {
         return {
@@ -418,33 +444,22 @@ export class FileService {
       const pathParts = path.split("/").filter(Boolean);
       let currentHandle = dirHandle;
 
-      // Navigate to the page directory
       for (const part of pathParts) {
         currentHandle = await currentHandle.getDirectoryHandle(part);
       }
 
-      // Read index.md from the directory
       const fileHandle = await currentHandle.getFileHandle("index.md");
       const file = await fileHandle.getFile();
       const content = await file.text();
 
-      // Parse the content
-      const { blocks, metadata } = await this.parseMarkdownToBlocks(content);
-
-      return {
-        blocks: blocks || [],
-        metadata: metadata || {
-          createdAt: new Date().toISOString(),
-          lastEdited: new Date().toISOString(),
-        },
-      };
+      return this.parseMarkdownToBlocks(content);
     } catch (error) {
       console.error("Error reading page:", error);
       throw error;
     }
   }
 
-  static async writePage(dirHandle, path, blocks, metadata = null) {
+  static async writePage(dirHandle: string, path: string, blocks: Block[], metadata = null) {
     try {
       if (!path) return false;
 
@@ -455,65 +470,57 @@ export class FileService {
         currentHandle = await currentHandle.getDirectoryHandle(part, { create: true });
       }
 
-      // Write page metadata
       const metadataToWrite = metadata || {
         createdAt: new Date().toISOString(),
         lastEdited: new Date().toISOString(),
       };
 
-      let fullContent = `<!--\n${JSON.stringify(metadataToWrite, null, 2)}\n-->\n\n`;
+      let content = `<page-metadata>\n${JSON.stringify(metadataToWrite, null, 2)}\n</page-metadata>\n\n`;
 
-      // Add each block with its metadata
       if (Array.isArray(blocks)) {
-        console.log("Writing blocks:", blocks);
-
         for (const block of blocks) {
-          // Add block metadata
           const blockMetadata = {
             type: block.type,
             id: block.id,
+            level: block.type === "heading" ? block.level : undefined, // Include level in metadata
             createdAt: block.createdAt || new Date().toISOString(),
             lastEdited: new Date().toISOString(),
           };
 
-          fullContent += `<!--${JSON.stringify(blockMetadata)}-->\n`;
+          content += `<block-metadata>${JSON.stringify(blockMetadata)}</block-metadata>\n`;
 
-          // Add block content based on type
           switch (block.type) {
-            case "paragraph":
-              fullContent += `${block.content || ""}\n\n`;
-              break;
-
             case "heading":
-              fullContent += `${"#".repeat(block.level || 1)} ${block.content || ""}\n\n`;
+              // Don't add markdown markers here - just the clean content
+              content += `${block.content || ""}\n\n`;
               break;
-
-            case "table":
-              if (block.data && block.data.length > 0) {
-                // Add separator row
-                fullContent += "| " + block.data[0].map(() => "---").join(" | ") + " |\n";
-                // Add data rows
-                fullContent += block.data.map((row) => "| " + row.map((cell) => cell || "").join(" | ") + " |").join("\n") + "\n\n";
-              }
+            case "paragraph":
+              content += `${block.content || ""}\n\n`;
               break;
-
+            case "image":
+              content += `![${block.caption || ""}](${block.src})\n\n`;
+              break;
             case "todo":
               if (block.items && Array.isArray(block.items)) {
-                fullContent += block.items.map((item) => `- [${item.completed ? "x" : " "}] ${item.text}`).join("\n") + "\n\n";
+                content += block.items.map((item) => `- [${item.completed ? "x" : " "}] ${item.text}`).join("\n") + "\n\n";
               }
               break;
-            
+            case "table":
+              if (block.data?.length > 0) {
+                // Add data rows without any extra formatting
+                const tableContent = block.data.map((row) => `| ${row.join(" | ")} |`).join("\n");
+                content += `${tableContent}\n\n`;
+              }
+              break;
           }
         }
       }
 
-      // Write to index.md
       const fileHandle = await currentHandle.getFileHandle("index.md", { create: true });
       const writable = await fileHandle.createWritable();
-      await writable.write(fullContent);
+      await writable.write(content);
       await writable.close();
 
-      console.log("Wrote content:", fullContent);
       return true;
     } catch (error) {
       console.error("Error writing page:", error);

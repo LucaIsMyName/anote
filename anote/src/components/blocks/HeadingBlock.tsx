@@ -14,35 +14,31 @@ export interface HeadingBlockProps {
 
 const HeadingBlock = ({ content, onChange }: HeadingBlockProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [headingLevel, setHeadingLevel] = useState(2); // Default to H2
-  const dropdownRef = useRef(null);
-  const inputRef = useRef(null);
+  const [headingLevel, setHeadingLevel] = useState(2);
 
   const handleSelectLevel = (level: number) => {
     setHeadingLevel(level);
     setIsDropdownOpen(false);
-    // Update content to include the heading level
-    const newContent = `${content.replace("#", "")}`;
-    onChange(newContent);
+    // Update without adding level to content
+    onChange(content || "");
   };
 
   const handleContentChange = (e: any) => {
-    const newText = e.target.value;
-    onChange(`${headingLevel} ${newText}`);
+    // Don't prepend level number
+    onChange(e.target.value);
   };
-
+  
   return (
     <div className="flex items-center flex-row-reverse relative">
       <button
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         className="flex opacity-25 hover:opacity-100 items-center space-x-1 bg-gray-100 px-3 py-1 rounded text-gray-700 hover:bg-gray-200">
-        <span>{`H${headingLevel}`}</span>
+        <span>{`h${headingLevel}`}</span>
         <ChevronDown className="w-4 h-4" />
       </button>
 
       {isDropdownOpen && (
         <div
-          ref={dropdownRef}
           className="absolute top-full right-0 mt-1 w-20 bg-white border rounded shadow-lg z-10">
           {[2, 3, 4, 5, 6].map((level) => (
             <button
@@ -54,12 +50,11 @@ const HeadingBlock = ({ content, onChange }: HeadingBlockProps) => {
           ))}
         </div>
       )}
-
+      
       <Textarea
-        type="text"
-        value={content.replace(/*/^#\d\s/ */'#', "")} // Remove the level indicator from display
+        value={content || ""}
         onChange={handleContentChange}
-        className="m-0 w-full bg-transparent text-lg font-bold focus:ring-1 focus:ring-blue-500 focus:ring-offset-2 focus:outline-4 outline-offset-2	rounded"
+        className="m-0 w-full bg-transparent text-lg font-bold focus:ring-1 focus:ring-blue-500 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded"
         placeholder="Heading text..."
       />
     </div>
