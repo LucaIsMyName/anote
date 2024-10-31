@@ -441,7 +441,9 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
         return (
           <FileBlock
             key={block.id}
-            file={block}
+            src={block.src || null}
+            caption={block.caption || ''}
+            onChange={(updates) => updateBlock(block.id, updates)}
           />
         );
       default:

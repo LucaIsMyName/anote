@@ -164,18 +164,18 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
               {headers.map((header, colIndex) => (
                 <th
                   key={colIndex}
-                  className="relative border-b bg-gray-50 rounded-l-lg"
+                  className="relative border-b bg-gray-50 rounded-l-lg border-r-2"
                   style={{ width: columnWidths[colIndex] || 150 }}>
                   <Input
                     type="text"
                     value={header}
                     onChange={(e) => updateHeader(colIndex, e.target.value)}
-                    className=" w-full px-4 py-2 text-sm font-semibold bg-transparent focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded"
+                    className=" px-4 py-2 text-sm font-semibold bg-transparent focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded"
                     placeholder="Column name..."
                   />
                   <button
                     onClick={() => deleteColumn(colIndex)}
-                    className="p-1 size-[24px] text-gray-400 hover:text-red-500 absolute right-2 top-[calc(50%-12px)]">
+                    className="p-1 absolute right-4 size-[24px] text-right text-gray-400 hover:text-red-500 top-[calc(50%-12px)]">
                     <Trash className="w-[12px] h-[12px]" />
                   </button>
                   {colIndex < headers.length - 1 && (
@@ -191,34 +191,34 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {data.map((row, rowIndex) => (
-              <tr key={rowIndex}>
+              <tr key={rowIndex} className="relative">
                 {row.map((cell, colIndex) => (
                   <td
                     key={colIndex}
                     className="relative"
-                    style={{ width: columnWidths[colIndex] || 150 }}>
+                    style={{ width: columnWidths[colIndex] || "auto" }}>
                     <Input
                       type="text"
                       value={cell}
                       onChange={(e) => updateCell(rowIndex, colIndex, e.target.value)}
-                      className="block w-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      className="block w-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-sky-500 border-r-2"
                       placeholder="Type something..."
                     />
                   </td>
                 ))}
-                <td className="size-[38px] bg-gray-300 flex items-center justify-center">
+                <div className="absolute right-0 size-[38px] bg-gray-100 flex items-center justify-center">
                   <button
                     onClick={() => deleteRow(rowIndex)}
                     className=" flex justify-center items-center size-[24px] text-gray-400 hover:text-red-500">
                     <Trash className="w-[12px] h-[12px]" />
                   </button>
-                </td>
+                </div>
               </tr>
             ))}
           </tbody>
         </table>
 
-        <div className="flex border-t">
+        <div className="flex border-t-2">
           <button
             onClick={addRow}
             className="flex-1 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 flex items-center justify-center">
@@ -226,8 +226,8 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
           </button>
           <button
             onClick={addColumn}
-            className="flex-1 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 border-l flex items-center justify-center">
-            <Plus className="w-4 h-4 mr-1" /> Add column
+            className="size-[40px]  border-l-2 py-2 text-sm text-gray-600 hover:bg-gray-50 border-l flex items-center justify-center">
+            <Plus className="w-4 h-4 mr-1" />
           </button>
         </div>
       </div>

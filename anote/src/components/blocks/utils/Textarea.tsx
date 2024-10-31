@@ -77,7 +77,7 @@ const Textarea = memo(
         value={localValue}
         onChange={handleChange}
         rows={1}
-        className={`w-full bg-transparent focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded focus:ring-sky-500 resize-none overflow-hidden ${className}`}
+        className={`w-full p-0 bg-transparent rounded resize-none overflow-hidden ${className}`}
         {...props}
       />
     );

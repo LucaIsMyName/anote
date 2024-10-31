@@ -1,6 +1,6 @@
 # anote
 
-a note taking and documentation app
+`anote`is a note taking and documentation app in ReactJs and Typescript.
 
 ## use
 1. open the `anote` folder and
@@ -9,6 +9,14 @@ a note taking and documentation app
 4. Create Pages and insert Blocks in these Pages
 
 `anote` stored the Pages as folder in your selected Project Folder and insert index.md file to every Folder with the Blocks Metadata and Content
+
+## features
+
+- `headings` and `paragraph`
+- `tp-do` lists
+- `image` upload
+- `file` upload
+- `table` support
 
 ## to do
 
