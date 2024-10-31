@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anote</title>
+  <style>
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 4rem;
+    }
+    
+    details>summary {
+      list-style: none;
+    }
+
+    /* Remove marker in Chrome/Safari/Edge */
+    details>summary::-webkit-details-marker,
+    details>summary::marker {
+      display: none;
+    }
+
+    /* Ensure the summary doesn't show markers in Safari iOS */
+    details>summary {
+      -webkit-appearance: none;
+    }
+
+    /* Optional: prevent text selection */
+    details>summary {
+      -moz-user-select: none;
+           user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .tippy-content {
+      padding: 0 !important;
+    }
+
+    /* Add these styles to your CSS */
+    [draggable="true"] {
+      cursor: grab;
+    }
+
+    [draggable="true"]:active {
+      cursor: grabbing;
+    }
+
+    .block-dragging {
+      opacity: 0.5;
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/index-D7glbcf5.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Cc4UuN6Q.css">
+</head>
+
+<body>
+  <div id="root"></div>
+</body>
+
+</html>

@@ -58,7 +58,7 @@ export class ImportExportService {
   static importWorkspaceFromZip(zipBlob: any) {
   }
 
-  static async importWorkspaceFromJson(json:JSON) {
+  static async importWorkspaceFromJson(json:any) {
   }
 
   static async exportWorkspaceToJson(workspace:any) {
@@ -70,14 +70,13 @@ export class ImportExportService {
   static exportPagetreeToZip(directory:string) {
   }
 
-  static importPagetreeFromJson(json:JSON) {
+  static importPagetreeFromJson(json:any) {
   }
 
-  static importPagetreeFromZip(json:JSON) {
+  static importPagetreeFromZip(json:any) {
   }
 
   static exportPageToJson(directory:string) {
-  }
   }
 
   static importPageFromJson(json:JSON) {
