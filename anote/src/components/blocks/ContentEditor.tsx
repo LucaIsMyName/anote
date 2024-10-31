@@ -453,8 +453,6 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
 
   /**
    *
-   * @param {number} index
-   * @returns
    * @description Block controls component that renders buttons for adding, copying, and deleting blocks.
    * This component is displayed at the bottom of each block and is only visible when the user hovers over the block.
    * It renders buttons for adding a new block, copying the current block, and deleting the current block.
