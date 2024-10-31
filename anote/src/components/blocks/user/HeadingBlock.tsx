@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
-import SwitchableEditor from "./utils/SwitchableEditor.tsx";
-import Tooltip from "./utils/Tooltip.tsx";
-import { FileService } from "../../services/FileService.ts";
+import SwitchableEditor from "../utils/SwitchableEditor.tsx";
+import Tooltip from "../utils/Tooltip.tsx";
+import { FileService } from "../../../services/FileService.ts";
 
 export interface HeadingBlockProps {
   content: string;

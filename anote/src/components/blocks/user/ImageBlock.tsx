@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Image as ImageIcon, Upload } from "lucide-react";
-import Input from "./utils/Input.tsx";
+import Input from "../utils/Input.tsx";
 
 export interface ImageBlockProps {
   src: string | ArrayBuffer | null;

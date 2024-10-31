@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState, memo } from "react";
 import { Navigate } from "react-router-dom";
-import PageMentionMenu from "./PageMentionMenu.tsx";
-import Input from "./utils/Input.tsx";
-import SwitchableEditor from "./utils/SwitchableEditor.tsx";
-import { FileService } from "../../services/FileService.ts";
+import PageMentionMenu from "../PageMentionMenu.tsx";
+import Input from "../utils/Input.tsx";
+import SwitchableEditor from "../utils/SwitchableEditor.tsx";
+import { FileService } from "../../../services/FileService.ts";
 
 export interface ParagraphBlockProps {
   content: string;

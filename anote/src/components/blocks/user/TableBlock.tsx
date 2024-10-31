@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Plus, Trash } from "lucide-react";
-import Input from "./utils/Input.tsx";
+import Input from "../utils/Input.tsx";
 
 /**
  * @description A table block component that allows users to

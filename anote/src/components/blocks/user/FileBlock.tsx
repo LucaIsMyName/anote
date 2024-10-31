@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { FileIcon, Upload } from "lucide-react";
-import Input from "./utils/Input.tsx";
+import Input from "../utils/Input.tsx";
 
 interface FileData {
   name: string;
