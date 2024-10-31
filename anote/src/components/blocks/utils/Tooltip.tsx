@@ -8,7 +8,7 @@ interface TooltipProps {
   children: React.ReactNode;
   content: React.ReactNode;
   // Extending common Tippy props that we want to expose
-  placement?: 'top' | 'bottom' | 'left' | 'right';
+  placement?: 'top' | 'bottom' | 'left' | 'right' | 'bottom-end' | 'bottom-start' | 'top-end' | 'top-start' | 'left-end' | 'left-start' | 'right-end' | 'right-start';
   trigger?: 'click' | 'mouseenter' | 'focus' | 'manual';
   theme?: 'light' | 'dark';
   interactive?: boolean;
@@ -27,7 +27,7 @@ const Tooltip = ({
   theme = 'dark',
   interactive = false,
   arrow = true,
-  offset = [0, 8],
+  offset = [0, 0],
   className = '',
   visible,
   onClickOutside,
