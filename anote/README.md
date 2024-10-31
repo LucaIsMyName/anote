@@ -21,6 +21,7 @@
 ## to do
 
 - bug: storing and displaying inline md work but it get's saved as `html` inside MD ...
+- bug: `<SwitchableEditor />` for `<ParagraphBlock />` and `<HeadingBlock />` jumping around on keystrokes and making a '.' when hitting spacebar 2 times
 - feature (unsure): add `<DataBlock />` with tables framework, store them as JSON inside the and retrieve JSON from there instead of MD table 
 - feature: `<TodoBlock />` -> add first item on newly created empty list automatically! -> focus and select the word!
 - feature: implement hit "Enter" on `<ParagraphBlock />`, `<HeadingBlock />`, `<ImageBlock />`, `<TableBlock />` or any other Text based inputs Components

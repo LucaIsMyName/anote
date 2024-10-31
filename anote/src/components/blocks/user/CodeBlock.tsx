@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, memo } from "react";
 import { Navigate } from "react-router-dom";
-import SwitchableEditor from "./utils/SwitchableEditor.tsx";
-import { FileService } from "../../services/FileService.ts";
+import SwitchableEditor from "../utils/SwitchableEditor.tsx";
+import { FileService } from "../../../services/FileService.ts";
 
 export interface CodeBlockProps {
   content: string;
