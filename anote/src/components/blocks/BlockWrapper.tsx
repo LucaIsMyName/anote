@@ -1,6 +1,4 @@
-// First, create a new file: src/components/blocks/BlockWrapper.tsx
-
-import React, { memo } from "react";
+import React, { memo, forwardRef } from "react";
 import { GripVertical } from "lucide-react";
 
 export interface BlockWrapperProps {
@@ -17,18 +15,32 @@ export interface BlockWrapperProps {
   renderBlockControls: (index: number) => React.ReactNode;
 }
 
-const BlockWrapper = memo(({ block, index, children, isDragging, draggedBlockIndex, dragOverBlockIndex, onDragStart, onDragEnd, onDragOver, onDragLeave, renderBlockControls }: BlockWrapperProps) => {
+const BlockWrapper = forwardRef<HTMLDivElement, BlockWrapperProps>(({
+  block,
+  index,
+  children,
+  isDragging,
+  draggedBlockIndex,
+  dragOverBlockIndex,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDragLeave,
+  renderBlockControls
+}, ref) => {
   const isDraggedBlock = draggedBlockIndex === index;
   const isOverBlock = dragOverBlockIndex === index;
 
   return (
     <div
+      ref={ref}
       className={`
-        relative group mb-8 transition-all duration-200 ease-in-out
+        relative group mb-10 transition-all duration-200 ease-in-out
         ${isDragging ? "cursor-grabbing" : "cursor-grab"}
         ${isDraggedBlock ? "" : "opacity-100"}
-        ${isOverBlock ? "border-t-2 border-blue-500" : "border-t-0 border-transparent"}
+        ${isOverBlock ? "border-t-2 border-sky-500" : "border-t-0 border-transparent"}
       `}
+      id={block.id}
       draggable="true"
       onDragStart={(e) => onDragStart(e, index)}
       onDragEnd={onDragEnd}
@@ -53,4 +65,4 @@ const BlockWrapper = memo(({ block, index, children, isDragging, draggedBlockInd
 
 BlockWrapper.displayName = "BlockWrapper";
 
-export default BlockWrapper;
+export default memo(BlockWrapper);

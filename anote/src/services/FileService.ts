@@ -784,47 +784,16 @@ export class FileService {
     return current;
   }
 
-  static async movePage(dirHandle: string, sourcePath: string, targetPath: string) {
-    try {
-      // Create new location
-      await this.createPage(dirHandle, targetPath);
-
-      // Copy content
-      await this.copyDirectory(await this.getDirectoryHandle(dirHandle, sourcePath), await this.getDirectoryHandle(dirHandle, targetPath));
-
-      // Delete old location and handle potential initial page creation
-      const result = await this.deletePage(dirHandle, sourcePath);
-
-      // If result is not null, it means a new initial page was created
-      // In this case, we should keep the moved page instead
-      if (result) {
-        await this.deletePage(dirHandle, result);
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Error moving page:", error);
-      throw error;
-    }
-  }
-
   static async createInitialPage(dirHandle: string) {
     const initialPage = {
-      title: "Welcome",
+      title: "Welcome to Your Workspace",
       createdAt: new Date().toISOString(),
       lastEdited: new Date().toISOString(),
+      id: uuidv4(),
       tags: ["getting-started"],
     };
 
     const initialBlocks = [
-      {
-        id: Date.now(),
-        type: "heading",
-        level: 1,
-        content: "Welcome to Your Workspace",
-        createdAt: new Date().toISOString(),
-        lastEdited: new Date().toISOString(),
-      },
       {
         id: Date.now() + 1,
         type: "paragraph",

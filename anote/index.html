@@ -7,6 +7,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Anote</title>
   <style>
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 4rem;
+    }
+    
+    details>summary {
+      list-style: none;
+    }
+
+    /* Remove marker in Chrome/Safari/Edge */
+    details>summary::-webkit-details-marker,
+    details>summary::marker {
+      display: none;
+    }
+
+    /* Ensure the summary doesn't show markers in Safari iOS */
+    details>summary {
+      -webkit-appearance: none;
+    }
+
+    /* Optional: prevent text selection */
+    details>summary {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .tippy-content {
+      padding: 0 !important;
+    }
+
     /* Add these styles to your CSS */
     [draggable="true"] {
       cursor: grab;

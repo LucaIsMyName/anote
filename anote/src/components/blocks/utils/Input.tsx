@@ -57,7 +57,7 @@ const Input = memo(
           ref={ref || inputRef}
           value={localValue}
           onChange={handleChange}
-          className={`w-full bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 ${className}`}
+          className={`w-full bg-transparent focus:outline-none focus:ring-1 focus:ring-sky-500 ${className}`}
           {...props}
         />
       </div>

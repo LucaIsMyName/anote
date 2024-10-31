@@ -17,13 +17,13 @@ const BlockControls = memo(({
   onCopyBlock, 
   onDeleteBlock 
 }: BlockControlsProps) => (
-  <div className="absolute w-full left-0 -bottom-8 flex flex-row items-center justify-start opacity-0 group-hover:opacity-100">
+  <div className="absolute w-full -left-2 -bottom-8 flex flex-row items-center justify-start opacity-0 group-hover:opacity-100">
     {/* Add block button */}
     <div className="flex items-center">
       <BlockMenu
         onSelect={(type) => onAddBlock(type, index)}
         trigger={
-          <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full">
+          <button className="p-2 text-sky-500 hover:bg-sky-50 rounded-full">
             <Plus className="w-4 h-4" />
           </button>
         }
@@ -31,7 +31,7 @@ const BlockControls = memo(({
       {/* Copy block button */}
       <button
         onClick={() => onCopyBlock(index)}
-        className="p-2 text-blue-500 hover:bg-blue-50 rounded-full"
+        className="p-2 text-sky-500 hover:bg-sky-50 rounded-full"
         title="Copy Block">
         <Copy className="w-4 h-4" />
       </button>

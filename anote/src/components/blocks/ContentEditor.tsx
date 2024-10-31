@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo, useRef, useCallback } from "react";
-import { Plus, Trash2, Edit2, Copy, FolderPlus, Calendar, Save, GripVertical } from "lucide-react";
+import { Plus, Trash2, Edit2, Copy, FolderPlus, Calendar, Save, GripVertical, LoaderCircle } from "lucide-react";
 import { BlockMenu, BlockType } from "./BlockMenu.tsx";
 import TableBlock from "./TableBlock.tsx";
 import HeadingBlock from "./HeadingBlock.tsx";
@@ -11,6 +11,7 @@ import BlockWrapper from "./BlockWrapper.tsx";
 import TableOfContents from "./TableOfContents.tsx";
 import TodoBlock from "./TodoBlock.tsx";
 import Input from "./utils/Input.tsx";
+import Tooltip from "./utils/Tooltip.tsx";
 import { FileService } from "../../services/FileService.ts";
 
 const CURRENT_PAGE_KEY = "anote_current_page";
@@ -20,7 +21,6 @@ export interface ContentEditorProps {
   currentPath: string;
   onPathChange?: (path: string) => void;
 }
-
 
 const EmptyPageBlock = ({ onAddBlock: any }) => {
   const [showMenu, setShowMenu] = useState(false);
@@ -64,11 +64,12 @@ const EmptyPageBlock = ({ onAddBlock: any }) => {
  * create, edit, and delete blocks of content in a page.
  */
 
-
 const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: ContentEditorProps) => {
   // Added default value
   const [blocks, setBlocks] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isShowingSavingIndicator, setIsShowingSavingIndicator] = useState(false);
+  const savingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [pageTitle, setPageTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [pageMetadata, setPageMetadata] = useState({
@@ -78,7 +79,22 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
   const [draggedBlockIndex, setDraggedBlockIndex] = useState(null);
   const [dragOverBlockIndex, setDragOverBlockIndex] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const blockRefs = useRef(new Map());
 
+  const scrollToHeading = useCallback((blockId: number) => {
+    const element = blockRefs.current.get(blockId);
+    if (element) {
+      // Scroll the heading into view with some offset from the top
+      const offset = 80; // Adjust this value based on your layout
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
+  }, []);
   /**
    *
    * @param {number} index
@@ -248,23 +264,45 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
     if (sortedPages.length === 0) return null;
     return sortedPages[0].name;
   };
+
   const saveContent = async () => {
     if (!workspace || !currentPath || !blocks) return;
 
     try {
       setIsSaving(true);
+      setIsShowingSavingIndicator(true);
+
       const updatedMetadata = {
         ...pageMetadata,
         lastEdited: new Date().toISOString(),
       };
+
       await FileService.writePage(workspace, currentPath, blocks, updatedMetadata);
       setPageMetadata(updatedMetadata);
     } catch (error) {
       console.error("Error saving content:", error);
     } finally {
       setIsSaving(false);
+
+      // Clear any existing timer
+      if (savingTimerRef.current) {
+        clearTimeout(savingTimerRef.current);
+      }
+
+      // Set a new timer to hide the indicator after 1 second
+      savingTimerRef.current = setTimeout(() => {
+        setIsShowingSavingIndicator(false);
+      }, 1000);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (savingTimerRef.current) {
+        clearTimeout(savingTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleTitleChange = async (newTitle) => {
     if (newTitle.trim() === pageTitle || !newTitle.trim()) {
@@ -297,28 +335,32 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
     return () => clearTimeout(timer);
   }, [blocks]);
 
-  const addBlock = useCallback((type, index) => {
-    const newBlock = {
-      id: Date.now(),
-      type,
-      content: "",
-      createdAt: new Date().toISOString(),
-      lastEdited: new Date().toISOString(),
-      items: type === BlockType.TODO ? [] : undefined,
-      data: type === BlockType.TABLE ? [] : undefined,
-    };
-  
-    // Handle adding first block
-    if (index === -1) {
-      setBlocks([newBlock]);
-      return;
-    }
-  
-    // Handle adding block at specific index
-    const newBlocks = [...blocks];
-    newBlocks.splice(index + 1, 0, newBlock);
-    setBlocks(newBlocks);
-  }, [blocks]);
+  const addBlock = useCallback(
+    (type, index) => {
+      const newBlock = {
+        id: Date.now(),
+        type,
+        content: "",
+        level: type === BlockType.HEADING ? 2 : undefined, // Add default level for headings
+        createdAt: new Date().toISOString(),
+        lastEdited: new Date().toISOString(),
+        items: type === BlockType.TODO ? [] : undefined,
+        data: type === BlockType.TABLE ? [] : undefined,
+      };
+
+      // Handle adding first block
+      if (index === -1) {
+        setBlocks([newBlock]);
+        return;
+      }
+
+      // Handle adding block at specific index
+      const newBlocks = [...blocks];
+      newBlocks.splice(index + 1, 0, newBlock);
+      setBlocks(newBlocks);
+    },
+    [blocks]
+  );
 
   const handleDelete = async () => {
     if (window.confirm(`Are you sure you want to delete "${pageTitle}"?`)) {
@@ -368,7 +410,8 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
         return (
           <HeadingBlock
             content={block.content}
-            onChange={(content) => updateBlock(block.id, { content })}
+            level={block.level || 2}
+            onChange={(content, level) => updateBlock(block.id, { content, level })}
           />
         );
       case BlockType.TABLE:
@@ -428,7 +471,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
     [addBlock, handleCopyBlock, deleteBlock]
   );
   return (
-    <div className="mx-auto p-8">
+    <main className="mx-auto p-8">
       {/* Page Header */}
       <div className="mb-8 space-y-2 px-6">
         <div className="flex items-center justify-between group">
@@ -451,36 +494,48 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
             </form>
           ) : (
             <h1
-              className="text-5xl flex-1 cursor-pointer hover:text-blue-600 mb-4"
+              className="text-5xl flex-1 cursor-pointer hover:text-sky-600 mb-4"
               onClick={() => setIsEditingTitle(true)}>
               {pageTitle}
             </h1>
           )}
 
           <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-2">
-            <button
-              onClick={() => setIsEditingTitle(true)}
-              className="p-2 hover:bg-gray-100 rounded-full"
-              title="Rename page">
-              <Edit2 className="w-4 h-4 text-gray-500" />
-            </button>
-            <button
-              onClick={handleDelete}
-              className="p-2 hover:bg-gray-100 rounded-full"
-              title="Delete page">
-              <Trash2 className="w-4 h-4 text-red-500" />
-            </button>
-            <button
-              onClick={handleCreateSubpage}
-              className="p-2 hover:bg-gray-100 rounded-full"
-              title="Create subpage">
-              <FolderPlus className="w-4 h-4 text-blue-500" />
-            </button>
+            <Tooltip
+              theme={"light"}
+              content="Rename page"
+              placement="top">
+              <button
+                onClick={() => setIsEditingTitle(true)}
+                className="p-2 hover:bg-gray-100 rounded-full">
+                <Edit2 className="w-4 h-4 text-gray-500" />
+              </button>
+            </Tooltip>
+
+            <Tooltip
+              content="Delete page"
+              placement="top">
+              <button
+                onClick={handleDelete}
+                className="p-2 hover:bg-gray-100 rounded-full">
+                <Trash2 className="w-4 h-4 text-red-500" />
+              </button>
+            </Tooltip>
+
+            <Tooltip
+              content="Create subpage"
+              placement="top">
+              <button
+                onClick={handleCreateSubpage}
+                className="p-2 hover:bg-gray-100 rounded-full">
+                <FolderPlus className="w-4 h-4 text-sky-500" />
+              </button>
+            </Tooltip>
           </div>
         </div>
 
         {/* Page Metadata */}
-        <div className="flex items-center space-x-4 text-sm text-gray-500">
+        <div className="flex items-center space-x-4 text-sm text-gray-500 pb-6 border-b-2">
           <div className="flex items-center space-x-1">
             <Calendar className="w-4 h-4" />
             <span className="truncate">Created: {new Date(pageMetadata.createdAt).toLocaleDateString()}</span>
@@ -492,32 +547,54 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
         </div>
       </div>
       {/* Blocks */}
-      <div className="max-w-4xl mx-auto px-6 relative">
-        {blocks.length === 0 ? (
-          <EmptyPageBlock onAddBlock={addBlock} />
-        ) : (
-          blocks.map((block, index) => (
-            <BlockWrapper
-              key={block.id}
-              block={block}
-              index={index}
-              isDragging={isDragging}
-              draggedBlockIndex={draggedBlockIndex}
-              dragOverBlockIndex={dragOverBlockIndex}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              renderBlockControls={renderBlockControls}>
-              {renderBlock(block)}
-            </BlockWrapper>
-          ))
-        )}
+      <div className=" mx-auto px-6 relative">
+        <div className="lg:flex gap-8">
+          <div className="block w-full lg:w-64 flex-shrink-0 lg:mr-6">
+            <TableOfContents
+              blocks={blocks}
+              onHeadingClick={scrollToHeading}
+            />
+          </div>
+          <div className="flex-1">
+            {blocks.length === 0 ? (
+              <EmptyPageBlock onAddBlock={addBlock} />
+            ) : (
+              blocks.map((block, index) => (
+                <BlockWrapper
+                  key={block.id}
+                  ref={(node) => {
+                    if (node) {
+                      blockRefs.current.set(block.id, node);
+                    } else {
+                      blockRefs.current.delete(block.id);
+                    }
+                  }}
+                  block={block}
+                  index={index}
+                  isDragging={isDragging}
+                  draggedBlockIndex={draggedBlockIndex}
+                  dragOverBlockIndex={dragOverBlockIndex}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  renderBlockControls={renderBlockControls}>
+                  {renderBlock(block)}
+                </BlockWrapper>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Saving indicator */}
-      {isSaving && <div className="fixed top-4 right-4 bg-blue-500 text-white px-3 py-1 rounded-full text-sm">Saving...</div>}
-    </div>
+      {isShowingSavingIndicator && (
+        <div className="fixed top-4 right-4 bg-white/10 backdrop-blur-sm border border-gray-200 rounded px-2 py-1 text-sm text-gray-500 flex items-center gap-2 shadow-sm">
+          <LoaderCircle className="w-4 h-4 animate-spin" />
+          <span>Saving...</span>
+        </div>
+      )}
+    </main>
   );
 };
 

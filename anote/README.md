@@ -2,16 +2,22 @@
 
 a note taking and documentation app
 
-## install
-
 ## use
+1. open the `anote` folder and
+2. run `npm run dev`
+3. select a folder on you Computer
+4. Create Pages and insert Blocks in these Pages
+
+`anote` stored the Pages as folder in your selected Project Folder and insert index.md file to every Folder with the Blocks Metadata and Content
 
 ## to do
 
-- feature: use `tippy-js` for tooltips instead coding them myself
-- feature: add DataBlock with tables framework, store them as JSON insoide the and retrieve JSON from there instead of MD table 
-- feature: finish implement routing!
-- featuire: to-do -> add first item on newly created empty list automatically! -> focus and select the word!
-- feature: implement hit "Enter" on Paragraph, Heading, Image, Table or any other Text based inputs Components
-- bug: make FileBlock Component store and retrieve from/to MD file (like image!)
-- bug: fix image component if nothing is uplaoded on initial insert of block
+- feature (unsure): add `<DataBlock />` with tables framework, store them as JSON inside the and retrieve JSON from there instead of MD table 
+- feature: `<TodoBlock />` -> add first item on newly created empty list automatically! -> focus and select the word!
+- feature: implement hit "Enter" on `<ParagraphBlock />`, `<HeadingBlock />`, `<ImageBlock />`, `<TableBlock />` or any other Text based inputs Components
+- feature: implement arrow up/down buttons to move `<BlockWrapper />` step by step up/down the List (optional instead of dragging which can act buggy)
+- bug: make drag blocks work smoother on `<BlockWrapper />` & `<ContentEditor />`
+- bug: make drag/drop work on `<Sidebar />`
+- bug: make `<FileBlock />` store and retrieve from/to MD file (like image!)
+- bug: fix `<ImageBlock />` if nothing is uplaoded on initial insert of block
+- bug: when resizing the `<Sidebar />` it doesnt resize the height of `<Textarea />` comoponent (so `<Textarea />` have cut-off lines or too much space on bottom)

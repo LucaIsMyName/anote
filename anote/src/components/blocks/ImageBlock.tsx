@@ -73,7 +73,7 @@ const ImageBlock = ({ src, caption, onChange }: ImageBlockProps) => {
           onDrop={handleDrop}
           className={`
             border-2 border-dashed rounded-lg p-8
-            ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"}
+            ${isDragging ? "border-sky-500 bg-sky-50" : "border-gray-300"}
           `}>
           <div className="flex flex-col items-center space-y-4">
             <div className="p-4 bg-gray-100 rounded-full">

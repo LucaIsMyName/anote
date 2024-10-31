@@ -107,12 +107,6 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
   }, [workspace]);
 
   useEffect(() => {
-    if (workspace) {
-      loadPages();
-    }
-  }, [workspace]);
-
-  useEffect(() => {
     localStorage.setItem(EXPANDED_PATHS_KEY, JSON.stringify(expandedPaths));
     localStorage.setItem(SIDEBAR_WIDTH_KEY, width);
     localStorage.setItem(SIDEBAR_OPEN_KEY, isOpen);
@@ -231,13 +225,13 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
     if (isDropTarget && !isDragging) {
       switch (dropPosition) {
         case "above":
-          dropIndicatorClass = "before:absolute before:left-0 before:right-0 before:top-0 before:h-0.5 before:bg-blue-500";
+          dropIndicatorClass = "before:absolute before:left-0 before:right-0 before:top-0 before:h-0.5 before:bg-sky-500";
           break;
         case "below":
-          dropIndicatorClass = "after:absolute after:left-0 after:right-0 after:bottom-0 after:h-0.5 after:bg-blue-500";
+          dropIndicatorClass = "after:absolute after:left-0 after:right-0 after:bottom-0 after:h-0.5 after:bg-sky-500";
           break;
         case "inside":
-          dropIndicatorClass = "bg-blue-50 border-2 border-blue-500";
+          dropIndicatorClass = "bg-sky-50 border-2 border-sky-500";
           break;
       }
     }
@@ -338,7 +332,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
         onDrop={(e) => handleDrop(e, fullPath)}
         className={`relative group ${isDragging ? "opacity-50" : ""} ${dropIndicatorClass}`}>
         <div
-          className={`flex items-center px-2 py-1 hover:bg-gray-100 ${currentPath === fullPath ? "bg-blue-50" : ""}`}
+          className={`flex items-center px-2 py-1 hover:bg-gray-100 ${currentPath === fullPath ? "bg-sky-50" : ""}`}
           style={{ paddingLeft: `${level * 1.5}rem` }}>
           <button
             onClick={() => {
@@ -396,7 +390,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
               onClick={handleCreateSubpage}
               className="p-1 hover:bg-gray-200 rounded"
               title="Create subpage">
-              <FolderPlus className="w-3.5 h-3.5 text-blue-500" />
+              <FolderPlus className="w-3.5 h-3.5 text-sky-500" />
             </button>
             <button
               onClick={() => handleDelete(fullPath)}
@@ -465,8 +459,8 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
         position: "relative",
       }}
       className="bg-white shadow border-r-2 border-gray-200 h-screen overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between w-full px-3 py-2">
-        {isOpen ? <h1 className="font-bold">Workspace</h1> : ""}
+      <div className="flex items-center justify-between w-full px-3 py-3">
+        {isOpen ? <h1 className="font-bold text-lg">anote</h1> : ""}
         <button
           onClick={toggleSidebar}
           className="text-sm text-gray-500 hover:text-gray-700 focus:outline-none">

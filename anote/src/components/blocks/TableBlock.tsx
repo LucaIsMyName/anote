@@ -156,15 +156,15 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
   return (
     <div className="mb-4 overflow-x-auto">
       <div
-        className="inline-block min-w-full border rounded-lg"
+        className="inline-block min-w-full border-2 rounded-lg"
         ref={tableRef}>
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead>
+        <table className="min-w-full divide-y divide-gray-200 rounded-lg">
+          <thead className="rounded-t-lg">
             <tr>
               {headers.map((header, colIndex) => (
                 <th
                   key={colIndex}
-                  className="relative border-b bg-gray-50"
+                  className="relative border-b bg-gray-50 rounded-l-lg"
                   style={{ width: columnWidths[colIndex] || 150 }}>
                   <Input
                     type="text"
@@ -180,7 +180,7 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
                   </button>
                   {colIndex < headers.length - 1 && (
                     <div
-                      className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-blue-500"
+                      className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-sky-500"
                       onMouseDown={(e) => startResize(colIndex, e)}
                     />
                   )}
@@ -201,12 +201,12 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
                       type="text"
                       value={cell}
                       onChange={(e) => updateCell(rowIndex, colIndex, e.target.value)}
-                      className="block w-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="block w-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-sky-500"
                       placeholder="Type something..."
                     />
                   </td>
                 ))}
-                <td className="">
+                <td className="size-[38px] bg-gray-300 flex items-center justify-center">
                   <button
                     onClick={() => deleteRow(rowIndex)}
                     className=" flex justify-center items-center size-[24px] text-gray-400 hover:text-red-500">
