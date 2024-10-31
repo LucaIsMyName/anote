@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
-import Textarea from "./utils/Textarea.tsx";
+import SwitchableEditor from "./utils/SwitchableEditor.tsx";
 import Tooltip from "./utils/Tooltip.tsx";
+import { FileService } from "../../services/FileService.ts";
 
 export interface HeadingBlockProps {
   content: string;
@@ -16,11 +17,17 @@ export interface HeadingBlockProps {
 const HeadingBlock = ({ content, level: initialLevel = 2, onChange }: HeadingBlockProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [headingLevel, setHeadingLevel] = useState(initialLevel);
-  
+  const [localContent, setLocalContent] = useState('');
+
   // Update heading level when prop changes
   useEffect(() => {
     setHeadingLevel(initialLevel);
   }, [initialLevel]);
+
+  useEffect(() => {
+    const markdownContent = FileService.transformInlineHtmlToMarkdown(content || '');
+    setLocalContent(markdownContent);
+  }, [content]);
 
   const handleSelectLevel = (level: number) => {
     setHeadingLevel(level);
@@ -28,8 +35,10 @@ const HeadingBlock = ({ content, level: initialLevel = 2, onChange }: HeadingBlo
     onChange(content || "", level);
   };
 
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onChange(e.target.value, headingLevel);
+  const handleContentChange = (newMarkdownContent: string) => {
+    setLocalContent(newMarkdownContent);
+    const htmlContent = FileService.transformInlineMarkdownToHtml(newMarkdownContent);
+    onChange(htmlContent, headingLevel);
   };
 
   const HeadingLevelMenu = (
@@ -74,17 +83,17 @@ const HeadingBlock = ({ content, level: initialLevel = 2, onChange }: HeadingBlo
       >
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="flex items-center px-[0.5em]  py-[0.2em] rounded text-gray-700 hover:bg-gray-200 opacity-25 hover:opacity-100 transition-opacity ml-2"
+          className="flex items-center space-x-1 bg-gray-100 px-3 py-1 rounded text-gray-700 hover:bg-gray-200 opacity-25 hover:opacity-100 transition-opacity ml-2"
         >
           <span>{`H${headingLevel}`}</span>
           <ChevronDown className="w-4 h-4" />
         </button>
       </Tooltip>
       
-      <Textarea
-        value={content || ""}
+      <SwitchableEditor
+        content={localContent}
         onChange={handleContentChange}
-        className={`m-0 w-full bg-transparent font-bold focus:ring-1 focus:ring-sky-500 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded ${getFontSize()}`}
+        className={`m-0 w-full bg-transparent focus:ring-1 focus:ring-sky-500 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded p-1 ${getFontSize()}`}
         placeholder="Heading text..."
       />
     </div>

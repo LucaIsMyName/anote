@@ -107,6 +107,105 @@ export class FileService {
 
     return searchDirectory(dirHandle);
   }
+
+  static transformInlineMarkdownToHtml(markdown: string): string {
+    if (!markdown) return '';
+  
+    // First preserve spaces by converting them to a special marker
+    let html = markdown
+      .replace(/  +/g, match => '&nbsp;'.repeat(match.length));
+  
+    // Process markdown
+    const patterns = [
+      {
+        pattern: /\*\*([^*]+)\*\*/g,
+        replacement: '<strong>$1</strong>'
+      },
+      {
+        pattern: /__([^_]+)__/g,
+        replacement: '<strong>$1</strong>'
+      },
+      {
+        pattern: /(?<!\*)\*([^*]+)\*(?!\*)/g,
+        replacement: '<em>$1</em>'
+      },
+      {
+        pattern: /(?<!_)_([^_]+)_(?!_)/g,
+        replacement: '<em>$1</em>'
+      },
+      {
+        pattern: /`([^`]+)`/g,
+        replacement: '<code>$1</code>'
+      },
+      {
+        pattern: /\[([^\]]+)\]\(([^)]+)\)/g,
+        replacement: '<a href="$2" class="text-sky-600 hover:underline">$1</a>'
+      }
+    ];
+  
+    // Apply each pattern while preserving spaces
+    patterns.forEach(({ pattern, replacement }) => {
+      html = html.replace(pattern, replacement);
+    });
+  
+    // Handle line breaks while preserving spaces
+    return html
+      .split('\n')
+      .map(line => line || '&nbsp;')
+      .join('<br />');
+  }
+  
+  static transformInlineHtmlToMarkdown(html: string): string {
+    if (!html) return '';
+    
+    // If it's already markdown or plain text, preserve spaces
+    if (!/[<>]/.test(html)) {
+      return html.replace(/&nbsp;/g, ' ');
+    }
+  
+    let markdown = html
+      // First handle spaces and entities
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&');
+  
+    // Convert HTML to markdown
+    const conversions = [
+      {
+        pattern: /<br\s*\/?>\s*/g,
+        replacement: '\n'
+      },
+      {
+        pattern: /<(strong|b)>([^<]*)<\/\1>/g,
+        replacement: '**$2**'
+      },
+      {
+        pattern: /<(em|i)>([^<]*)<\/\1>/g,
+        replacement: '*$2*'
+      },
+      {
+        pattern: /<code>([^<]*)<\/code>/g,
+        replacement: '`$1`'
+      },
+      {
+        pattern: /<a[^>]+href="([^"]*)"[^>]*>([^<]*)<\/a>/g,
+        replacement: '[$2]($1)'
+      }
+    ];
+  
+    // Apply conversions while preserving spaces
+    conversions.forEach(({ pattern, replacement }) => {
+      markdown = markdown.replace(pattern, replacement);
+    });
+  
+    // Clean up remaining HTML tags while preserving spaces
+    markdown = markdown
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ');
+  
+    return markdown.trim();
+  }
   /**
    *
    * @param {string} dirHandle

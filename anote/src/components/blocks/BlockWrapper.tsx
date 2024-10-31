@@ -48,8 +48,8 @@ const BlockWrapper = forwardRef<HTMLDivElement, BlockWrapperProps>(({
       onDragLeave={onDragLeave}>
       {/* Larger drag handle area */}
       <div
-        className="absolute left-0 top-0 bottom-0 w-12 -translate-x-full 
-                   opacity-0 group-hover:opacity-100 flex items-center 
+        className="absolute left-0 top-0 w-12 -translate-x-full 
+                   opacity-0 group-hover:opacity-100 flex items-center h-full
                    justify-center cursor-grab active:cursor-grabbing">
         <div className="p-2 rounded hover:bg-gray-100">
           <GripVertical className="w-5 h-5 text-gray-400" />

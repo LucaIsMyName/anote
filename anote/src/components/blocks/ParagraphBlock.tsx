@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState, memo } from "react";
 import { Navigate } from "react-router-dom";
 import PageMentionMenu from "./PageMentionMenu.tsx";
 import Input from "./utils/Input.tsx";
-import Textarea from "./utils/Textarea.tsx";
-
+import SwitchableEditor from "./utils/SwitchableEditor.tsx";
+import { FileService } from "../../services/FileService.ts";
 
 export interface ParagraphBlockProps {
   content: string;
@@ -29,6 +29,7 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick }: Pa
   });
   const inputRef = useRef(null);
   const [pages, setPages] = useState([]);
+  const [localContent, setLocalContent] = useState("");
 
   useEffect(() => {
     // Fetch pages when component mounts
@@ -45,6 +46,17 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick }: Pa
       fetchPages();
     }
   }, [workspace]);
+
+  useEffect(() => {
+    const markdownContent = FileService.transformInlineHtmlToMarkdown(content || "");
+    setLocalContent(markdownContent);
+  }, [content]);
+
+  const handleChange = (newMarkdownContent: string) => {
+    setLocalContent(newMarkdownContent);
+    const htmlContent = FileService.transformInlineMarkdownToHtml(newMarkdownContent);
+    onChange(htmlContent);
+  };
 
   const handleKeyDown = (e: any) => {
     if (e.key === "@") {
@@ -110,13 +122,11 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick }: Pa
 
   return (
     <div className="relative">
-      <Textarea
-        className="w-full bg-transparent focus:ring-offset-2 focus:outline-4 outline-offset-2	rounded"
+      <SwitchableEditor
+        content={localContent}
+        onChange={handleChange}
+        className="w-full focus:ring-1 focus:ring-sky-500 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded p-1 text-gray-700"
         placeholder="Type something..."
-        value={content}
-        onChange={handleInput}
-        onKeyDown={handleKeyDown}
-        onClick={handleClick}
       />
 
       <PageMentionMenu

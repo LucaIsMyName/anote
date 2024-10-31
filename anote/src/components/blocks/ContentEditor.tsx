@@ -589,7 +589,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
 
       {/* Saving indicator */}
       {isShowingSavingIndicator && (
-        <div className="fixed top-4 right-4 bg-white/10 backdrop-blur-sm border border-gray-200 rounded px-2 py-1 text-sm text-gray-500 flex items-center gap-2 shadow-sm">
+        <div className="fixed top-4 right-4 bg-white/80 backdrop-blur-sm border border-gray-200 rounded px-2 py-1 text-sm text-gray-500 flex items-center gap-2 shadow-sm">
           <LoaderCircle className="w-4 h-4 animate-spin" />
           <span>Saving...</span>
         </div>

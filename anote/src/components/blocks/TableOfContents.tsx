@@ -8,11 +8,24 @@ interface TableOfContentsProps {
 
 const TableOfContents = memo(({ blocks, onHeadingClick }: TableOfContentsProps) => {
   // Filter and transform heading blocks
+
+  const stripHtml = (html: string): string => {
+    if (!html) return '';
+    
+    // First decode HTML entities
+    const txt = document.createElement('textarea');
+    txt.innerHTML = html;
+    const decodedHtml = txt.value;
+    
+    // Then remove HTML tags
+    return decodedHtml.replace(/<[^>]+>/g, '');
+  };
+
   const headings = blocks
     .filter((block) => block.type === "heading")
     .map((block) => ({
       id: block.id,
-      content: block.content,
+      content: stripHtml(block.content), // Clean the content here
       level: block.level || 2,
     }));
 
