@@ -90,10 +90,10 @@ const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, level: initialLeve
         theme="light"
         placement="bottom-start"
         offset={[10, 0]}
-        className="font-mono">
+        className="">
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="flex font-mono items-center space-x-1 px-2 pt-[0.1em] rounded text-gray-700 hover:bg-gray-100 opacity-25 hover:opacity-100 transition-opacity ml-2">
+          className="flex items-center space-x-1 px-2 pt-[0.1em] rounded text-gray-700 hover:bg-gray-100 opacity-25 hover:opacity-100 transition-opacity ml-2">
           <span>{`h${headingLevel}`}</span>
           <ChevronDown className="w-4 h-4" />
         </button>

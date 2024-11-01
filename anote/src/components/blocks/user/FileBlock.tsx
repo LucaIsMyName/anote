@@ -91,8 +91,8 @@ const FileBlock: React.FC<FileBlockProps> = ({
   
   if (fileInfo) {
     return (
-      <div className="mb-4">
-        <div className="border rounded-lg p-4 bg-gray-50">
+      <div className="">
+        <div className="border-2 rounded-lg p-4 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <FileIcon className="w-8 h-8 text-gray-400" />
@@ -112,7 +112,7 @@ const FileBlock: React.FC<FileBlockProps> = ({
                 link.click();
                 document.body.removeChild(link);
               }}
-              className="px-3 py-1 text-sm text-sky-600 hover:text-sky-700 hover:bg-sky-50 rounded-md transition-colors"
+              className="px-3 py-1 text-sm border-2 text-sky-600 hover:text-sky-700 hover:bg-sky-50 rounded-md transition-colors"
             >
               Download
             </button>

@@ -9,6 +9,7 @@ import ImageBlock from "./user/ImageBlock.tsx";
 import FileBlock from "./user/FileBlock.tsx";
 import CodeBlock from "./user/CodeBlock.tsx";
 import ListBlock from "./user/ListBlock.tsx";
+import ReferenceBlock from "./user/ReferenceBlock.tsx";
 
 import BlockControls from "./BlockControls.tsx";
 import BlockWrapper from "./BlockWrapper.tsx";
@@ -91,6 +92,21 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
     anchorEl: null,
     triggerBlockIndex: -1,
   });
+  const handleMoveBlock = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      if (toIndex < 0 || toIndex >= blocks.length) return;
+
+      const newBlocks = [...blocks];
+      const [movedBlock] = newBlocks.splice(fromIndex, 1);
+      newBlocks.splice(toIndex, 0, movedBlock);
+
+      // Update lastEdited timestamp of the moved block
+      movedBlock.lastEdited = new Date().toISOString();
+
+      setBlocks(newBlocks);
+    },
+    [blocks]
+  );
 
   const handleBlockEnterKey = (index: number) => {
     // Get the position of the current block
@@ -390,6 +406,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
         items: type === BlockType.LIST ? [] : undefined, // Changed from TODO to LIST
         listType: type === BlockType.LIST ? "unordered" : undefined, // Add this line
         data: type === BlockType.TABLE ? [] : undefined,
+        referenceId: type === BlockType.REFERENCE ? undefined : undefined, // Add this line
       };
       // Handle adding first block
       if (index === -1) {
@@ -510,6 +527,15 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
             }}
           />
         );
+      case BlockType.REFERENCE:
+        return (
+          <ReferenceBlock
+            referenceId={block.referenceId}
+            workspace={workspace}
+            onNavigate={(pagePath) => onPathChange(pagePath)}
+            onChange={(referenceId) => updateBlock(block.id, { referenceId })}
+          />
+        );
       default:
         return null;
     }
@@ -539,7 +565,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
     <main className="mx-auto p-8">
       {/* Page Header */}
       <div className="mb-8 space-y-2 md:px-6">
-        <div className="flex items-center justify-between group">
+        <div className="flex items-center justify-between group my-4">
           {isEditingTitle ? (
             <form
               onSubmit={(e) => {
@@ -550,7 +576,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
               <Input
                 name="title"
                 defaultValue={pageTitle}
-                className="text-5xl w-full focus:outline-none bg-transparent mb-4"
+                className="text-5xl w-full focus:outline-none bg-transparent "
                 onBlur={(e) => handleTitleChange(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") setIsEditingTitle(false);
@@ -559,93 +585,69 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
             </form>
           ) : (
             <h1
-              className="text-5xl flex-1 cursor-pointer hover:text-sky-600 mb-4"
+              className="text-5xl flex-1 cursor-pointer hover:text-sky-600"
               onClick={() => setIsEditingTitle(true)}>
               {pageTitle}
             </h1>
           )}
-
-          <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-2">
-            <Tooltip
-              content="Export as JSON"
-              placement="top">
-              <button
-                onClick={async () => {
-                  const pageJson = await ImportExportService.exportPageToJson(workspace, currentPath);
-                  const blob = new Blob([JSON.stringify(pageJson, null, 2)], {
-                    type: "application/json",
-                  });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `${pageTitle}.json`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
-                className="p-2 hover:bg-gray-100 rounded-full">
-                <Download className="w-4 h-4 text-gray-500" />
-              </button>
-            </Tooltip>
-
-            <Tooltip
-              content="Export as Markdown"
-              placement="top">
-              <button
-                onClick={async () => {
-                  const markdown = await ImportExportService.exportPageToMd(workspace, currentPath);
-                  const blob = new Blob([markdown], { type: "text/markdown" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `${pageTitle}.md`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
-                className="p-2 hover:bg-gray-100 rounded-full">
-                <FileText className="w-4 h-4 text-gray-500" />
-              </button>
-            </Tooltip>
-            <Tooltip
-              theme={"light"}
-              content="Rename page"
-              placement="top">
-              <button
-                onClick={() => setIsEditingTitle(true)}
-                className="p-2 hover:bg-gray-100 rounded-full">
-                <Edit2 className="w-4 h-4 text-gray-500" />
-              </button>
-            </Tooltip>
-
-            <Tooltip
-              content="Delete page"
-              placement="top">
-              <button
-                onClick={handleDelete}
-                className="p-2 hover:bg-gray-100 rounded-full">
-                <Trash2 className="w-4 h-4 text-red-500" />
-              </button>
-            </Tooltip>
-
-            <Tooltip
-              content="Create subpage"
-              placement="top">
-              <button
-                onClick={handleCreateSubpage}
-                className="p-2 hover:bg-gray-100 rounded-full">
-                <FolderPlus className="w-4 h-4 text-sky-400" />
-              </button>
-            </Tooltip>
-          </div>
         </div>
+
+        <section className="flex items-center space-x-2 pb-4 -ml-2">
+          <button
+            onClick={async () => {
+              const pageJson = await ImportExportService.exportPageToJson(workspace, currentPath);
+              const blob = new Blob([JSON.stringify(pageJson, null, 2)], {
+                type: "application/json",
+              });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `${pageTitle}.json`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="p-2 hover:bg-gray-100 rounded-full">
+            <Download className="w-5 h-5 text-gray-500" />
+          </button>
+          <button
+            onClick={async () => {
+              const markdown = await ImportExportService.exportPageToMd(workspace, currentPath);
+              const blob = new Blob([markdown], { type: "text/markdown" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `${pageTitle}.md`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="p-2 hover:bg-gray-100 rounded-full">
+            <FileText className="w-5 h-5 text-gray-500" />
+          </button>
+          <button
+            onClick={() => setIsEditingTitle(true)}
+            className="p-2 hover:bg-gray-100 rounded-full">
+            <Edit2 className="w-5 h-5 text-gray-500" />
+          </button>
+          <button
+            onClick={handleDelete}
+            className="p-2 hover:bg-gray-100 rounded-full">
+            <Trash2 className="w-5 h-5 text-gray-500" />
+          </button>
+          <button
+            onClick={handleCreateSubpage}
+            className="p-2 hover:bg-gray-100 rounded-full">
+            <FolderPlus className="w-5 h-5 text-gray-500" />
+          </button>
+        </section>
 
         {/* Page Metadata */}
         <div className="flex items-center space-x-4 text-sm text-gray-500 pb-6 border-b-2">
           <div className="flex items-center space-x-1">
-            <Calendar className="w-4 h-4" />
+            <Calendar className="w-5 h-5" />
             <span className="truncate">Created: {new Date(pageMetadata.createdAt).toLocaleDateString()}</span>
           </div>
           <div className="flex items-center space-x-1">
-            <Save className="w-4 h-4" />
+            <Save className="w-5 h-5" />
             <span className="truncate">Last edited: {new Date(pageMetadata.lastEdited).toLocaleDateString()}</span>
           </div>
         </div>
@@ -676,6 +678,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
                   onDragEnd={handleDragEnd}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
+                  onMoveBlock={handleMoveBlock} // Add this line
                   renderBlockControls={renderBlockControls}>
                   {renderBlock(block, index)}
                 </BlockWrapper>

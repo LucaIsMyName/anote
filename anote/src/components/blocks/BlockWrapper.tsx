@@ -1,5 +1,5 @@
 import React, { memo, forwardRef } from "react";
-import { GripVertical } from "lucide-react";
+import { GripVertical, ChevronUp, ChevronDown } from "lucide-react";
 
 export interface BlockWrapperProps {
   block: any;
@@ -13,24 +13,22 @@ export interface BlockWrapperProps {
   onDragOver: (e: React.DragEvent, index: number) => void;
   onDragLeave: (e: React.DragEvent) => void;
   renderBlockControls: (index: number) => React.ReactNode;
+  onMoveBlock: (fromIndex: number, toIndex: number) => void;
 }
 
-const BlockWrapper = forwardRef<HTMLDivElement, BlockWrapperProps>(({
-  block,
-  index,
-  children,
-  isDragging,
-  draggedBlockIndex,
-  dragOverBlockIndex,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDragLeave,
-  renderBlockControls
-}, ref) => {
+const BlockWrapper = forwardRef<HTMLDivElement, BlockWrapperProps>(({ block, index, children, isDragging, draggedBlockIndex, dragOverBlockIndex, onDragStart, onDragEnd, onDragOver, onDragLeave, renderBlockControls, onMoveBlock }, ref) => {
   const isDraggedBlock = draggedBlockIndex === index;
   const isOverBlock = dragOverBlockIndex === index;
-
+  const handleMoveUp = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (index > 0) {
+      onMoveBlock(index, index - 1);
+    }
+  };
+  const handleMoveDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onMoveBlock(index, index + 1);
+  };
   return (
     <div
       ref={ref}
@@ -38,7 +36,7 @@ const BlockWrapper = forwardRef<HTMLDivElement, BlockWrapperProps>(({
         relative group mb-10 transition-all duration-200 ease-in-out
         ${isDragging ? "cursor-grabbing" : "cursor-grab"}
         ${isDraggedBlock ? "" : "opacity-100 border-2 border-transparent p-0 rounded-lg shadow-sky-400"}
-        ${isOverBlock ? "border-2 border-sky-400 p-4 scale-90 rounded-lg" : "border-transparent"}
+        ${isOverBlock ? "border-2 outline-sky-400 outline-offset-4 rounded-lg" : "border-transparent"}
       `}
       id={block.id}
       draggable="true"
@@ -47,14 +45,27 @@ const BlockWrapper = forwardRef<HTMLDivElement, BlockWrapperProps>(({
       onDragOver={(e) => onDragOver(e, index)}
       onDragLeave={onDragLeave}>
       {/* Larger drag handle area */}
+      {/* Block controls with arrows */}
       <div
-      id={block.id}
-        className="absolute left-0 top-0 w-12 -translate-x-full 
-                   opacity-0 group-hover:opacity-100 flex items-center h-full
-                   justify-center cursor-grab active:cursor-grabbing">
-        <div className="p-2 rounded hover:bg-gray-100">
-          <GripVertical className="w-5 h-5 text-gray-400" />
+        className="absolute left-0 top-0 w-8 -translate-x-full 
+                     opacity-0 group-hover:opacity-100 flex flex-col
+                     items-center gap-1">
+        <button
+          onClick={handleMoveUp}
+          className={`${index === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+          disabled={index === 0}>
+          <ChevronUp className="w-4 h-4 text-gray-400" />
+        </button>
+
+        <div className="cursor-grab active:cursor-grabbing">
+          <GripVertical className="w-4 h-4 text-gray-400" />
         </div>
+
+        <button
+          onClick={handleMoveDown}
+          className="">
+          <ChevronDown className="w-4 h-4 text-gray-400" />
+        </button>
       </div>
 
       <div className={`relative ${isDragging ? "pointer-events-none" : ""}`}>{children}</div>

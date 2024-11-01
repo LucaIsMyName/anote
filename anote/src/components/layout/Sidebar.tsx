@@ -523,7 +523,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
           />
         </>
       )}
-      <div className="border-t border-gray-200 p-3 space-y-2">
+      {/* <div className="border-t border-gray-200 p-3 space-y-2">
         <div className="flex justify-between items-center">
           <button
             onClick={async () => {
@@ -543,7 +543,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
             <span>Export Workspace</span>
           </button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

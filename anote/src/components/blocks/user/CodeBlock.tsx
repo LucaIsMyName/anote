@@ -13,9 +13,10 @@ import "prismjs/components/prism-rust";
 import "prismjs/components/prism-sql";
 import "prismjs/components/prism-json";
 import "prismjs/components/prism-yaml";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, ToggleLeft } from "lucide-react";
 import Tooltip from "../utils/Tooltip.tsx";
 import Textarea from "../utils/Textarea.tsx";
+
 export interface CodeBlockProps {
   content?: string;
   onChange: (updates: { content: string; language: string; isMultiline: boolean }) => void;
@@ -64,7 +65,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, la
     onChange({
       content: newContent,
       language,
-      isMultiline
+      isMultiline,
     });
   };
 
@@ -74,7 +75,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, la
     onChange({
       content,
       language: newLanguage,
-      isMultiline
+      isMultiline,
     });
     setIsLanguageMenuOpen(false);
   };
@@ -86,7 +87,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, la
     onChange({
       content,
       language,
-      isMultiline: newIsMultiline
+      isMultiline: newIsMultiline,
     });
   };
 
@@ -114,7 +115,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, la
   );
 
   return (
-    <div className="relative group rounded-lg border border-gray-200 bg-gray-50">
+    <div className="relative group rounded-lg border-2 border-gray-200 bg-gray-50">
       <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-white rounded-t-lg">
         <div className="flex items-center space-x-2">
           <Tooltip
@@ -128,35 +129,39 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, la
             arrow={false}>
             <button
               onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
-              className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
+              className="px-3 py-1 min-w-32 text-left text-sm text-gray-600 hover:bg-gray-100 rounded">
               {supportedLanguages.find((lang) => lang.value === language)?.label || language}
             </button>
           </Tooltip>
+          <div className="text-md h-[1.5em] w-[2px] bg-gray-300"></div>
           <button
             onClick={toggleMultiline}
-            className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
+            className="px-3 py-1 text-sm text-left flex gap-2 justify-between items-center min-w-32 text-gray-600 hover:bg-gray-100 rounded">
             {isMultiline ? "Multiline" : "Single line"}
+            <ToggleLeft className="w-4 h-4" />
           </button>
         </div>
         <button
           onClick={copyToClipboard}
-          className="p-2 hover:bg-gray-100 rounded text-gray-500 flex items-center space-x-1">
-          {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          className="p-1 px-3 hover:bg-gray-100 rounded text-gray-500 flex items-center justify-end gap-2 space-x-1">
           <span className="text-sm">{isCopied ? "Copied!" : "Copy"}</span>
+          {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
         </button>
       </div>
 
       <div className="relative h-auto">
         <Textarea
-          value={content}  // Use content directly from props
+          value={content} // Use content directly from props
           onChange={handleContentChange}
-          className="w-full p-4 font-mono text-sm bg-transparent absolute inset-0 resize-none outline-none"
+          className="w-full p-4 text-sm bg-transparent absolute inset-0 resize-none outline-none"
           style={{ height: isMultiline ? "auto" : "2.5rem" }}
           rows={isMultiline ? 5 : 1}
         />
         <pre className="p-4 m-0 overflow-x-auto">
-          <code ref={codeRef} className={`language-${language}`}>
-            {content || " "}  {/* Use content directly from props */}
+          <code
+            ref={codeRef}
+            className={`language-${language}`}>
+            {content || " "} {/* Use content directly from props */}
           </code>
         </pre>
       </div>

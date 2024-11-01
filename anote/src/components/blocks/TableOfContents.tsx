@@ -64,8 +64,8 @@ const TableOfContents = memo(({ blocks, onHeadingClick }: TableOfContentsProps) 
             className={`${getIndentClass(heading.level)} group transition-colors`}>
             <a
               href={`#${heading.id}`}
-              className="flex items-center text-gray-600 hover:text-sky-600 text-sm py-1 w-full">
-              <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              className="flex items-center gap-2 text-gray-600 hover:text-sky-600 text-sm py-1/2 w-full">
+              <ChevronRight className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
               <span className="truncate">{heading.content || "Untitled"}</span>
             </a>
           </li>
