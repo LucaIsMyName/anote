@@ -131,7 +131,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
   const renderReference = () => {
     if (!isReferenceValid || !selectedReference) {
       return (
-        <div className="p-4 border-2 border-yellow-200 bg-yellow-50 rounded">
+        <div className="p-4 border-2 border-yellow-300 bg-yellow-50 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <AlertTriangle className="w-5 h-5 text-yellow-500" />
@@ -139,7 +139,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
             </div>
             <button
               onClick={() => setIsSearching(true)}
-              className="px-3 py-1 text-sm bg-white border border-yellow-300 rounded hover:bg-yellow-50">
+              className="px-3 py-1 text-sm bg-white border-2 border-yellow-400 rounded hover:bg-yellow-50">
               {!isReferenceValid ? "Select New Reference" : "Select Reference"}
             </button>
           </div>
@@ -243,7 +243,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
         if (tableData.length === 0) return null;
 
         return (
-          <div className="overflow-x-auto border rounded">
+          <div className="overflow-x-auto border-2 rounded">
             <table className="min-w-full divide-y divide-gray-200">
               <tbody>
                 {tableData.map((row, rowIndex) => (
@@ -266,11 +266,11 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
         );
 
       case "image":
-        return <div className="p-3 bg-gray-50 rounded border border-gray-200 text-sm text-gray-500">{reference.id}</div>;
+        return <div className="p-3 bg-gray-50 rounded border-2 border-gray-200 text-sm text-gray-500">{reference.type.toUpperCase()} {reference.pagePath}/#{reference.id} {reference.pageId}</div>;
       case "file":
-        return <div className="p-3 bg-gray-50 rounded border border-gray-200 text-sm text-gray-500">{reference.id}</div>;
+        return <div className="p-3 bg-gray-50 rounded border-2 border-gray-200 text-sm text-gray-500">{reference.pagePath}/#{reference.id}</div>;
       default:
-        return <div className="p-3 bg-gray-50 rounded border border-gray-200 text-sm text-gray-500">{reference.id}</div>;return <div className="p-3 bg-gray-50 rounded border border-gray-200 text-sm text-gray-500">{reference.id}</div>;
+        return <div className="p-3 bg-gray-50 rounded border-2 border-gray-200 text-sm text-gray-500">#{reference.id}</div>;return <div className="p-3 bg-gray-50 rounded border border-gray-200 text-sm text-gray-500">{reference.id}</div>;
     }
   };
 
