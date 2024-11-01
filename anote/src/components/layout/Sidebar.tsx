@@ -460,7 +460,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
         transition: "width 0.3s",
         position: "relative",
       }}
-      className="bg-white shadow border-r-2 border-gray-200 h-screen overflow-hidden flex flex-col">
+      className="bg-white shadow border-r-2 border-gray-200 h-screen overflow-y-scroll flex flex-col">
       <div className="flex items-center justify-between w-full px-3 py-3">
         {isOpen ? <h1 className="font-bold text-lg">anote</h1> : ""}
         <button

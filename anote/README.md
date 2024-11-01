@@ -22,6 +22,7 @@
 
 - bug: storing and displaying inline md work but it get's saved as `html` inside MD ...
 - bug: can't refence blocks from folders that inside folders or more
+- -feature: add relative times (for Created at: Last Week, Last Edited: Today) via date npm package
 - feature/change: `<Suspense />` and placeholde content before `<Sidebar />` and `<ContentEditor />` are loaded
 - feature (unsure): add `<DataBlock />` with tables framework, store them as JSON inside the and retrieve JSON from there instead of MD table 
 - feature: `<TodoBlock />` -> add first item on newly created empty list automatically! -> focus and select the word!
