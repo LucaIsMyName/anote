@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { FolderPlus, PanelRightClose, Plus, ChevronRight, ChevronDown, Edit2, Trash2, PanelRightOpen } from "lucide-react";
+import { FolderPlus, Download, PanelRightClose, Plus, ChevronRight, ChevronDown, Edit2, Trash2, PanelRightOpen } from "lucide-react";
 import { FileService } from "../../services/FileService.ts";
+import { ImportExportService } from "../../services/ImportExportService.ts";
 import Input from "../blocks/utils/Input.tsx";
+
 const EXPANDED_PATHS_KEY = "anote_expanded_paths";
 const SIDEBAR_WIDTH_KEY = "sidebar_width";
 const SIDEBAR_OPEN_KEY = "sidebar_open";
@@ -21,7 +23,7 @@ interface SidebarProps {
 const PageCreationDialog = ({ workspace, parentPath = "", onSubmit, onClose }) => {
   const [pageName, setPageName] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: any) => {
     e.preventDefault();
     if (pageName.trim()) {
       onSubmit(pageName.trim());
@@ -225,13 +227,13 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
     if (isDropTarget && !isDragging) {
       switch (dropPosition) {
         case "above":
-          dropIndicatorClass = "before:absolute before:left-0 before:right-0 before:top-0 before:h-0.5 before:bg-sky-500";
+          dropIndicatorClass = "before:absolute before:left-0 before:right-0 before:top-0 before:h-0.5 before:bg-sky-400";
           break;
         case "below":
-          dropIndicatorClass = "after:absolute after:left-0 after:right-0 after:bottom-0 after:h-0.5 after:bg-sky-500";
+          dropIndicatorClass = "after:absolute after:left-0 after:right-0 after:bottom-0 after:h-0.5 after:bg-sky-400";
           break;
         case "inside":
-          dropIndicatorClass = "bg-sky-50 border-2 border-sky-500";
+          dropIndicatorClass = "bg-sky-50 border-2 border-sky-400";
           break;
       }
     }
@@ -390,7 +392,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
               onClick={handleCreateSubpage}
               className="p-1 hover:bg-gray-200 rounded"
               title="Create subpage">
-              <FolderPlus className="w-3.5 h-3.5 text-sky-500" />
+              <FolderPlus className="w-3.5 h-3.5 text-sky-400" />
             </button>
             <button
               onClick={() => handleDelete(fullPath)}
@@ -521,6 +523,27 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
           />
         </>
       )}
+      <div className="border-t border-gray-200 p-3 space-y-2">
+        <div className="flex justify-between items-center">
+          <button
+            onClick={async () => {
+              const workspaceJson = await ImportExportService.exportWorkspaceToJson(workspace);
+              const blob = new Blob([JSON.stringify(workspaceJson, null, 2)], {
+                type: "application/json",
+              });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "anote-workspace.json";
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="flex items-center space-x-2 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
+            <Download className="w-4 h-4" />
+            <span>Export Workspace</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

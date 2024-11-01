@@ -26,7 +26,7 @@ const Tooltip = ({
   trigger = 'mouseenter',
   theme = 'dark',
   interactive = false,
-  arrow = true,
+  arrow = false,
   offset = [0, 0],
   className = '',
   visible,

@@ -55,7 +55,7 @@ const TableOfContents = memo(({ blocks, onHeadingClick }: TableOfContentsProps) 
   return (
     <details
       open
-      className="lg:sticky top-8 bg-white/50 backdrop-blur-sm border-gray-200 mb-8 lg:max-h-[calc(100vh-2rem)] overflow-y-auto pt-0 pb-8 border-b-2">
+      className="lg:sticky top-8 bg-white/50 backdrop-blur-sm border-gray-200 mb-8 lg:max-h-[calc(100vh-2rem)] overflow-y-auto pt-0 pb-8 border-b-2 lg:border-b-0">
       <summary className="text-md font-semibold text-gray-500">Table of Contents</summary>
       <ul className="space-y-2 mt-3">
         {headings.map((heading) => (

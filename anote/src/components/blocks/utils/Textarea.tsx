@@ -9,73 +9,93 @@ const Textarea = memo(
   forwardRef<HTMLTextAreaElement, TextareaProps>(({ value, onChange, className = "", ...props }, forwardedRef) => {
     const localRef = useRef<HTMLTextAreaElement>(null);
     const ref = (forwardedRef || localRef) as React.RefObject<HTMLTextAreaElement>;
-    const [localValue, setLocalValue] = useState(value);
-    const previousClassName = useRef(className);
+    const cursorPositionRef = useRef<{ start: number; end: number } | null>(null);
+    const isComposing = useRef(false);
 
     const adjustHeight = useCallback(() => {
       const element = ref.current;
       if (!element) return;
 
+      // Store current cursor position
+      cursorPositionRef.current = {
+        start: element.selectionStart,
+        end: element.selectionEnd
+      };
+
       // Reset height to minimum to get proper scrollHeight
       element.style.height = "auto";
-
-      // Force a repaint to ensure proper height calculation
-      // This is needed especially when font size changes
-      void element.offsetHeight;
-
-      // Set height to scrollHeight to fit content
-      const newHeight = Math.max(element.scrollHeight, 24); // Minimum height of 24px
+      
+      // Set height to scrollHeight
+      const newHeight = Math.max(element.scrollHeight, 24);
       element.style.height = `${newHeight}px`;
+
+      // Restore cursor position on next frame
+      requestAnimationFrame(() => {
+        if (element && cursorPositionRef.current) {
+          const { start, end } = cursorPositionRef.current;
+          element.setSelectionRange(start, end);
+        }
+      });
     }, [ref]);
 
-    // Update local value when prop changes
+    // Adjust height on content or class changes
     useEffect(() => {
-      setLocalValue(value);
-      // Adjust height after value update
       requestAnimationFrame(adjustHeight);
-    }, [value, adjustHeight]);
+    }, [value, className, adjustHeight]);
 
-    // Monitor className changes
+    // Handle window resize
     useEffect(() => {
-      if (previousClassName.current !== className) {
-        previousClassName.current = className;
-        // Use requestAnimationFrame to ensure the class change has been applied
-        requestAnimationFrame(() => {
-          requestAnimationFrame(adjustHeight);
-        });
-      }
-    }, [className, adjustHeight]);
+      const handleResize = () => requestAnimationFrame(adjustHeight);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, [adjustHeight]);
 
     const handleChange = useCallback(
       (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setLocalValue(e.target.value);
+        if (isComposing.current) return;
+
+        // Store cursor position
+        const element = e.target;
+        cursorPositionRef.current = {
+          start: element.selectionStart,
+          end: element.selectionEnd
+        };
+
+        // Call parent onChange
         onChange(e);
-        // Adjust height after content change
+
+        // Adjust height
         requestAnimationFrame(adjustHeight);
       },
       [onChange, adjustHeight]
     );
 
-    // Initial height adjustment
-    useEffect(() => {
-      requestAnimationFrame(adjustHeight);
-    }, [adjustHeight]);
+    const handleCompositionStart = () => {
+      isComposing.current = true;
+    };
 
-    // Adjust height on window resize to handle font-size changes from responsive design
-    useEffect(() => {
-      const handleResize = () => {
-        requestAnimationFrame(adjustHeight);
+    const handleCompositionEnd = (e: React.CompositionEvent<HTMLTextAreaElement>) => {
+      isComposing.current = false;
+      handleChange(e as unknown as React.ChangeEvent<HTMLTextAreaElement>);
+    };
+
+    // Handle selection changes
+    const handleSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+      const element = e.target as HTMLTextAreaElement;
+      cursorPositionRef.current = {
+        start: element.selectionStart,
+        end: element.selectionEnd
       };
-
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }, [adjustHeight]);
+    };
 
     return (
       <textarea
         ref={ref}
-        value={localValue}
+        value={value}
         onChange={handleChange}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
+        onSelect={handleSelect}
         rows={1}
         className={`w-full p-0 bg-transparent rounded resize-none overflow-hidden ${className}`}
         {...props}

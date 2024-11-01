@@ -37,8 +37,8 @@ const BlockWrapper = forwardRef<HTMLDivElement, BlockWrapperProps>(({
       className={`
         relative group mb-10 transition-all duration-200 ease-in-out
         ${isDragging ? "cursor-grabbing" : "cursor-grab"}
-        ${isDraggedBlock ? "" : "opacity-100"}
-        ${isOverBlock ? "border-t-2 border-sky-500" : "border-t-0 border-transparent"}
+        ${isDraggedBlock ? "" : "opacity-100 border-2 border-transparent p-0 rounded-lg shadow-sky-400"}
+        ${isOverBlock ? "border-2 border-sky-400 p-4 scale-90 rounded-lg" : "border-transparent"}
       `}
       id={block.id}
       draggable="true"
@@ -48,6 +48,7 @@ const BlockWrapper = forwardRef<HTMLDivElement, BlockWrapperProps>(({
       onDragLeave={onDragLeave}>
       {/* Larger drag handle area */}
       <div
+      id={block.id}
         className="absolute left-0 top-0 w-12 -translate-x-full 
                    opacity-0 group-hover:opacity-100 flex items-center h-full
                    justify-center cursor-grab active:cursor-grabbing">

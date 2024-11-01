@@ -10,6 +10,7 @@ export interface ParagraphBlockProps {
   onChange: (content: string) => void;
   workspace: string;
   onPageClick: (pagePath: string) => void;
+  onEnterKey?: () => void; // Add this prop
 }
 
 /**
@@ -19,7 +20,7 @@ export interface ParagraphBlockProps {
  * When a page is mentioned, it will be highlighted and clickable.
  */
 
-export const ParagraphBlock = ({ content, onChange, workspace, onPageClick }: ParagraphBlockProps) => {
+export const ParagraphBlock = ({ content, onChange, workspace, onPageClick, onEnterKey }: ParagraphBlockProps) => {
   const [mentionState, setMentionState] = useState({
     isOpen: false,
     searchTerm: "",
@@ -52,6 +53,7 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick }: Pa
     setLocalContent(markdownContent);
   }, [content]);
 
+  
   const handleChange = (newMarkdownContent: string) => {
     setLocalContent(newMarkdownContent);
     const htmlContent = FileService.transformInlineMarkdownToHtml(newMarkdownContent);
@@ -74,6 +76,9 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick }: Pa
           left: rect.left - inputRef.current.getBoundingClientRect().left,
         },
       });
+    }else if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      onEnterKey?.();
     }
   };
 
@@ -122,10 +127,11 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick }: Pa
 
   return (
     <div className="relative">
-      <SwitchableEditor
+       <SwitchableEditor
         content={localContent}
         onChange={handleChange}
-        className="w-full focus:ring-1 focus:ring-sky-500 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded p-1 text-gray-700"
+        onKeyDown={handleKeyDown}  // Add this prop
+        className="w-full focus:ring-1 focus:ring-sky-400 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded p-1 text-gray-700"
         placeholder="Type something..."
       />
 

@@ -84,7 +84,7 @@ const WorkspaceSelector = ({ onWorkspaceReady }: WorkspaceSelectorProps) => {
               href="https://www.google.com/chrome/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center space-x-2 px-4 py-2 bg-sky-500 text-white rounded hover:bg-sky-600 transition-colors"
+              className="flex items-center justify-center space-x-2 px-4 py-2 bg-sky-400 text-white rounded hover:bg-sky-600 transition-colors"
             >
               <Chrome className="w-5 h-5" />
               <span>Download Chrome</span>
@@ -93,7 +93,7 @@ const WorkspaceSelector = ({ onWorkspaceReady }: WorkspaceSelectorProps) => {
               href="https://www.microsoft.com/edge"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center space-x-2 px-4 py-2 bg-sky-500 text-white rounded hover:bg-sky-600 transition-colors"
+              className="flex items-center justify-center space-x-2 px-4 py-2 bg-sky-400 text-white rounded hover:bg-sky-600 transition-colors"
             >
               <Download className="w-5 h-5" />
               <span>Download Edge</span>
@@ -124,7 +124,7 @@ const WorkspaceSelector = ({ onWorkspaceReady }: WorkspaceSelectorProps) => {
           <p className="text-gray-600 mb-4">{errorMessage}</p>
           <button
             onClick={selectDirectory}
-            className="px-4 py-2 bg-sky-500 text-white rounded hover:bg-sky-600"
+            className="px-4 py-2 bg-sky-400 text-white rounded hover:bg-sky-600"
           >
             Try Again
           </button>
@@ -136,14 +136,14 @@ const WorkspaceSelector = ({ onWorkspaceReady }: WorkspaceSelectorProps) => {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white">
       <div className="max-w-md mx-auto p-6">
-        <Folder className="w-12 h-12 text-sky-500 mb-4" />
+        <Folder className="w-12 h-12 text-sky-400 mb-4" />
         <h2 className="text-xl font-bold mb-4">Select Workspace Folder</h2>
         <p className="text-gray-600 mb-6">
           Choose a folder for your workspace. If it's empty, we'll set it up for you.
         </p>
         <button
           onClick={selectDirectory}
-          className="px-4 py-2 bg-sky-500 text-white rounded hover:bg-sky-600"
+          className="px-4 py-2 bg-sky-400 text-white rounded hover:bg-sky-600"
         >
           {status === "creating" ? "Creating Workspace..." : "Select Folder"}
         </button>

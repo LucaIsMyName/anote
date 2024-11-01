@@ -7,7 +7,9 @@ import WorkspaceSelector from "./components/workspace/WorkspaceSelector.tsx";
 import { Settings, CircleX } from "lucide-react";
 import { WorkspaceService } from "./services/workspaceService.ts";
 import { FileService } from "./services/FileService.ts";
+import Textarea from "./components/blocks/utils/Textarea.tsx";
 import Tooltip from "./components/blocks/utils/Tooltip.tsx";
+import "./App.css";
 
 interface PageWrapperProps {
   workspace: any;
@@ -167,8 +169,8 @@ const App: React.FC = () => {
           offset={[0, 10]}>
           <button
             onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-            className={`p-2 bg-white rounded-full shadow-lg hover:shadow-xl transition-all ${isSettingsOpen ? "ring-2 ring-sky-500 ring-offset-2" : ""}`}>
-            <Settings className={`w-5 h-5 ${isSettingsOpen ? "text-sky-500" : "text-gray-600"}`} />
+            className={`p-2 bg-white rounded-full shadow-lg hover:shadow-xl transition-all ${isSettingsOpen ? "ring-2 ring-sky-400 ring-offset-2" : ""}`}>
+            <Settings className={`w-5 h-5 ${isSettingsOpen ? "text-sky-400" : "text-gray-600"}`} />
           </button>
         </Tooltip>
       </div>

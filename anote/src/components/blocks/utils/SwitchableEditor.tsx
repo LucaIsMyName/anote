@@ -5,6 +5,7 @@ import { FileService } from "../../../services/FileService.ts";
 interface SwitchableEditorProps {
   content: string;
   onChange: (content: string) => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;  // Add this
   className?: string;
   placeholder?: string;
 }
@@ -12,55 +13,102 @@ interface SwitchableEditorProps {
 const SwitchableEditor: React.FC<SwitchableEditorProps> = ({ 
   content, 
   onChange, 
+  onKeyDown,
   className = "", 
   placeholder = "Start typing..." 
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [markdownContent, setMarkdownContent] = useState(content);
+  const [markdownContent, setMarkdownContent] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const cursorPositionRef = useRef<{start: number; end: number} | null>(null);
+  const isInitialMount = useRef(true);
 
+  // Only transform content from HTML to Markdown on initial load or when content prop changes externally
   useEffect(() => {
-    if (content.includes("<") && content.includes(">")) {
-      const markdown = FileService.transformInlineHtmlToMarkdown(content);
-      setMarkdownContent(markdown);
-    } else {
-      setMarkdownContent(content);
+    if (isInitialMount.current || !isEditing) {
+      if (content.includes("<") && content.includes(">")) {
+        const markdown = FileService.transformInlineHtmlToMarkdown(content);
+        setMarkdownContent(markdown);
+      } else {
+        setMarkdownContent(content);
+      }
     }
-  }, [content]);
+    isInitialMount.current = false;
+  }, [content, isEditing]);
 
   const handleViewClick = () => {
     setIsEditing(true);
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
-        const position = textareaRef.current.value.length;
-        textareaRef.current.selectionStart = position;
-        textareaRef.current.selectionEnd = position;
+        if (cursorPositionRef.current) {
+          const { start, end } = cursorPositionRef.current;
+          textareaRef.current.setSelectionRange(start, end);
+        } else {
+          const length = textareaRef.current.value.length;
+          textareaRef.current.setSelectionRange(length, length);
+        }
       }
-    }, 0);
+    });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // Prevent the default newline
+      onKeyDown?.(e); // Call the parent's onKeyDown handler
+    } else {
+      onKeyDown?.(e); // For other keys, just pass through
+    }
   };
 
   const handleBlur = () => {
+    if (textareaRef.current) {
+      cursorPositionRef.current = {
+        start: textareaRef.current.selectionStart,
+        end: textareaRef.current.selectionEnd
+      };
+    }
     setIsEditing(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newMarkdown = e.target.value;
+    const element = e.target;
+    
+    // Store cursor position before any updates
+    cursorPositionRef.current = {
+      start: element.selectionStart,
+      end: element.selectionEnd
+    };
+
+    // Update markdown content directly
     setMarkdownContent(newMarkdown);
-    onChange(newMarkdown);
+
+    // Convert to HTML and trigger parent onChange
+    const htmlContent = FileService.transformInlineMarkdownToHtml(newMarkdown);
+    onChange(htmlContent);
+
+    // Schedule cursor position restoration
+    requestAnimationFrame(() => {
+      if (textareaRef.current && cursorPositionRef.current) {
+        const { start, end } = cursorPositionRef.current;
+        textareaRef.current.setSelectionRange(start, end);
+      }
+    });
   };
 
   if (isEditing) {
     return (
       <Textarea
-        ref={textareaRef}
-        value={markdownContent}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        className={`${className} whitespace-pre-wrap`}
-        placeholder={placeholder}
-        style={{ whiteSpace: 'pre-wrap' }}
-      />
+      ref={textareaRef}
+      value={markdownContent}
+      onChange={handleChange}
+      onKeyDown={handleKeyDown}  // Use our new handler
+      onBlur={handleBlur}
+      className={`${className} whitespace-pre-wrap`}
+      placeholder={placeholder}
+      style={{ whiteSpace: 'pre-wrap' }}
+    />
     );
   }
 
@@ -74,10 +122,9 @@ const SwitchableEditor: React.FC<SwitchableEditorProps> = ({
       {markdownContent ? (
         <div 
           dangerouslySetInnerHTML={{ __html: displayHtml }}
-          className={className} // Inherit parent className for styling
+          className={className}
           style={{ 
             whiteSpace: 'pre-wrap',
-            // Inherit all font properties
             fontSize: 'inherit',
             fontWeight: 'inherit',
             fontFamily: 'inherit',

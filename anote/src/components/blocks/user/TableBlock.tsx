@@ -180,7 +180,7 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
                   </button>
                   {colIndex < headers.length - 1 && (
                     <div
-                      className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-sky-500"
+                      className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-sky-400"
                       onMouseDown={(e) => startResize(colIndex, e)}
                     />
                   )}
@@ -201,7 +201,7 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
                       type="text"
                       value={cell}
                       onChange={(e) => updateCell(rowIndex, colIndex, e.target.value)}
-                      className="block w-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-sky-500 border-r-2"
+                      className="block w-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-sky-400 border-r-2"
                       placeholder="Type something..."
                     />
                   </td>

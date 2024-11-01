@@ -136,7 +136,7 @@ const FileBlock: React.FC<FileBlockProps> = ({
       onDrop={handleDrop}
       className={`
         border-2 border-dashed rounded-lg p-8 mb-4 
-        ${isDragging ? "border-sky-500 bg-sky-50" : "border-gray-300"}
+        ${isDragging ? "border-sky-400 bg-sky-50" : "border-gray-300"}
       `}
     >
       <div className="flex flex-col items-center space-y-4">

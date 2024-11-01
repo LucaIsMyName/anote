@@ -23,7 +23,7 @@ const BlockControls = memo(({
       <BlockMenu
         onSelect={(type) => onAddBlock(type, index)}
         trigger={
-          <button className="p-2 text-sky-500 hover:bg-sky-50 rounded-full">
+          <button className="p-2 text-sky-400 hover:bg-sky-50 rounded-full">
             <Plus className="w-4 h-4" />
           </button>
         }
@@ -31,7 +31,7 @@ const BlockControls = memo(({
       {/* Copy block button */}
       <button
         onClick={() => onCopyBlock(index)}
-        className="p-2 text-sky-500 hover:bg-sky-50 rounded-full"
+        className="p-2 text-sky-400 hover:bg-sky-50 rounded-full"
         title="Copy Block">
         <Copy className="w-4 h-4" />
       </button>

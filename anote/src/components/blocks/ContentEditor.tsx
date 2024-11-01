@@ -1,18 +1,24 @@
 import React, { useState, useEffect, memo, useRef, useCallback } from "react";
-import { Plus, Trash2, Edit2, Copy, FolderPlus, Calendar, Save, GripVertical, LoaderCircle } from "lucide-react";
+import { Plus, Download, FileText, Trash2, Edit2, Copy, FolderPlus, Calendar, Save, GripVertical, LoaderCircle } from "lucide-react";
 import { BlockMenu, BlockType } from "./BlockMenu.tsx";
+
 import TableBlock from "./user/TableBlock.tsx";
 import HeadingBlock from "./user/HeadingBlock.tsx";
 import ParagraphBlock from "./user/ParagraphBlock.tsx";
 import ImageBlock from "./user/ImageBlock.tsx";
 import FileBlock from "./user/FileBlock.tsx";
+import CodeBlock from "./user/CodeBlock.tsx";
+import ListBlock from "./user/ListBlock.tsx";
+
 import BlockControls from "./BlockControls.tsx";
 import BlockWrapper from "./BlockWrapper.tsx";
 import TableOfContents from "./TableOfContents.tsx";
-import TodoBlock from "./user/TodoBlock.tsx";
+
 import Input from "./utils/Input.tsx";
 import Tooltip from "./utils/Tooltip.tsx";
+
 import { FileService } from "../../services/FileService.ts";
+import { ImportExportService } from "../../services/ImportExportService.ts";
 
 const CURRENT_PAGE_KEY = "anote_current_page";
 
@@ -26,7 +32,7 @@ const EmptyPageBlock = ({ onAddBlock: any }) => {
   const [showMenu, setShowMenu] = useState(false);
   const buttonRef = useRef(null);
 
-  const handleAddBlock = (type) => {
+  const handleAddBlock = (type: any) => {
     onAddBlock(type, -1); // -1 as index since it's the first block
     setShowMenu(false);
   };
@@ -80,6 +86,34 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
   const [dragOverBlockIndex, setDragOverBlockIndex] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const blockRefs = useRef(new Map());
+  const [blockMenuState, setBlockMenuState] = useState({
+    isOpen: false,
+    anchorEl: null,
+    triggerBlockIndex: -1,
+  });
+
+  const handleBlockEnterKey = (index: number) => {
+    // Get the position of the current block
+    const blockElement = blockRefs.current.get(blocks[index].id);
+    if (!blockElement) return;
+
+    // Calculate position for the menu
+    const rect = blockElement.getBoundingClientRect();
+    setBlockMenuState({
+      isOpen: true,
+      anchorEl: blockElement,
+      triggerBlockIndex: index,
+    });
+  };
+
+  const handleBlockMenuSelect = (type: string) => {
+    addBlock(type, blockMenuState.triggerBlockIndex);
+    setBlockMenuState({
+      isOpen: false,
+      anchorEl: null,
+      triggerBlockIndex: -1,
+    });
+  };
 
   const scrollToHeading = useCallback((blockId: number) => {
     const element = blockRefs.current.get(blockId);
@@ -304,6 +338,15 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
     };
   }, []);
 
+  const handlePageClick = (pagePath: string) => {
+    // Find the real path by looking up the page ID
+    FileService.findPagePathById(workspace, pagePath).then((path) => {
+      if (path) {
+        onPathChange(path);
+      }
+    });
+  };
+
   const handleTitleChange = async (newTitle) => {
     if (newTitle.trim() === pageTitle || !newTitle.trim()) {
       setIsEditingTitle(false);
@@ -341,13 +384,13 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
         id: Date.now(),
         type,
         content: "",
-        level: type === BlockType.HEADING ? 2 : undefined, // Add default level for headings
+        level: type === BlockType.HEADING ? 2 : undefined,
         createdAt: new Date().toISOString(),
         lastEdited: new Date().toISOString(),
-        items: type === BlockType.TODO ? [] : undefined,
+        items: type === BlockType.LIST ? [] : undefined, // Changed from TODO to LIST
+        listType: type === BlockType.LIST ? "unordered" : undefined, // Add this line
         data: type === BlockType.TABLE ? [] : undefined,
       };
-
       // Handle adding first block
       if (index === -1) {
         setBlocks([newBlock]);
@@ -404,6 +447,9 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
           <ParagraphBlock
             content={block.content}
             onChange={(content) => updateBlock(block.id, { content })}
+            workspace={workspace}
+            onPageClick={handlePageClick}
+            onEnterKey={() => handleBlockEnterKey(index)}
           />
         );
       case BlockType.HEADING:
@@ -412,6 +458,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
             content={block.content}
             level={block.level || 2}
             onChange={(content, level) => updateBlock(block.id, { content, level })}
+            onEnterKey={() => handleBlockEnterKey(index)}
           />
         );
       case BlockType.TABLE:
@@ -430,11 +477,12 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
             onChange={(updates) => updateBlock(block.id, updates)}
           />
         );
-      case BlockType.TODO:
+      case BlockType.LIST:
         return (
-          <TodoBlock
+          <ListBlock
             items={block.items || []}
-            onChange={(items) => updateBlock(block.id, { items })}
+            type={block.listType || "unordered"}
+            onChange={(items, type) => updateBlock(block.id, { items, listType: type })}
           />
         );
       case BlockType.FILE:
@@ -442,8 +490,24 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
           <FileBlock
             key={block.id}
             src={block.src || null}
-            caption={block.caption || ''}
+            caption={block.caption || ""}
             onChange={(updates) => updateBlock(block.id, updates)}
+          />
+        );
+      case BlockType.CODE:
+        return (
+          <CodeBlock
+            content={block.content || ""}
+            language={block.language || "javascript"}
+            isMultiline={block.isMultiline !== false}
+            onChange={(updates) => {
+              // Properly handle all updates from CodeBlock
+              updateBlock(block.id, {
+                content: updates.content,
+                language: updates.language,
+                isMultiline: updates.isMultiline,
+              });
+            }}
           />
         );
       default:
@@ -470,10 +534,11 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
     ),
     [addBlock, handleCopyBlock, deleteBlock]
   );
+
   return (
     <main className="mx-auto p-8">
       {/* Page Header */}
-      <div className="mb-8 space-y-2 px-6">
+      <div className="mb-8 space-y-2 md:px-6">
         <div className="flex items-center justify-between group">
           {isEditingTitle ? (
             <form
@@ -502,6 +567,45 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
 
           <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-2">
             <Tooltip
+              content="Export as JSON"
+              placement="top">
+              <button
+                onClick={async () => {
+                  const pageJson = await ImportExportService.exportPageToJson(workspace, currentPath);
+                  const blob = new Blob([JSON.stringify(pageJson, null, 2)], {
+                    type: "application/json",
+                  });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `${pageTitle}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-full">
+                <Download className="w-4 h-4 text-gray-500" />
+              </button>
+            </Tooltip>
+
+            <Tooltip
+              content="Export as Markdown"
+              placement="top">
+              <button
+                onClick={async () => {
+                  const markdown = await ImportExportService.exportPageToMd(workspace, currentPath);
+                  const blob = new Blob([markdown], { type: "text/markdown" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `${pageTitle}.md`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-full">
+                <FileText className="w-4 h-4 text-gray-500" />
+              </button>
+            </Tooltip>
+            <Tooltip
               theme={"light"}
               content="Rename page"
               placement="top">
@@ -528,7 +632,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
               <button
                 onClick={handleCreateSubpage}
                 className="p-2 hover:bg-gray-100 rounded-full">
-                <FolderPlus className="w-4 h-4 text-sky-500" />
+                <FolderPlus className="w-4 h-4 text-sky-400" />
               </button>
             </Tooltip>
           </div>
@@ -547,15 +651,9 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
         </div>
       </div>
       {/* Blocks */}
-      <div className=" mx-auto px-6 relative">
-        <div className="lg:flex gap-8">
-          <div className="block w-full lg:w-64 flex-shrink-0 lg:mr-6">
-            <TableOfContents
-              blocks={blocks}
-              onHeadingClick={scrollToHeading}
-            />
-          </div>
-          <div className="flex-1">
+      <div className=" mx-auto md:px-6 relative">
+        <div className="flex flex-col-reverse justify-between lg:flex-row gap-8">
+          <div className="flex-1 max-w-3xl">
             {blocks.length === 0 ? (
               <EmptyPageBlock onAddBlock={addBlock} />
             ) : (
@@ -579,19 +677,45 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   renderBlockControls={renderBlockControls}>
-                  {renderBlock(block)}
+                  {renderBlock(block, index)}
                 </BlockWrapper>
               ))
             )}
+          </div>
+          <div className="block w-full h-full overlow-y-scroll lg:max-w-48 flex-shrink-0 lg:mr-6">
+            <TableOfContents
+              blocks={blocks}
+              onHeadingClick={scrollToHeading}
+            />
           </div>
         </div>
       </div>
 
       {/* Saving indicator */}
       {isShowingSavingIndicator && (
-        <div className="fixed top-4 right-4 bg-white/80 backdrop-blur-sm border border-gray-200 rounded px-2 py-1 text-sm text-gray-500 flex items-center gap-2 shadow-sm">
+        <div className="fixed top-8 right-12 bg-white/80 backdrop-blur-sm border border-gray-200 rounded px-2 py-1 text-sm text-gray-500 flex items-center gap-2 shadow-sm">
           <LoaderCircle className="w-4 h-4 animate-spin" />
           <span>Saving...</span>
+        </div>
+      )}
+      {/* Add BlockMenu portal */}
+      {blockMenuState.isOpen && blockMenuState.anchorEl && (
+        <div
+          className="fixed z-50"
+          style={{
+            top: blockMenuState.anchorEl.getBoundingClientRect().bottom + 8,
+            left: blockMenuState.anchorEl.getBoundingClientRect().left,
+          }}>
+          <BlockMenu
+            onSelect={handleBlockMenuSelect}
+            onClose={() =>
+              setBlockMenuState({
+                isOpen: false,
+                anchorEl: null,
+                triggerBlockIndex: -1,
+              })
+            }
+          />
         </div>
       )}
     </main>

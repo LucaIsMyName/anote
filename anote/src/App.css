@@ -3,29 +3,40 @@ html {
   scroll-padding-top: 4rem;
 }
 
-details>summary {
+body {
+  font-family: elza, sans-serif;
+  letter-spacing: 0.015em;
+}
+
+.font-mono {
+  font-family: cofo-sans-mono-variable, sans-serif;
+  font-variation-settings: "wght" 400;
+}
+
+details > summary {
   list-style: none;
 }
 
 /* Remove marker in Chrome/Safari/Edge */
-details>summary::-webkit-details-marker,
-details>summary::marker {
+details > summary::-webkit-details-marker,
+details > summary::marker {
   display: none;
 }
 
 /* Ensure the summary doesn't show markers in Safari iOS */
-details>summary {
+details > summary {
   -webkit-appearance: none;
 }
 
 /* Optional: prevent text selection */
-details>summary {
+details > summary {
   user-select: none;
   -webkit-user-select: none;
 }
 
 .tippy-content {
   padding: 0 !important;
+  box-shadow: none !important;
 }
 
 /* Add these styles to your CSS */
@@ -39,4 +50,14 @@ details>summary {
 
 .block-dragging {
   opacity: 0.5;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+  background: transparent !important;
+}
+
+pre,
+code {
+  font-family: geist-mono,"SF Mono", SFMono-Regular, ui-monospace, "DejaVu Sans Mono", Menlo, Consolas, monospace;
 }

@@ -18,6 +18,9 @@ interface Block {
   src?: string;
   caption?: string;
   data?: Array<Array<string>>;
+  language?: string;
+  isMultiline?: boolean;
+  listType?: "unordered" | "ordered" | "todo";
 }
 
 interface TodoItem {
@@ -49,6 +52,88 @@ interface PageMetadata {
 }
 
 export class FileService {
+  static async searchBlocks(dirHandle: string, searchTerm: string): Promise<BlockReference[]> {
+    const results: BlockReference[] = [];
+
+    // Helper function to search blocks in a page
+    const searchPageBlocks = async (pagePath: string, pageTitle: string) => {
+      const { blocks } = await this.readPage(dirHandle, pagePath);
+
+      for (const block of blocks) {
+        const blockContent = block.content || "";
+        const searchableContent = `${blockContent} ${JSON.stringify(block)}`.toLowerCase();
+
+        if (searchableContent.includes(searchTerm.toLowerCase())) {
+          results.push({
+            id: block.id.toString(),
+            type: block.type,
+            content: block.content,
+            pageId: pagePath,
+            pagePath: pagePath,
+            pageTitle: pageTitle,
+            createdAt: block.createdAt,
+            lastEdited: block.lastEdited,
+          });
+        }
+      }
+    };
+
+    // Recursively search through all pages
+    const searchDirectory = async (path = "") => {
+      const pages = await this.listPages(dirHandle, path);
+
+      for (const page of pages) {
+        const pagePath = path ? `${path}/${page.name}` : page.name;
+        await searchPageBlocks(pagePath, page.name);
+
+        if (page.children?.length) {
+          for (const child of page.children) {
+            await searchDirectory(`${pagePath}/${child.name}`);
+          }
+        }
+      }
+    };
+
+    await searchDirectory();
+    return results;
+  }
+
+  static async getBlockReference(dirHandle: string, referenceId: string): Promise<BlockReference | null> {
+    // Search through all pages to find the referenced block
+    const searchDirectory = async (path = "") => {
+      const pages = await this.listPages(dirHandle, path);
+
+      for (const page of pages) {
+        const pagePath = path ? `${path}/${page.name}` : page.name;
+        const { blocks } = await this.readPage(dirHandle, pagePath);
+
+        const block = blocks.find((b) => b.id.toString() === referenceId);
+        if (block) {
+          return {
+            id: block.id.toString(),
+            type: block.type,
+            content: block.content,
+            pageId: pagePath,
+            pagePath: pagePath,
+            pageTitle: page.name,
+            createdAt: block.createdAt,
+            lastEdited: block.lastEdited,
+          };
+        }
+
+        if (page.children?.length) {
+          for (const child of page.children) {
+            const result = await searchDirectory(`${pagePath}/${child.name}`);
+            if (result) return result;
+          }
+        }
+      }
+      return null;
+    };
+
+    return searchDirectory();
+  }
+
   static async movePage(dirHandle: string, sourcePath: string, targetPath: string) {
     try {
       // Don't move if source and target are the same
@@ -111,34 +196,40 @@ export class FileService {
   static transformInlineMarkdownToHtml(markdown: string): string {
     if (!markdown) return "";
 
-    // First preserve spaces by converting them to a special marker
+    // First preserve spaces by converting multiple spaces to nbsp
     let html = markdown.replace(/  +/g, (match) => "&nbsp;".repeat(match.length));
 
-    // Process markdown
+    // Process markdown with improved patterns that preserve spaces
     const patterns = [
       {
-        pattern: /\*\*([^*]+)\*\*/g,
-        replacement: "<strong>$1</strong>",
+        // Bold with asterisks - preserve spaces around
+        pattern: /(\s|^)\*\*([^*]+)\*\*(\s|$)/g,
+        replacement: "$1<strong>$2</strong>$3",
       },
       {
-        pattern: /__([^_]+)__/g,
-        replacement: "<strong>$1</strong>",
+        // Bold with underscores - preserve spaces around
+        pattern: /(\s|^)__([^_]+)__(\s|$)/g,
+        replacement: "$1<strong>$2</strong>$3",
       },
       {
-        pattern: /(?<!\*)\*([^*]+)\*(?!\*)/g,
-        replacement: "<em>$1</em>",
+        // Italic with asterisks - preserve spaces around
+        pattern: /(\s|^)\*([^*]+)\*(\s|$)/g,
+        replacement: "$1<em>$2</em>$3",
       },
       {
-        pattern: /(?<!_)_([^_]+)_(?!_)/g,
-        replacement: "<em>$1</em>",
+        // Italic with underscores - preserve spaces around
+        pattern: /(\s|^)_([^_]+)_(\s|$)/g,
+        replacement: "$1<em>$2</em>$3",
       },
       {
-        pattern: /`([^`]+)`/g,
-        replacement: "<code>$1</code>",
+        // Inline code - preserve spaces around
+        pattern: /(\s|^)`([^`]+)`(\s|$)/g,
+        replacement: "$1<code>$2</code>$3",
       },
       {
-        pattern: /\[([^\]]+)\]\(([^)]+)\)/g,
-        replacement: '<a href="$2" class="text-sky-600 hover:underline">$1</a>',
+        // Links - preserve spaces around
+        pattern: /(\s|^)\[([^\]]+)\]\(([^)]+)\)(\s|$)/g,
+        replacement: '$1<a href="$3" class="text-sky-600 hover:underline">$2</a>$4',
       },
     ];
 
@@ -169,27 +260,32 @@ export class FileService {
       .replace(/&gt;/g, ">")
       .replace(/&amp;/g, "&");
 
-    // Convert HTML to markdown
+    // Convert HTML to markdown with improved patterns that preserve spaces
     const conversions = [
       {
+        // Line breaks
         pattern: /<br\s*\/?>\s*/g,
         replacement: "\n",
       },
       {
-        pattern: /<(strong|b)>([^<]*)<\/\1>/g,
-        replacement: "**$2**",
+        // Bold - preserve spaces around
+        pattern: /(\s|^)<(strong|b)>([^<]*)<\/\2>(\s|$)/g,
+        replacement: "$1**$3**$4",
       },
       {
-        pattern: /<(em|i)>([^<]*)<\/\1>/g,
-        replacement: "*$2*",
+        // Italic - preserve spaces around
+        pattern: /(\s|^)<(em|i)>([^<]*)<\/\2>(\s|$)/g,
+        replacement: "$1*$3*$4",
       },
       {
-        pattern: /<code>([^<]*)<\/code>/g,
-        replacement: "`$1`",
+        // Code - preserve spaces around
+        pattern: /(\s|^)<code>([^<]*)<\/code>(\s|$)/g,
+        replacement: "$1`$2`$3",
       },
       {
-        pattern: /<a[^>]+href="([^"]*)"[^>]*>([^<]*)<\/a>/g,
-        replacement: "[$2]($1)",
+        // Links - preserve spaces around
+        pattern: /(\s|^)<a[^>]+href="([^"]*)"[^>]*>([^<]*)<\/a>(\s|$)/g,
+        replacement: "$1[$3]($2)$4",
       },
     ];
 
@@ -198,10 +294,13 @@ export class FileService {
       markdown = markdown.replace(pattern, replacement);
     });
 
-    // Clean up remaining HTML tags while preserving spaces
-    markdown = markdown.replace(/<[^>]+>/g, "").replace(/\s+/g, " ");
+    // Clean up remaining HTML tags while better preserving whitespace
+    markdown = markdown
+      .replace(/<[^>]+>/g, "")
+      .replace(/\s{2,}/g, " ") // Collapse multiple spaces to single space
+      .trim();
 
-    return markdown.trim();
+    return markdown;
   }
   /**
    *
@@ -445,8 +544,41 @@ export class FileService {
       try {
         const metadata = JSON.parse(section.substring(0, metadataEndIndex));
         let content = section.substring(metadataEndIndex + 16).trim();
+        if (metadata.type === "code") {
+          let codeContent = "";
+          let language = metadata.language || "javascript";
+          let isMultiline = metadata.isMultiline !== false;
 
-        if (metadata.type === "heading") {
+          if (isMultiline) {
+            // Updated regex pattern to better match multiline code content
+            // This pattern handles content between ```language and ``` more reliably
+            const multilineMatch = content.match(/^```(\w*)\n?([\s\S]*?)\n?```$/);
+            if (multilineMatch) {
+              language = multilineMatch[1] || language;
+              // Trim the content but preserve intentional empty lines within the code
+              codeContent = multilineMatch[2].replace(/^\n+|\n+$/g, "");
+            } else {
+              // Fallback: try to extract content between any ``` markers if the first pattern fails
+              const fallbackMatch = content.match(/^```[\s\S]*?\n?([\s\S]*?)\n?```$/);
+              if (fallbackMatch) {
+                codeContent = fallbackMatch[1].replace(/^\n+|\n+$/g, "");
+              }
+            }
+          } else {
+            // Improved single-line code matching
+            const singleLineMatch = content.match(/^`(.*?)`$/);
+            if (singleLineMatch) {
+              codeContent = singleLineMatch[1];
+            }
+          }
+
+          blocks.push({
+            ...metadata,
+            content: codeContent,
+            language,
+            isMultiline,
+          });
+        } else if (metadata.type === "heading") {
           // Remove all markdown heading markers and clean content
           const cleanContent = content
             .replace(/^#{1,6}\s+/, "")
@@ -466,21 +598,46 @@ export class FileService {
               src: imgMatch[2],
             });
           }
-        } else if (metadata.type === "todo") {
-          // Parse todo items
-          const items = content.split("\n").map((line) => {
-            const todoMatch = line.match(/^-\s*\[([ x])\]\s*(.+)$/);
-            return todoMatch
-              ? {
-                  id: Date.now() + Math.random(),
-                  completed: todoMatch[1] === "x",
-                  text: todoMatch[2],
-                }
-              : null;
-          });
+        } else if (metadata.type === "list") {
+          const items = content
+            .split("\n")
+            .map((line) => {
+              let match;
+              switch (metadata.listType) {
+                case "todo":
+                  match = line.match(/^-\s*\[([ x])\]\s*(.+)$/);
+                  return match
+                    ? {
+                        id: Date.now() + Math.random(),
+                        text: match[2],
+                        completed: match[1] === "x",
+                      }
+                    : null;
+                case "ordered":
+                  match = line.match(/^\d+\.\s+(.+)$/);
+                  return match
+                    ? {
+                        id: Date.now() + Math.random(),
+                        text: match[1],
+                      }
+                    : null;
+                case "unordered":
+                default:
+                  match = line.match(/^-\s+(.+)$/);
+                  return match
+                    ? {
+                        id: Date.now() + Math.random(),
+                        text: match[1],
+                      }
+                    : null;
+              }
+            })
+            .filter(Boolean);
+
           blocks.push({
             ...metadata,
-            items: items.filter(Boolean),
+            items,
+            listType: metadata.listType || "unordered",
           });
         } else if (metadata.type === "table") {
           // Parse table data
@@ -508,12 +665,20 @@ export class FileService {
           // Parse file block content
           const fileMatch = content.match(/\[FILE\](.*?)\[\/FILE\]/);
           const captionMatch = content.match(/\[CAPTION\](.*?)\[\/CAPTION\]/);
-          
+
           if (fileMatch) {
             blocks.push({
               ...metadata,
               src: fileMatch[1],
-              caption: captionMatch ? captionMatch[1] : ''
+              caption: captionMatch ? captionMatch[1] : "",
+            });
+          }
+        } else if (metadata.type === "reference") {
+          const referenceMatch = content.match(/\[REFERENCE\](.*?)\[\/REFERENCE\]/);
+          if (referenceMatch) {
+            blocks.push({
+              ...metadata,
+              referenceId: referenceMatch[1],
             });
           }
         } else {
@@ -660,13 +825,36 @@ export class FileService {
 
       if (Array.isArray(blocks)) {
         for (const block of blocks) {
-          const blockMetadata = {
-            type: block.type,
-            id: block.id,
-            level: block.type === "heading" ? block.level : undefined, // Include level in metadata
-            createdAt: block.createdAt || new Date().toISOString(),
-            lastEdited: new Date().toISOString(),
-          };
+          let blockMetadata;
+
+          if (block.type === "code") {
+            // Special handling for code blocks
+            blockMetadata = {
+              type: block.type,
+              id: block.id,
+              createdAt: block.createdAt || new Date().toISOString(),
+              lastEdited: new Date().toISOString(),
+              language: block.language || "javascript",
+              isMultiline: block.isMultiline !== false,
+            };
+          } else if (block.type === "list") {
+            // Special handling for list blocks
+            blockMetadata = {
+              type: block.type,
+              id: block.id,
+              createdAt: block.createdAt || new Date().toISOString(),
+              lastEdited: new Date().toISOString(),
+              listType: block.listType || "unordered", // Include list type in metadata
+            };
+          } else {
+            blockMetadata = {
+              type: block.type,
+              id: block.id,
+              level: block.type === "heading" ? block.level : undefined, // Include level in metadata
+              createdAt: block.createdAt || new Date().toISOString(),
+              lastEdited: new Date().toISOString(),
+            };
+          }
 
           content += `<block-metadata>${JSON.stringify(blockMetadata)}</block-metadata>\n`;
 
@@ -678,12 +866,33 @@ export class FileService {
             case "paragraph":
               content += `${block.content || ""}\n\n`;
               break;
+            case "code":
+              if (block.isMultiline) {
+                content += `\`\`\`${block.language || "javascript"}\n${block.content || ""}\n\`\`\`\n\n`;
+              } else {
+                content += `\`${block.content || ""}\`\n\n`;
+              }
+              break;
+
             case "image":
               content += `![${block.caption || ""}](${block.src})\n\n`;
               break;
-            case "todo":
+            case "list":
               if (block.items && Array.isArray(block.items)) {
-                content += block.items.map((item) => `- [${item.completed ? "x" : " "}] ${item.text}`).join("\n") + "\n\n";
+                content +=
+                  block.items
+                    .map((item, index) => {
+                      switch (block.listType) {
+                        case "todo":
+                          return `- [${item.completed ? "x" : " "}] ${item.text}`;
+                        case "ordered":
+                          return `${index + 1}. ${item.text}`;
+                        case "unordered":
+                        default:
+                          return `- ${item.text}`;
+                      }
+                    })
+                    .join("\n") + "\n\n";
               }
               break;
             case "table":
@@ -693,16 +902,19 @@ export class FileService {
                 content += `${tableContent}\n\n`;
               }
               break;
-              case "file":
-                // Only write file data if it exists and is valid
-                if (block.src && block.src !== 'undefined') {
-                  content += `[FILE]${block.src}[/FILE]\n`;
-                  if (block.caption) {
-                    content += `[CAPTION]${block.caption}[/CAPTION]\n`;
-                  }
+            case "file":
+              // Only write file data if it exists and is valid
+              if (block.src && block.src !== "undefined") {
+                content += `[FILE]${block.src}[/FILE]\n`;
+                if (block.caption) {
+                  content += `[CAPTION]${block.caption}[/CAPTION]\n`;
                 }
-                content += '\n';
-                break;
+              }
+              content += "\n";
+              break;
+            case "reference":
+              content += `[REFERENCE]${block.referenceId}[/REFERENCE]\n\n`;
+              break;
           }
         }
       }
