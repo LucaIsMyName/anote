@@ -220,10 +220,10 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, la
               {supportedLanguages.find((lang) => lang.value === language)?.label || language}
             </button>
           </Tooltip>
-          <div className="text-md h-[1.5em] w-[2px] bg-gray-300"></div>
+          <div className="text-md h-[1.5em] w-[1.5px] bg-gray-200"></div>
           <button
             onClick={toggleMultiline}
-            className="px-3 py-1 text-sm text-left flex gap-2 justify-between items-center min-w-32 text-gray-600 hover:bg-gray-100 rounded">
+            className="hidden lg:flex px-3 py-1 text-sm text-left gap-2 justify-between items-center min-w-32 text-gray-600 hover:bg-gray-100 rounded">
             {isMultiline ? "Multiline" : "Single line"}
             <ToggleLeft className="w-4 h-4" />
           </button>
@@ -231,7 +231,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, la
         <button
           onClick={copyToClipboard}
           className="p-1 px-3 hover:bg-gray-100 rounded text-gray-500 flex items-center justify-end gap-2 space-x-1">
-          <span className="text-sm">{isCopied ? "Copied!" : "Copy"}</span>
+          <span className="hidden lg:inline text-sm">{isCopied ? "Copied!" : "Copy"}</span>
           {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
         </button>
       </div>

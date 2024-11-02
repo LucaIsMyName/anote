@@ -142,8 +142,8 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
 
   @keyframes highlight-pulse {
     0% { background-color: transparent; }
-    25% { background-color: rgba(14, 165, 233, 0.1); }
-    75% { background-color: rgba(14, 165, 233, 0.1); }
+    25% { background-color: rgba(2, 132, 199, 0.12); }
+    75% { background-color: rgba(2, 132, 199, 0.12); }
     100% { background-color: transparent; }
   }
 `;
@@ -201,11 +201,11 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
       <div className="border-2 border-gray-100 rounded-lg p-4">
         <div className="prose prose-sm max-w-none mb-4">{renderReferencedBlock(selectedReference)}</div>
         <div className="flex items-center justify-between mt-2 pt-2 border-t-2 border-gray-100 text-xs">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 truncate">
             <Link className="w-4 h-4 text-gray-400" />
-            <span className="text-sm leading-3	 text-gray-400">{selectedReference.pageTitle}</span>
+            <span className="text-sm leading-3 truncate text-gray-400">{selectedReference.pageTitle}</span>
             <Hash className="w-4 h-4 text-gray-400" />
-            <span className="text-sm leading-3	 text-gray-400">{selectedReference.id}</span>
+            <span className="text-sm leading-3	truncate text-gray-400">{selectedReference.id}</span>
           </div>
           <div className="flex items-center gap-2">
             <button
