@@ -17,6 +17,7 @@ import TableOfContents from "./TableOfContents.tsx";
 
 import Input from "./utils/Input.tsx";
 import Tooltip from "./utils/Tooltip.tsx";
+import RelativeTime from "./utils/RelativeTime.tsx";
 
 import { FileService } from "../../services/FileService.ts";
 import { ImportExportService } from "../../services/ImportExportService.ts";
@@ -585,7 +586,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
             </form>
           ) : (
             <h1
-              className="text-5xl flex-1 cursor-pointer hover:text-sky-600"
+              className="text-5xl lg:text-6xl font-bold flex-1 cursor-pointer hover:text-sky-600"
               onClick={() => setIsEditingTitle(true)}>
               {pageTitle}
             </h1>
@@ -607,7 +608,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
               URL.revokeObjectURL(url);
             }}
             className="p-2 hover:bg-gray-100 rounded-full">
-            <Download className="w-5 h-5 text-gray-500" />
+            <Download className="w-4 h-4 text-gray-500" />
           </button>
           <button
             onClick={async () => {
@@ -621,34 +622,36 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
               URL.revokeObjectURL(url);
             }}
             className="p-2 hover:bg-gray-100 rounded-full">
-            <FileText className="w-5 h-5 text-gray-500" />
+            <FileText className="w-4 h-4 text-gray-500" />
           </button>
           <button
             onClick={() => setIsEditingTitle(true)}
             className="p-2 hover:bg-gray-100 rounded-full">
-            <Edit2 className="w-5 h-5 text-gray-500" />
+            <Edit2 className="w-4 h-4 text-gray-500" />
           </button>
           <button
             onClick={handleDelete}
             className="p-2 hover:bg-gray-100 rounded-full">
-            <Trash2 className="w-5 h-5 text-gray-500" />
+            <Trash2 className="w-4 h-4 text-gray-500" />
           </button>
           <button
             onClick={handleCreateSubpage}
             className="p-2 hover:bg-gray-100 rounded-full">
-            <FolderPlus className="w-5 h-5 text-gray-500" />
+            <FolderPlus className="w-4 h-4 text-gray-500" />
           </button>
         </section>
 
         {/* Page Metadata */}
-        <div className="flex items-center space-x-4 text-sm text-gray-500 pb-6 border-b-2">
-          <div className="flex items-center space-x-1">
-            <Calendar className="w-5 h-5" />
-            <span className="truncate">Created: {new Date(pageMetadata.createdAt).toLocaleDateString()}</span>
+        <div className="md:flex items-center md:space-x-4 text-sm text-gray-500 pb-6 border-b-2">
+          <div className="flex items-center space-x-1 mb-2 md:mb-0">
+            <Calendar className="w-4 h-4" />
+            <span className="truncate">
+              <RelativeTime date={pageMetadata.createdAt} />
+            </span>
           </div>
-          <div className="flex items-center space-x-1">
-            <Save className="w-5 h-5" />
-            <span className="truncate">Last edited: {new Date(pageMetadata.lastEdited).toLocaleDateString()}</span>
+          <div className="flex items-center space-x-1 mb-2 md:mb-0">
+          {isShowingSavingIndicator ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            <span className="truncate">{isShowingSavingIndicator ? "Saving ..." : <RelativeTime date={pageMetadata.lastEdited} />}</span>
           </div>
         </div>
       </div>

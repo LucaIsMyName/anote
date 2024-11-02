@@ -17,6 +17,7 @@
     "@tanstack/react-table": "^8.20.5",
     "@tippyjs/react": "^4.2.6",
     "@types/prismjs": "^1.26.5",
+    "date-fns": "^4.1.0",
     "gray-matter": "^4.0.3",
     "jszip": "^3.10.1",
     "lucide-react": "^0.453.0",

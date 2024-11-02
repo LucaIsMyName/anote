@@ -62,7 +62,7 @@ export const BlockMenu = ({ onSelect, trigger = undefined }: BlockMenuProps) => 
       className="block-menu-tooltip">
       <div onClick={() => setIsOpen(!isOpen)}>
         {trigger || (
-          <button className="p-2 hover:bg-gray-100 rounded-full">
+          <button className="">
             <Plus className="w-4 h-4 text-gray-600" />
           </button>
         )}

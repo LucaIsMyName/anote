@@ -57,40 +57,67 @@ export class FileService {
 
     // Helper function to search blocks in a page
     const searchPageBlocks = async (pagePath: string, pageTitle: string) => {
-      const { blocks } = await this.readPage(dirHandle, pagePath);
+      try {
+        const { blocks } = await this.readPage(dirHandle, pagePath);
 
-      for (const block of blocks) {
-        const blockContent = block.content || "";
-        const searchableContent = `${blockContent} ${JSON.stringify(block)}`.toLowerCase();
+        for (const block of blocks) {
+          const blockContent = block.content || "";
+          const searchableContent = `${blockContent} ${JSON.stringify(block)}`.toLowerCase();
 
-        if (searchableContent.includes(searchTerm.toLowerCase())) {
-          results.push({
-            id: block.id.toString(),
-            type: block.type,
-            content: block.content,
-            pageId: pagePath,
-            pagePath: pagePath,
-            pageTitle: pageTitle,
-            createdAt: block.createdAt,
-            lastEdited: block.lastEdited,
-          });
+          if (searchableContent.includes(searchTerm.toLowerCase())) {
+            results.push({
+              id: block.id.toString(),
+              type: block.type,
+              content: block.content,
+              pageId: pagePath,
+              pagePath: pagePath,
+              pageTitle: pageTitle,
+              createdAt: block.createdAt,
+              lastEdited: block.lastEdited,
+            });
+          }
         }
+      } catch (error) {
+        console.error(`Error searching in page ${pagePath}:`, error);
       }
     };
 
-    // Recursively search through all pages
-    const searchDirectory = async (path = "") => {
-      const pages = await this.listPages(dirHandle, path);
+    // Recursive function to search through directory structure
+    const searchDirectory = async (currentPath = "") => {
+      try {
+        let handle = dirHandle;
 
-      for (const page of pages) {
-        const pagePath = path ? `${path}/${page.name}` : page.name;
-        await searchPageBlocks(pagePath, page.name);
-
-        if (page.children?.length) {
-          for (const child of page.children) {
-            await searchDirectory(`${pagePath}/${child.name}`);
+        // Navigate to current directory if not at root
+        if (currentPath) {
+          const pathParts = currentPath.split("/");
+          for (const part of pathParts) {
+            handle = await handle.getDirectoryHandle(part);
           }
         }
+
+        // List all entries in current directory
+        for await (const entry of handle.values()) {
+          // Skip assets directory and hidden files
+          if (entry.name === "assets" || entry.name.startsWith(".")) continue;
+
+          if (entry.kind === "directory") {
+            const newPath = currentPath ? `${currentPath}/${entry.name}` : entry.name;
+
+            try {
+              // Check if this directory is a page (has index.md)
+              await entry.getFileHandle("index.md");
+              await searchPageBlocks(newPath, entry.name);
+            } catch (error) {
+              // If no index.md, just skip searching this directory as a page
+              console.debug(`No index.md found in ${newPath}`);
+            }
+
+            // Recursively search subdirectories regardless of whether they're pages
+            await searchDirectory(newPath);
+          }
+        }
+      } catch (error) {
+        console.error(`Error searching directory ${currentPath}:`, error);
       }
     };
 
@@ -99,36 +126,57 @@ export class FileService {
   }
 
   static async getBlockReference(dirHandle: string, referenceId: string): Promise<BlockReference | null> {
-    // Search through all pages to find the referenced block
-    const searchDirectory = async (path = "") => {
-      const pages = await this.listPages(dirHandle, path);
+    // Recursive function to search through directory structure
+    const searchDirectory = async (currentPath = "") => {
+      try {
+        let handle = dirHandle;
 
-      for (const page of pages) {
-        const pagePath = path ? `${path}/${page.name}` : page.name;
-        const { blocks } = await this.readPage(dirHandle, pagePath);
-
-        const block = blocks.find((b) => b.id.toString() === referenceId);
-        if (block) {
-          return {
-            id: block.id.toString(),
-            type: block.type,
-            content: block.content,
-            pageId: pagePath,
-            pagePath: pagePath,
-            pageTitle: page.name,
-            createdAt: block.createdAt,
-            lastEdited: block.lastEdited,
-          };
+        // Navigate to current directory if not at root
+        if (currentPath) {
+          const pathParts = currentPath.split("/");
+          for (const part of pathParts) {
+            handle = await handle.getDirectoryHandle(part);
+          }
         }
 
-        if (page.children?.length) {
-          for (const child of page.children) {
-            const result = await searchDirectory(`${pagePath}/${child.name}`);
+        // Check current directory for index.md
+        try {
+          const { blocks } = await this.readPage(dirHandle, currentPath);
+          const block = blocks.find((b) => b.id.toString() === referenceId);
+          if (block) {
+            return {
+              id: block.id.toString(),
+              type: block.type,
+              content: block.content,
+              pageId: currentPath,
+              pagePath: currentPath,
+              pageTitle: currentPath.split("/").pop() || "",
+              createdAt: block.createdAt,
+              lastEdited: block.lastEdited,
+            };
+          }
+        } catch (error) {
+          // If no index.md or error reading page, continue searching
+          console.debug(`No index.md found in ${currentPath}`);
+        }
+
+        // Search through subdirectories
+        for await (const entry of handle.values()) {
+          // Skip assets directory and hidden files
+          if (entry.name === "assets" || entry.name.startsWith(".")) continue;
+
+          if (entry.kind === "directory") {
+            const newPath = currentPath ? `${currentPath}/${entry.name}` : entry.name;
+            const result = await searchDirectory(newPath);
             if (result) return result;
           }
         }
+
+        return null;
+      } catch (error) {
+        console.error(`Error searching directory ${currentPath}:`, error);
+        return null;
       }
-      return null;
     };
 
     return searchDirectory();
@@ -549,27 +597,17 @@ export class FileService {
           let language = metadata.language || "javascript";
           let isMultiline = metadata.isMultiline !== false;
 
-          if (isMultiline) {
-            // Updated regex pattern to better match multiline code content
-            // This pattern handles content between ```language and ``` more reliably
-            const multilineMatch = content.match(/^```(\w*)\n?([\s\S]*?)\n?```$/);
-            if (multilineMatch) {
-              language = multilineMatch[1] || language;
-              // Trim the content but preserve intentional empty lines within the code
-              codeContent = multilineMatch[2].replace(/^\n+|\n+$/g, "");
-            } else {
-              // Fallback: try to extract content between any ``` markers if the first pattern fails
-              const fallbackMatch = content.match(/^```[\s\S]*?\n?([\s\S]*?)\n?```$/);
-              if (fallbackMatch) {
-                codeContent = fallbackMatch[1].replace(/^\n+|\n+$/g, "");
-              }
+          // Extract content between triple backticks, accounting for language specification
+          const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/;
+          const match = content.match(codeBlockRegex);
+
+          if (match) {
+            // If there's a language specified in the markdown, use it
+            if (match[1]) {
+              language = match[1];
             }
-          } else {
-            // Improved single-line code matching
-            const singleLineMatch = content.match(/^`(.*?)`$/);
-            if (singleLineMatch) {
-              codeContent = singleLineMatch[1];
-            }
+            // Get the actual code content, preserving whitespace but trimming extra newlines
+            codeContent = match[2].replace(/^\n+|\n+$/g, "");
           }
 
           blocks.push({

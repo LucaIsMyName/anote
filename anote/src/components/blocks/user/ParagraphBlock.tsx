@@ -10,15 +10,8 @@ export interface ParagraphBlockProps {
   onChange: (content: string) => void;
   workspace: string;
   onPageClick: (pagePath: string) => void;
-  onEnterKey?: () => void; // Add this prop
+  onEnterKey?: () => void;
 }
-
-/**
- * @description Paragraph block component that allows users to input text
- * and mention other pages using double square brackets.
- * Example: [[Page Name]]
- * When a page is mentioned, it will be highlighted and clickable.
- */
 
 export const ParagraphBlock = ({ content, onChange, workspace, onPageClick, onEnterKey }: ParagraphBlockProps) => {
   const [mentionState, setMentionState] = useState({
@@ -48,16 +41,16 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick, onEn
     }
   }, [workspace]);
 
+  // Update local content when prop changes, converting HTML to Markdown
   useEffect(() => {
     const markdownContent = FileService.transformInlineHtmlToMarkdown(content || "");
     setLocalContent(markdownContent);
   }, [content]);
 
-  
-  const handleChange = (newMarkdownContent: string) => {
-    setLocalContent(newMarkdownContent);
-    const htmlContent = FileService.transformInlineMarkdownToHtml(newMarkdownContent);
-    onChange(htmlContent);
+  const handleChange = (newContent: string) => {
+    // The content coming from SwitchableEditor will already be HTML
+    // because SwitchableEditor handles the markdown-to-html conversion
+    onChange(newContent);
   };
 
   const handleKeyDown = (e: any) => {
@@ -76,41 +69,29 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick, onEn
           left: rect.left - inputRef.current.getBoundingClientRect().left,
         },
       });
-    }else if (e.key === "Enter" && !e.shiftKey) {
+    } else if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       onEnterKey?.();
     }
   };
 
-  const handleInput = (e: any) => {
-    const newContent = e.target.value;
-    onChange(newContent);
-
-    if (mentionState.isOpen) {
-      const currentPosition = e.target.selectionStart;
-      const searchText = newContent.slice(mentionState.startPosition, currentPosition);
-
-      if (searchText.includes(" ") || currentPosition < mentionState.startPosition) {
-        setMentionState((prev) => ({ ...prev, isOpen: false }));
-      } else {
-        setMentionState((prev) => ({ ...prev, searchTerm: searchText }));
-      }
-    }
-  };
-
   const handlePageSelect = (pageInfo: PageInfo) => {
-    const before = content.slice(0, mentionState.startPosition - 1);
-    const after = content.slice(inputRef.current.selectionStart);
+    const before = localContent.slice(0, mentionState.startPosition - 1);
+    const after = localContent.slice(inputRef.current.selectionStart);
     const pageLink = `[[${pageInfo.name}|${pageInfo.id}]]`; // Include ID in link
-
-    onChange(before + pageLink + after);
+    
+    const newContent = before + pageLink + after;
+    setLocalContent(newContent);
+    const htmlContent = FileService.transformInlineMarkdownToHtml(newContent);
+    onChange(htmlContent);
+    
     setMentionState((prev) => ({ ...prev, isOpen: false }));
   };
 
   const handleClick = (e: any) => {
     const text = e.target?.value.toString();
     const clickPosition = e.target?.selectionStart;
-    const linkRegex = /\[\[(.*?)\|(.*?)\]\]/g; // Updated regex to capture ID
+    const linkRegex = /\[\[(.*?)\|(.*?)\]\]/g;
     let match;
 
     while ((match = linkRegex.exec(text)) !== null) {
@@ -119,7 +100,7 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick, onEn
       const endIndex = startIndex + match[0].length;
 
       if (clickPosition >= startIndex && clickPosition <= endIndex) {
-        Navigate(`/page/${id}`); // Use react-router navigation
+        Navigate(`/page/${id}`);
         break;
       }
     }
@@ -127,10 +108,10 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick, onEn
 
   return (
     <div className="relative">
-       <SwitchableEditor
+      <SwitchableEditor
         content={localContent}
         onChange={handleChange}
-        onKeyDown={handleKeyDown}  // Add this prop
+        onKeyDown={handleKeyDown}
         className="w-full focus:ring-1 focus:ring-sky-400 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded p-1 text-gray-700"
         placeholder="Type something..."
       />

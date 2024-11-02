@@ -1,6 +1,20 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Link, Hash, Cuboid, NotepadText, RefreshCcw, ExternalLink, AlertTriangle, FileIcon } from "lucide-react";
 import { FileService } from "../../../services/FileService.ts";
+import Prism from "prismjs";
+import "prismjs/themes/prism.css";
+import "prismjs/components/prism-typescript";
+import "prismjs/components/prism-javascript";
+import "prismjs/components/prism-c";
+import "prismjs/components/prism-cpp";
+import "prismjs/components/prism-bash";
+import "prismjs/components/prism-python";
+import "prismjs/components/prism-java";
+import "prismjs/components/prism-go";
+import "prismjs/components/prism-rust";
+import "prismjs/components/prism-sql";
+import "prismjs/components/prism-json";
+import "prismjs/components/prism-yaml";
 
 interface BlockReference {
   id: string;
@@ -73,6 +87,24 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
     loadReference();
   }, [referenceId, workspace]);
 
+  const handleNavigate = () => {
+    // First navigate to the page
+    onNavigate(selectedReference?.pagePath || "");
+
+    // Then scroll to the block after a small delay to ensure the page has loaded
+    setTimeout(() => {
+      const blockElement = document.getElementById(`${selectedReference?.id}`);
+      if (blockElement) {
+        blockElement.scrollIntoView({ behavior: "smooth" });
+        // Optional: Add highlight effect
+        blockElement.classList.add("highlight-referenced-block");
+        setTimeout(() => {
+          blockElement.classList.remove("highlight-referenced-block");
+        }, 2000);
+      }
+    }, 100);
+  };
+
   const handleSearch = async (term: string) => {
     setSearchTerm(term);
 
@@ -103,6 +135,24 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
     onChange(reference.id);
   };
 
+  const styles = `
+  .highlight-referenced-block {
+    animation: highlight-pulse 2s ease-in-out;
+  }
+
+  @keyframes highlight-pulse {
+    0% { background-color: transparent; }
+    25% { background-color: rgba(14, 165, 233, 0.1); }
+    75% { background-color: rgba(14, 165, 233, 0.1); }
+    100% { background-color: transparent; }
+  }
+`;
+
+  // Add the styles to the document
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
+
   const renderSearchResults = () => (
     <div className="mt-2 space-y-2">
       {searchResults.length === 0 && searchTerm.length > 2 && <div className="p-4 text-sm text-gray-500 bg-gray-50 rounded">No blocks found matching your search.</div>}
@@ -121,7 +171,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
           <div className="text-sm text-gray-600 flex items-center gap-3">
             <Cuboid className="size-4 text-gray-500" /> {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
           </div>
-          {result.type !== "file" ? <div className="text-sm text-gray-600 truncate mt-3">{cleanContent(result.content)}</div> : ''}
+          {result.type !== "file" ? <div className="text-sm text-gray-600 truncate mt-3">{cleanContent(result.content)}</div> : ""}
         </div>
       ))}
     </div>
@@ -148,9 +198,9 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
     }
 
     return (
-      <div className="border-2 border-gray-200 rounded-lg p-4">
+      <div className="border-2 border-gray-100 rounded-lg p-4">
         <div className="prose prose-sm max-w-none mb-4">{renderReferencedBlock(selectedReference)}</div>
-        <div className="flex items-center justify-between mt-2 pt-2 border-t-2 text-xs">
+        <div className="flex items-center justify-between mt-2 pt-2 border-t-2 border-gray-100 text-xs">
           <div className="flex items-center gap-2">
             <Link className="w-4 h-4 text-gray-400" />
             <span className="text-sm leading-3	 text-gray-400">{selectedReference.pageTitle}</span>
@@ -164,7 +214,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
               <RefreshCcw className="size-4 text-gray-400" />
             </button>
             <button
-              onClick={() => onNavigate(selectedReference.pagePath)}
+              onClick={handleNavigate}
               className="p-1 hover:bg-gray-100 rounded">
               <ExternalLink className="w-4 h-4 text-gray-400" />
             </button>
@@ -194,7 +244,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
 
       case "code":
         return (
-          <pre className="bg-gray-50 p-3 rounded">
+          <pre className="border-2 border-gray-100 bg-gray-50 text-black p-3 rounded">
             <code>{reference.content}</code>
           </pre>
         );
@@ -239,38 +289,37 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
         );
 
       case "table":
-        const tableData = reference.data || [];
+        const tableData = reference.content || [];
         if (tableData.length === 0) return null;
 
         return (
           <div className="overflow-x-auto border-2 rounded">
             <table className="min-w-full divide-y divide-gray-200">
               <tbody>
-                {tableData.map((row, rowIndex) => (
-                  <tr
-                    key={rowIndex}
-                    className={rowIndex === 0 ? "bg-gray-50" : ""}>
-                    {row.map((cell, cellIndex) => (
-                      <td
-                        key={`${rowIndex}-${cellIndex}`}
-                        className={`px-4 py-2 text-sm border-r last:border-r-0 
-                          ${rowIndex === 0 ? "font-medium text-gray-900" : "text-gray-700"}`}>
-                        {cell || ""}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+                {tableData}
               </tbody>
             </table>
           </div>
         );
 
       case "image":
-        return <div className="p-3 bg-gray-50 rounded border-2 border-gray-200 text-sm text-gray-500">{reference.type.toUpperCase()} {reference.pagePath}/#{reference.id} {reference.pageId}</div>;
+        return (
+          <div className="p-3 bg-gray-50 truncate rounded border-2 border-gray-200 text-sm text-gray-500">
+            {reference.pagePath}/#{reference.id}
+          </div>
+        );
       case "file":
-        return <div className="p-3 bg-gray-50 rounded border-2 border-gray-200 text-sm text-gray-500">{reference.pagePath}/#{reference.id}</div>;
+        return (
+          <div className="p-3 bg-gray-50 truncate rounded border-2 border-gray-200 text-sm text-gray-500">
+            {reference.pagePath}/#{reference.id}
+          </div>
+        );
       default:
-        return <div className="p-3 bg-gray-50 rounded border-2 border-gray-200 text-sm text-gray-500">#{reference.id}</div>;return <div className="p-3 bg-gray-50 rounded border border-gray-200 text-sm text-gray-500">{reference.id}</div>;
+        return (
+          <div className="p-3 bg-gray-50 truncate rounded border-2 border-gray-200 text-sm text-gray-500">
+            {reference.pagePath}/#{reference.id}
+          </div>
+        );
     }
   };
 

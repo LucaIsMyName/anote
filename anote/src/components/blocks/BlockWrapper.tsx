@@ -70,7 +70,7 @@ const BlockWrapper = forwardRef<HTMLDivElement, BlockWrapperProps>(({ block, ind
 
       <div className={`relative ${isDragging ? "pointer-events-none" : ""}`}>{children}</div>
 
-      {renderBlockControls(index)}
+      <div>{renderBlockControls(index)}</div>
     </div>
   );
 });

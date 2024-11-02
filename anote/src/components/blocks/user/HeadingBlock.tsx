@@ -63,19 +63,19 @@ const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, level: initialLeve
   const getFontSize = () => {
     switch (headingLevel) {
       case 1:
-        return "text-4xl";
+        return "text-3xl lg:text-4xl";
       case 2:
-        return "text-3xl";
+        return "text-2xl lg:text-3xl";
       case 3:
-        return "text-2xl";
+        return "text-xl lg:text-2xl";
       case 4:
-        return "text-xl";
+        return "text-lg lg:text-xl";
       case 5:
-        return "text-lg";
+        return "text-md lg:text-lg";
       case 6:
-        return "text-base";
+        return "text-sm lg:text-base";
       default:
-        return "text-3xl";
+        return "text-2xl lg:text-3xl";
     }
   };
 

@@ -120,7 +120,7 @@ export const ListBlock: React.FC<ListBlockProps> = ({ items = [], type: initialT
   );
 
   return (
-    <div className="relative mb-4">
+    <div className="relative">
       <div className="flex flex-row-reverse">
         <div className="flex items-start">
           <Tooltip
@@ -142,7 +142,7 @@ export const ListBlock: React.FC<ListBlockProps> = ({ items = [], type: initialT
           </Tooltip>
         </div>
 
-        <div className="space-y-2 flex-1">
+        <div className="space-y-2 flex-1 text-lg lg:text-xl">
           {items.map((item, index) => (
             <div
               key={item.id}
@@ -155,8 +155,8 @@ export const ListBlock: React.FC<ListBlockProps> = ({ items = [], type: initialT
                   className="rounded accent-sky-400"
                 />
               )}
-              {listType === "ordered" && <span className="w-6 text-right text-gray-500">{index + 1}.</span>}
-              {listType === "unordered" && <span className="w-6 text-center text-gray-500">•</span>}
+              {listType === "ordered" && <span className="w-4 text-right text-gray-500">{index + 1}.</span>}
+              {listType === "unordered" && <span className="w-4 text-center text-gray-500">•</span>}
               <input
                 ref={(el) => {
                   inputRefs.current[item.id] = el;
@@ -166,7 +166,7 @@ export const ListBlock: React.FC<ListBlockProps> = ({ items = [], type: initialT
                 value={item.text}
                 onChange={(e) => updateItem(item.id, { text: e.target.value })}
                 onKeyDown={(e) => handleKeyDown(e, item)}
-                className="flex-1 p-0 bg-transparent"
+                className="flex-1 p-0 bg-transparent truncate"
                 placeholder={index === 0 ? "1st Item" : "List item..."}
               />
               <button
@@ -180,8 +180,8 @@ export const ListBlock: React.FC<ListBlockProps> = ({ items = [], type: initialT
       </div>
       <button
         onClick={() => addItem()}
-        className={`${listType === "todo" ? "ml-0" : "ml-[9px]"} mt-2 flex gap-4 text-gray-300 hover:text-gray-700`}>
-        <span>+ </span>Add item
+        className={`${listType === "todo" ? "ml-[20px]" : "ml-[24px]"} text-xl mt-2 flex gap-4 text-gray-300 hover:text-gray-700`}>
+        Add item
       </button>
     </div>
   );

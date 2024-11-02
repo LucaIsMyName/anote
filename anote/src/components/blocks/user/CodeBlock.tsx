@@ -15,7 +15,6 @@ import "prismjs/components/prism-json";
 import "prismjs/components/prism-yaml";
 import { Copy, Check, ToggleLeft } from "lucide-react";
 import Tooltip from "../utils/Tooltip.tsx";
-import Textarea from "../utils/Textarea.tsx";
 
 export interface CodeBlockProps {
   content?: string;
@@ -27,10 +26,13 @@ export interface CodeBlockProps {
 export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, language: initialLanguage = "javascript", isMultiline: initialIsMultiline = true }) => {
   const [language, setLanguage] = useState(initialLanguage);
   const [isMultiline, setIsMultiline] = useState(initialIsMultiline);
-  const [localContent, setLocalContent] = useState(content);
+  const [isEditing, setIsEditing] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const codeRef = useRef<HTMLElement>(null);
+  const preRef = useRef<HTMLPreElement>(null);
+  const selectionRef = useRef<{ start: number; end: number } | null>(null);
+  const cursorPositionRef = useRef<number | null>(null);
 
   const supportedLanguages = [
     { value: "javascript", label: "JavaScript" },
@@ -48,30 +50,58 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, la
   ];
 
   useEffect(() => {
-    // Highlight code whenever content or language changes
-    if (codeRef.current) {
+    if (codeRef.current && !isEditing) {
       Prism.highlightElement(codeRef.current);
     }
-  }, [content, language]);
+  }, [content, language, isEditing]);
 
-  useEffect(() => {
-    // Update local content when prop changes
-    setLocalContent(content);
-  }, [content]);
+  const saveCaretPosition = (element: HTMLElement) => {
+    const selection = window.getSelection();
+    const range = selection?.getRangeAt(0);
+    if (range) {
+      cursorPositionRef.current = range.startOffset;
+    }
+  };
 
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-    // Send all state in the update
+  const restoreCaretPosition = (element: HTMLElement) => {
+    if (cursorPositionRef.current !== null && isEditing) {
+      const selection = window.getSelection();
+      const range = document.createRange();
+
+      // Get the text node (first child of the code element)
+      const textNode = element.firstChild || element.appendChild(document.createTextNode(""));
+
+      // Set cursor position
+      const pos = Math.min(cursorPositionRef.current, textNode.textContent?.length || 0);
+      range.setStart(textNode, pos);
+      range.setEnd(textNode, pos);
+
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
+  };
+
+  const handleContentChange = (newContent: string) => {
+    if (codeRef.current) {
+      saveCaretPosition(codeRef.current);
+    }
+
     onChange({
       content: newContent,
       language,
       isMultiline,
     });
+
+    // Restore cursor position after React re-renders
+    requestAnimationFrame(() => {
+      if (codeRef.current) {
+        restoreCaretPosition(codeRef.current);
+      }
+    });
   };
 
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
-    // Send all state in the update
     onChange({
       content,
       language: newLanguage,
@@ -83,7 +113,6 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, la
   const toggleMultiline = () => {
     const newIsMultiline = !isMultiline;
     setIsMultiline(newIsMultiline);
-    // Send all state in the update
     onChange({
       content,
       language,
@@ -101,25 +130,83 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, la
     }
   };
 
-  const LanguageSelector = (
-    <div className="w-48 bg-white rounded-lg py-2 max-h-64 overflow-y-auto">
-      {supportedLanguages.map(({ value, label }) => (
-        <button
-          key={value}
-          className={`w-full px-4 py-2 text-left hover:bg-gray-100 ${language === value ? "bg-gray-100" : ""}`}
-          onClick={() => handleLanguageChange(value)}>
-          {label}
-        </button>
-      ))}
-    </div>
-  );
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !isMultiline) {
+      e.preventDefault();
+      setIsEditing(false);
+    } else if (e.key === "Escape") {
+      setIsEditing(false);
+    } else if (e.key === "Tab") {
+      e.preventDefault();
+      const selection = window.getSelection();
+      const range = selection?.getRangeAt(0);
+
+      if (range) {
+        const spaces = document.createTextNode("  ");
+        range.insertNode(spaces);
+        range.setStartAfter(spaces);
+        range.setEndAfter(spaces);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+
+        // Trigger content update
+        if (codeRef.current) {
+          handleContentChange(codeRef.current.textContent || "");
+        }
+      }
+    }
+  };
+
+  const restoreSelection = (element: HTMLElement) => {
+    if (selectionRef.current) {
+      element.selectionStart = selectionRef.current.start;
+      element.selectionEnd = selectionRef.current.end;
+    }
+  };
+
+  const sharedStyles = {
+    fontSize: "0.875rem", // text-sm
+    lineHeight: "1.5",
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+    whiteSpace: "pre" as const,
+    padding: "1rem",
+    margin: "0",
+    minHeight: isMultiline ? "5rem" : "2.5rem",
+    wordWrap: "break-word" as const,
+    overflowWrap: "break-word" as const,
+    display: "block",
+  };
+
+  const styles = `
+  .editing {
+    -webkit-user-modify: read-write-plaintext-only;
+    -moz-user-modify: read-write-plaintext-only;
+    user-modify: read-write-plaintext-only;
+  }
+`;
+
+  // Add the styles to the document
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
 
   return (
     <div className="relative group rounded-lg border-2 border-gray-200 bg-gray-50">
       <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-white rounded-t-lg">
         <div className="flex items-center space-x-2">
           <Tooltip
-            content={LanguageSelector}
+            content={
+              <div className="w-48 bg-white rounded-lg py-2 max-h-64 overflow-y-auto">
+                {supportedLanguages.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    className={`w-full px-4 py-2 text-left hover:bg-gray-100 ${language === value ? "bg-gray-100" : ""}`}
+                    onClick={() => handleLanguageChange(value)}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            }
             visible={isLanguageMenuOpen}
             onClickOutside={() => setIsLanguageMenuOpen(false)}
             interactive={true}
@@ -149,19 +236,37 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, la
         </button>
       </div>
 
-      <div className="relative h-auto">
-        <Textarea
-          value={content} // Use content directly from props
-          onChange={handleContentChange}
-          className="w-full p-4 text-sm bg-transparent absolute inset-0 resize-none outline-none"
-          style={{ height: isMultiline ? "auto" : "2.5rem" }}
-          rows={isMultiline ? 5 : 1}
-        />
-        <pre className="p-4 m-0 overflow-x-auto">
+      <div className="relative">
+        <pre
+          ref={preRef}
+          className="overflow-x-auto"
+          onClick={() => !isEditing && setIsEditing(true)}
+          style={sharedStyles}>
           <code
             ref={codeRef}
-            className={`language-${language}`}>
-            {content || " "} {/* Use content directly from props */}
+            className={`language-${language} ${isEditing ? "editing" : ""}`}
+            contentEditable={isEditing}
+            onBlur={(e) => {
+              handleContentChange(e.currentTarget.textContent || "");
+              setIsEditing(false);
+            }}
+            onKeyDown={handleKeyDown}
+            onInput={(e) => {
+              const newContent = e.currentTarget.textContent || "";
+              handleContentChange(newContent);
+            }}
+            onPaste={(e) => {
+              e.preventDefault();
+              const text = e.clipboardData.getData("text/plain");
+              document.execCommand("insertText", false, text);
+            }}
+            suppressContentEditableWarning={true}
+            style={{
+              ...sharedStyles,
+              outline: "none",
+              caretColor: isEditing ? "auto" : "transparent",
+            }}>
+            {content || " "}
           </code>
         </pre>
       </div>

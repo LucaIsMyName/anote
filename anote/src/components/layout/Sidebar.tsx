@@ -33,27 +33,14 @@ const PageCreationDialog = ({ workspace, parentPath = "", onSubmit, onClose }) =
 
   return (
     <div className="flex items-center gap-3">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class="lucide lucide-plus w-4 h-4">
-        <path d="M5 12h14"></path>
-        <path d="M12 5v14"></path>
-      </svg>
+      <Plus className="w-4 h-4" />
       <form onSubmit={handleSubmit}>
         <Input
           type="text"
           value={pageName}
           onChange={(e) => setPageName(e.target.value)}
           placeholder="Enter page name..."
-          className="w-full flex-1 bg-transparent"
+          className="w-full flex-1 text-white bg-transparent"
           autoFocus
           onKeyDown={(e) => {
             if (e.key === "Escape") {
@@ -472,7 +459,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
 
       {isOpen && (
         <>
-          <div className="border-b border-gray-200">
+          <div className="border-2 border-sky-600 bg-sky-400 text-white">
             {isCreatingPage && !newPageParentPath ? (
               <div className="px-3 py-2">
                 <PageCreationDialog
@@ -492,7 +479,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
                   setIsCreatingPage(true);
                   setNewPageParentPath("");
                 }}
-                className="flex items-center space-x-2 w-full px-3 py-2 text-gray-600 hover:bg-gray-100">
+                className="flex items-center space-x-2 w-full px-3 py-2">
                 <Plus className="w-4 h-4" />
                 <span>New Page</span>
               </button>
