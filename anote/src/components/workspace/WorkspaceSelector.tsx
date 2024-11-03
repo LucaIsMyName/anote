@@ -79,7 +79,7 @@ const WorkspaceSelector = ({ onWorkspaceReady }: WorkspaceSelectorProps) => {
           <p className="text-gray-600 mb-6">
             Safari doesn't support the required features for file system access. Please use one of these browsers instead:
           </p>
-          <div className="space-y-4">
+          <div className=" md:flex items-center gap-3">
             <a
               href="https://www.google.com/chrome/"
               target="_blank"
@@ -106,9 +106,9 @@ const WorkspaceSelector = ({ onWorkspaceReady }: WorkspaceSelectorProps) => {
 
   if (status === "checking") {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
+      <div className="fixed inset-0 flex items-center bg-white">
+        <div className="">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 " />
           <p className="mt-4 text-gray-600">Checking for existing workspace...</p>
         </div>
       </div>
@@ -117,9 +117,9 @@ const WorkspaceSelector = ({ onWorkspaceReady }: WorkspaceSelectorProps) => {
 
   if (status === "error") {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-white">
-        <div className="text-center max-w-md mx-auto p-6">
-          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+      <div className="fixed inset-0 flex items-center bg-white">
+        <div className="max-w-md mx-auto p-6">
+          <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
           <h2 className="text-xl font-bold mb-2">Workspace Error</h2>
           <p className="text-gray-600 mb-4">{errorMessage}</p>
           <button

@@ -2,6 +2,8 @@ import matter from "gray-matter";
 import { marked } from "marked";
 import { v4 as uuidv4 } from "uuid";
 
+import { BlockReference } from "../components/blocks/user/ReferenceBlock";
+
 interface File {
   name: string;
   type: string;
@@ -127,7 +129,7 @@ export class FileService {
 
   static async getBlockReference(dirHandle: string, referenceId: string): Promise<BlockReference | null> {
     // Recursive function to search through directory structure
-    const searchDirectory = async (currentPath = "") => {
+    const searchDirectory = async (currentPath = ""): Promise<BlockReference | null> => {
       try {
         let handle = dirHandle;
 
