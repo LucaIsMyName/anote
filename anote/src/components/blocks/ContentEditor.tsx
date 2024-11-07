@@ -563,7 +563,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
   );
 
   return (
-    <main className="mx-auto p-8">
+    <main className="absolute inset-0 left-[45px] md:left-[100px] mx-auto p-8">
       {/* Page Header */}
       <div className="mb-8 space-y-2 md:px-6">
         <div className="flex items-center justify-between group my-4">

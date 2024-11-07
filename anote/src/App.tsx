@@ -9,6 +9,9 @@ import { WorkspaceService } from "./services/workspaceService.ts";
 import { FileService } from "./services/FileService.ts";
 import Textarea from "./components/blocks/utils/Textarea.tsx";
 import Tooltip from "./components/blocks/utils/Tooltip.tsx";
+
+import { ModalDialog } from "./components/blocks/ModalDialog.tsx";
+
 import "./App.css";
 
 interface PageWrapperProps {
@@ -99,6 +102,12 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ workspace }) => {
           />
         </div>
       </ErrorBoundary>
+      <ModalDialog
+        isOpen={false}
+        title="Settings"
+        >
+        
+      </ModalDialog>
     </div>
   );
 };

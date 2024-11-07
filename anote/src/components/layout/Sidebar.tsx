@@ -40,7 +40,7 @@ const PageCreationDialog = ({ workspace, parentPath = "", onSubmit, onClose }) =
           value={pageName}
           onChange={(e) => setPageName(e.target.value)}
           placeholder="Enter page name..."
-          className="w-full flex-1 text-white bg-transparent"
+          className="w-full flex-1 text-white placeholder:text-white bg-transparent"
           autoFocus
           onKeyDown={(e) => {
             if (e.key === "Escape") {
@@ -201,10 +201,6 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
     }
   };
 
-  // In Sidebar.tsx, update the PageItem component
-
-  // In Sidebar.tsx, modify the button click handler and update PageItem component
-
   const PageItem = ({ page, level = 0, parentPath = "" }) => {
     const fullPath = parentPath ? `${parentPath}/${page.name}` : page.name;
     const isExpanded = expandedPaths[fullPath];
@@ -319,10 +315,10 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
         onDragOver={(e) => handleDragOver(e, fullPath)}
         onDragEnter={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e, fullPath)}
-        className={`relative group ${isDragging ? "opacity-50" : ""} ${dropIndicatorClass}`}>
+        className={`relative group space-y-2 ${isDragging ? "opacity-50" : ""} ${dropIndicatorClass}`}>
         <div
-          className={`flex items-center px-2 py-1 hover:bg-gray-100 ${currentPath === fullPath ? "bg-sky-50" : ""}`}
-          style={{ paddingLeft: `${level * 1.5}rem` }}>
+          className={`flex items-center rounded border-2 border-sky p-1 hover:bg-sky-50 ${currentPath === fullPath ? "bg-sky-50" : ""}`}
+          style={{ marginLeft: `${level * 1}rem` }}>
           <button
             onClick={() => {
               setExpandedPaths((prev) => ({
@@ -330,7 +326,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
                 [fullPath]: !prev[fullPath],
               }));
             }}
-            className="ml-2 p-1 hover:bg-gray-200 rounded">
+            className=" p-1 hover:bg-gray-200 rounded">
             {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
           </button>
 
@@ -361,7 +357,9 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
             </form>
           ) : (
             <span
-              onClick={() => onPageSelect(fullPath)}
+              onClick={() => {
+                onPageSelect(fullPath);
+              }}
               className="flex-1 px-2 py-1 cursor-pointer truncate">
               {page.name}
             </span>
@@ -441,76 +439,81 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
   return (
     <div
       style={{
-        maxWidth: isOpen ? "640px" : "48px",
-        minWidth: isOpen ? "200px" : "48px",
-        width: isOpen ? `${width}px` : "48px",
-        transition: "width 0.3s",
-        position: "relative",
+        maxWidth: isOpen ? `${width}px` : "60px",
+        width: isOpen ? `100%` : "60px",
+        transition: "max-width 0.3s",
       }}
-      className="bg-white shadow border-r-2 border-gray-200 h-screen overflow-y-scroll flex flex-col">
-      <div className="flex items-center justify-between w-full px-3 py-3">
-        {isOpen ? <h1 className="font-bold text-lg">anote</h1> : ""}
-        <button
-          onClick={toggleSidebar}
-          className="text-sm text-gray-500 hover:text-gray-700 focus:outline-none">
-          {isOpen ? <PanelRightOpen /> : <PanelRightClose />}
-        </button>
-      </div>
+      className={`p-2 h-screen  flex flex-col ${isOpen ? "fixed inset-0 right-10 md:relative z-50 peer-[main]:ml-[60px]" : "relative"}`}>
+      <div className="bg-white/90 backdrop-blur-sm border-2 rounded-lg border-gray-200 overflow-y-scroll h-full ">
+        <div className="flex items-center justify-between w-full p-2">
+          {isOpen ? (
+            <h1 className="font-bold text-lg">
+              <i>anote</i>
+            </h1>
+          ) : (
+            ""
+          )}
+          <button
+            onClick={toggleSidebar}
+            className="text-sm text-gray-500 hover:text-gray-700 focus:outline-none">
+            {isOpen ? <PanelRightOpen /> : <PanelRightClose />}
+          </button>
+        </div>
 
-      {isOpen && (
-        <>
-          <div className="border-2 border-sky-600 bg-sky-400 text-white">
-            {isCreatingPage && !newPageParentPath ? (
-              <div className="px-3 py-2">
-                <PageCreationDialog
-                  workspace={workspace}
-                  onSubmit={(name) => {
-                    handleCreatePage(name);
-                  }}
-                  onClose={() => {
-                    setIsCreatingPage(false);
+        {isOpen && (
+          <aside className="px-2 space-y-2">
+            <div className="border-2 border-sky-600 rounded bg-sky-400 text-white">
+              {isCreatingPage && !newPageParentPath ? (
+                <div className="px-3 py-2">
+                  <PageCreationDialog
+                    workspace={workspace}
+                    onSubmit={(name) => {
+                      handleCreatePage(name);
+                    }}
+                    onClose={() => {
+                      setIsCreatingPage(false);
+                      setNewPageParentPath("");
+                    }}
+                  />
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsCreatingPage(true);
                     setNewPageParentPath("");
                   }}
+                  className="flex items-center space-x-2 w-full px-2 py-2">
+                  <Plus className="w-4 h-4" />
+                  <span>New Page</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex-1 overflow-auto space-y-2">
+              {pages.map((page) => (
+                <PageItem
+                  key={page.name}
+                  page={page}
                 />
-              </div>
-            ) : (
-              <button
-                onClick={() => {
-                  setIsCreatingPage(true);
-                  setNewPageParentPath("");
-                }}
-                className="flex items-center space-x-2 w-full px-3 py-2">
-                <Plus className="w-4 h-4" />
-                <span>New Page</span>
-              </button>
-            )}
-          </div>
+              ))}
+              {pages.length === 0 && <div className="text-center text-gray-500 mt-4">No pages yet. Create your first page using the button above!</div>}
+            </div>
 
-          <div className="flex-1 overflow-auto">
-            {pages.map((page) => (
-              <PageItem
-                key={page.name}
-                page={page}
-              />
-            ))}
-            {pages.length === 0 && <div className="text-center text-gray-500 mt-4">No pages yet. Create your first page using the button above!</div>}
-          </div>
-
-          <div
-            onMouseDown={handleMouseDown}
-            style={{
-              width: "5px",
-              cursor: "col-resize",
-              position: "absolute",
-              top: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(0,0,0,0.1)",
-            }}
-          />
-        </>
-      )}
-      {/* <div className="border-t border-gray-200 p-3 space-y-2">
+            <div
+              onMouseDown={handleMouseDown}
+              style={{
+                width: "5px",
+                cursor: "col-resize",
+                position: "absolute",
+                top: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(0,0,0,0)",
+              }}
+            />
+          </aside>
+        )}
+        {/* <div className="border-t border-gray-200 p-3 space-y-2">
         <div className="flex justify-between items-center">
           <button
             onClick={async () => {
@@ -531,6 +534,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
           </button>
         </div>
       </div> */}
+      </div>
     </div>
   );
 };
