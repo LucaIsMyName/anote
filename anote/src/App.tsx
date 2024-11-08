@@ -86,14 +86,14 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ workspace }) => {
 
   return (
     <div className="flex h-screen bg-white">
-      <ErrorBoundary fallback={<div>Fallback Sidebar</div>}>
+      <ErrorBoundary>
         <Sidebar
           workspace={workspace}
           currentPath={currentPath}
           onPageSelect={handlePageSelect}
         />
       </ErrorBoundary>
-      <ErrorBoundary fallback={<div>Fallback Content</div>}>
+      <ErrorBoundary>
         <div className="flex-1 overflow-auto">
           <ContentEditor
             workspace={workspace}

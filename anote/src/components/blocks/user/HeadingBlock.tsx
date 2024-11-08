@@ -103,7 +103,7 @@ const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, level: initialLeve
         content={localContent}
         onChange={handleContentChange}
         onKeyDown={handleKeyDown} // Add this prop
-        className={`m-0 w-full bg-transparent focus:ring-1 focus:ring-sky-400 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded p-1 ${getFontSize()}`}
+        className={`m-0 w-full bg-transparent focus:ring-1 focus:ring-sky-400 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded ${getFontSize()}`}
         placeholder="Heading text..."
       />
     </div>

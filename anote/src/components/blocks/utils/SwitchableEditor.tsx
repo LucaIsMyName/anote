@@ -107,7 +107,7 @@ const SwitchableEditor: React.FC<SwitchableEditorProps> = ({
       onBlur={handleBlur}
       className={`${className} whitespace-pre-wrap`}
       placeholder={placeholder}
-      style={{ whiteSpace: 'pre-wrap' }}
+      
     />
     );
   }
@@ -117,7 +117,7 @@ const SwitchableEditor: React.FC<SwitchableEditorProps> = ({
   return (
     <div 
       onClick={handleViewClick}
-      className={`${className} cursor-text min-h-[1.5em]`}
+      className={`${className} cursor-text`}
     >
       {markdownContent ? (
         <div 

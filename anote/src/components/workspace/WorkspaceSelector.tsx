@@ -107,7 +107,7 @@ const WorkspaceSelector = ({ onWorkspaceReady }: WorkspaceSelectorProps) => {
   if (status === "checking") {
     return (
       <div className="fixed inset-0 flex items-center bg-white">
-        <div className="">
+        <div className="max-auto max-w-xl">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 " />
           <p className="mt-4 text-gray-600">Checking for existing workspace...</p>
         </div>

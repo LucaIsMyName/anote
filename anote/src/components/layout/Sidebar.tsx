@@ -307,6 +307,17 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
       return insertPageInTree(newPages, targetPathParts, sourcePage, position);
     };
 
+    const isLastPageInTree = () => {
+      let isLast = true;
+      let parent = parentPath;
+      pages.forEach((page) => {
+        if (page.name === parent) {
+          isLast = false;
+        }
+      });
+      return isLast;
+    }
+
     return (
       <div
         draggable
@@ -317,16 +328,17 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
         onDrop={(e) => handleDrop(e, fullPath)}
         className={`relative group space-y-2 ${isDragging ? "opacity-50" : ""} ${dropIndicatorClass}`}>
         <div
-          className={`flex items-center rounded border-2 border-sky p-1 hover:bg-sky-50 ${currentPath === fullPath ? "bg-sky-50" : ""}`}
+          className={`flex items-center rounded border-2 border-sky p-1 ${isLastPageInTree() ? 'mb-2' : ''} hover:bg-sky-50 ${currentPath === fullPath ? "bg-sky-50" : ""}`}
           style={{ marginLeft: `${level * 1}rem` }}>
           <button
+            disabled={isLastPageInTree()}
             onClick={() => {
               setExpandedPaths((prev) => ({
                 ...prev,
                 [fullPath]: !prev[fullPath],
               }));
             }}
-            className=" p-1 hover:bg-gray-200 rounded">
+            className={`p-1 hover:bg-gray-200 rounded ${isLastPageInTree() ? 'sr-only':''}`}>
             {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
           </button>
 
@@ -389,8 +401,9 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
         </div>
 
         {/* Child pages and creation dialog */}
-        <div className={isExpanded ? "" : "hidden"}>
+        <div className={isExpanded ? "" : "hidden after:content-['end'] pb-2"}>
           {page.children?.map((child) => (
+            // if it's the last level of a tree)
             <PageItem
               key={child.name}
               page={child}
