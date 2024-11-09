@@ -1,16 +1,18 @@
 import React, { useState, useEffect, memo, useRef, useCallback } from "react";
 import { Plus, Download, FileText, Trash2, Edit2, Copy, FolderPlus, Calendar, Save, GripVertical, LoaderCircle } from "lucide-react";
-import { BlockMenu, BlockType } from "./BlockMenu.tsx";
 
 import TableBlock from "./user/TableBlock.tsx";
 import HeadingBlock from "./user/HeadingBlock.tsx";
 import ParagraphBlock from "./user/ParagraphBlock.tsx";
+import QuoteBlock from "./user/QuoteBlock.tsx";
 import ImageBlock from "./user/ImageBlock.tsx";
 import FileBlock from "./user/FileBlock.tsx";
 import CodeBlock from "./user/CodeBlock.tsx";
 import ListBlock from "./user/ListBlock.tsx";
 import ReferenceBlock from "./user/ReferenceBlock.tsx";
+import DividerBlock from "./user/DividerBlock.tsx";
 
+import { BlockMenu, BlockType } from "./BlockMenu.tsx";
 import BlockControls from "./BlockControls.tsx";
 import BlockWrapper from "./BlockWrapper.tsx";
 import TableOfContents from "./TableOfContents.tsx";
@@ -18,6 +20,7 @@ import TableOfContents from "./TableOfContents.tsx";
 import Input from "./utils/Input.tsx";
 import Tooltip from "./utils/Tooltip.tsx";
 import RelativeTime from "./utils/RelativeTime.tsx";
+import ErrorBoundary from "./utils/ErrorBoundary.tsx";
 
 import { FileService } from "../../services/FileService.ts";
 import { ImportExportService } from "../../services/ImportExportService.ts";
@@ -482,6 +485,18 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
             onEnterKey={() => handleBlockEnterKey(index)}
           />
         );
+      case BlockType.QUOTE:
+        return (
+          <QuoteBlock
+            content={block.content}
+            onChange={(content) => updateBlock(block.id, { content })}
+            workspace={workspace}
+            onPageClick={handlePageClick}
+            onEnterKey={() => handleBlockEnterKey(index)}
+          />
+        );
+      case BlockType.DIVIDER:
+        return <DividerBlock />;
       case BlockType.HEADING:
         return (
           <HeadingBlock
@@ -576,171 +591,171 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
   );
 
   return (
-    <main className="absolute inset-0 left-[60px] md:left-[100px] mx-auto p-8">
-      {/* Page Header */}
-      <div className="mb-8 space-y-2 md:px-6">
-        <div className="flex items-center justify-between group my-4">
-          {isEditingTitle ? (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleTitleChange(e.target.title.value);
-              }}
-              className="flex-1">
-              <Input
-                name="title"
-                defaultValue={pageTitle}
-                onChange={
-                  (e) => setPageTitle(e.target.value)
-                }
-                className="text-4xl w-full focus:outline-none bg-transparent "
-                onBlur={(e) => handleTitleChange(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") setIsEditingTitle(false);
+    <ErrorBoundary>
+      <main className="absolute inset-0 left-[60px] md:left-[100px] mx-auto p-8">
+        {/* Page Header */}
+        <div className="mb-8 space-y-2 md:px-6">
+          <div className="flex items-center justify-between group my-4">
+            {isEditingTitle ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleTitleChange(e.target.title.value);
                 }}
-              />
-            </form>
-          ) : (
-            <h1
-              className="text-4xl lg:text-6xl font-bold flex-1 cursor-pointer hover:text-sky-600"
-              onClick={() => setIsEditingTitle(true)}>
-              {pageTitle}
-            </h1>
-          )}
-        </div>
-
-        <section className="flex items-center space-x-2 pb-4 -ml-2">
-          <button
-            onClick={async () => {
-              const pageJson = await ImportExportService.exportPageToJson(workspace, currentPath);
-              const blob = new Blob([JSON.stringify(pageJson, null, 2)], {
-                type: "application/json",
-              });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `${pageTitle}.json`;
-              a.click();
-              URL.revokeObjectURL(url);
-            }}
-            className="p-2 hover:bg-gray-100 rounded-full">
-            <Download className="w-4 h-4 text-gray-500" />
-          </button>
-          <button
-            onClick={async () => {
-              const markdown = await ImportExportService.exportPageToMd(workspace, currentPath);
-              const blob = new Blob([markdown], { type: "text/markdown" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `${pageTitle}.md`;
-              a.click();
-              URL.revokeObjectURL(url);
-            }}
-            className="p-2 hover:bg-gray-100 rounded-full">
-            <FileText className="w-4 h-4 text-gray-500" />
-          </button>
-          <button
-            onClick={() => setIsEditingTitle(true)}
-            className="p-2 hover:bg-gray-100 rounded-full">
-            <Edit2 className="w-4 h-4 text-gray-500" />
-          </button>
-          <button
-            onClick={handleDelete}
-            className="p-2 hover:bg-gray-100 rounded-full">
-            <Trash2 className="w-4 h-4 text-gray-500" />
-          </button>
-          <button
-            onClick={handleCreateSubpage}
-            className="p-2 hover:bg-gray-100 rounded-full">
-            <FolderPlus className="w-4 h-4 text-gray-500" />
-          </button>
-        </section>
-
-        {/* Page Metadata */}
-        <div className="md:flex items-center md:space-x-4 text-sm text-gray-500 pb-6 border-b-2">
-          <div className="flex items-center space-x-1 mb-2 md:mb-0">
-            <Calendar className="w-4 h-4" />
-            <span className="truncate">
-              <RelativeTime date={pageMetadata.createdAt} />
-            </span>
-          </div>
-          <div className="flex items-center space-x-1 mb-2 md:mb-0">
-            {isShowingSavingIndicator ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span className="truncate">{isShowingSavingIndicator ? "Saving ..." : <RelativeTime date={pageMetadata.lastEdited} />}</span>
-          </div>
-        </div>
-      </div>
-      {/* Blocks */}
-      <div className=" mx-auto md:px-6 relative">
-        <div className="flex flex-col-reverse justify-between lg:flex-row gap-8">
-          <div className="flex-1 max-w-[1660px]">
-            {blocks.length === 0 ? (
-              <EmptyPageBlock onAddBlock={addBlock} />
-            ) : (
-              blocks.map((block, index) => (
-                <BlockWrapper
-                  key={block.id}
-                  ref={(node) => {
-                    if (node) {
-                      blockRefs.current.set(block.id, node);
-                    } else {
-                      blockRefs.current.delete(block.id);
-                    }
+                className="flex-1">
+                <Input
+                  name="title"
+                  defaultValue={pageTitle}
+                  onChange={(e) => setPageTitle(e.target.value)}
+                  className="text-4xl w-full focus:outline-none bg-transparent "
+                  onBlur={(e) => handleTitleChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") setIsEditingTitle(false);
                   }}
-                  block={block}
-                  index={index}
-                  isDragging={isDragging}
-                  draggedBlockIndex={draggedBlockIndex}
-                  dragOverBlockIndex={dragOverBlockIndex}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onMoveBlock={handleMoveBlock} // Add this line
-                  renderBlockControls={renderBlockControls}>
-                  {renderBlock(block, index)}
-                </BlockWrapper>
-              ))
+                />
+              </form>
+            ) : (
+              <h1
+                className="text-4xl lg:text-6xl font-bold flex-1 cursor-pointer hover:text-sky-600"
+                onClick={() => setIsEditingTitle(true)}>
+                {pageTitle}
+              </h1>
             )}
           </div>
-          <div className="block w-full h-full overlow-y-scroll lg:max-w-48 flex-shrink-0 lg:mr-6">
-            <TableOfContents
-              blocks={blocks}
-              onHeadingClick={scrollToHeading}
-            />
+
+          <section className="flex items-center space-x-2 pb-4 -ml-2">
+            <button
+              onClick={async () => {
+                const pageJson = await ImportExportService.exportPageToJson(workspace, currentPath);
+                const blob = new Blob([JSON.stringify(pageJson, null, 2)], {
+                  type: "application/json",
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `${pageTitle}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="p-2 hover:bg-gray-100 rounded-full">
+              <Download className="w-4 h-4 text-gray-500" />
+            </button>
+            <button
+              onClick={async () => {
+                const markdown = await ImportExportService.exportPageToMd(workspace, currentPath);
+                const blob = new Blob([markdown], { type: "text/markdown" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `${pageTitle}.md`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="p-2 hover:bg-gray-100 rounded-full">
+              <FileText className="w-4 h-4 text-gray-500" />
+            </button>
+            <button
+              onClick={() => setIsEditingTitle(true)}
+              className="p-2 hover:bg-gray-100 rounded-full">
+              <Edit2 className="w-4 h-4 text-gray-500" />
+            </button>
+            <button
+              onClick={handleDelete}
+              className="p-2 hover:bg-gray-100 rounded-full">
+              <Trash2 className="w-4 h-4 text-gray-500" />
+            </button>
+            <button
+              onClick={handleCreateSubpage}
+              className="p-2 hover:bg-gray-100 rounded-full">
+              <FolderPlus className="w-4 h-4 text-gray-500" />
+            </button>
+          </section>
+
+          {/* Page Metadata */}
+          <div className="md:flex items-center md:space-x-4 text-sm text-gray-500 pb-6 border-b-2">
+            <div className="flex items-center space-x-1 mb-2 md:mb-0">
+              <Calendar className="w-4 h-4" />
+              <span className="truncate">
+                <RelativeTime date={pageMetadata.createdAt} />
+              </span>
+            </div>
+            <div className="flex items-center space-x-1 mb-2 md:mb-0">
+              {isShowingSavingIndicator ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              <span className="truncate">{isShowingSavingIndicator ? "Saving ..." : <RelativeTime date={pageMetadata.lastEdited} />}</span>
+            </div>
           </div>
         </div>
-      </div>
+        {/* Blocks */}
+        <div className=" mx-auto md:px-6 relative">
+          <div className="flex flex-col-reverse justify-between lg:flex-row gap-8">
+            <div className="flex-1 max-w-[1660px]">
+              {blocks.length === 0 ? (
+                <EmptyPageBlock onAddBlock={addBlock} />
+              ) : (
+                blocks.map((block, index) => (
+                  <BlockWrapper
+                    key={block.id}
+                    ref={(node) => {
+                      if (node) {
+                        blockRefs.current.set(block.id, node);
+                      } else {
+                        blockRefs.current.delete(block.id);
+                      }
+                    }}
+                    block={block}
+                    index={index}
+                    isDragging={isDragging}
+                    draggedBlockIndex={draggedBlockIndex}
+                    dragOverBlockIndex={dragOverBlockIndex}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onMoveBlock={handleMoveBlock} // Add this line
+                    renderBlockControls={renderBlockControls}>
+                    {renderBlock(block, index)}
+                  </BlockWrapper>
+                ))
+              )}
+            </div>
+            <div className="block w-full h-full overlow-y-scroll lg:max-w-48 flex-shrink-0 lg:mr-6">
+              <TableOfContents
+                blocks={blocks}
+                onHeadingClick={scrollToHeading}
+              />
+            </div>
+          </div>
+        </div>
 
-      {/* Saving indicator */}
-      {isShowingSavingIndicator && (
-        <div className="fixed top-8 right-12 bg-white/80 backdrop-blur-sm border border-gray-200 rounded px-2 py-1 text-sm text-gray-500 flex items-center gap-2 shadow-sm">
-          <LoaderCircle className="w-4 h-4 animate-spin" />
-          <span>Saving...</span>
-        </div>
-      )}
-      {/* Add BlockMenu portal */}
-      {blockMenuState.isOpen && blockMenuState.anchorEl && (
-        <div
-          className="fixed z-50"
-          style={{
-            top: blockMenuState.anchorEl.getBoundingClientRect().bottom + 8,
-            left: blockMenuState.anchorEl.getBoundingClientRect().left,
-          }}>
-          <BlockMenu
-            onSelect={handleBlockMenuSelect}
-            onClose={() =>
-              setBlockMenuState({
-                isOpen: false,
-                anchorEl: null,
-                triggerBlockIndex: -1,
-              })
-            }
-          />
-        </div>
-      )}
-    </main>
+        {/* Saving indicator */}
+        {isShowingSavingIndicator && (
+          <div className="fixed top-8 right-12 bg-white/80 backdrop-blur-sm border border-gray-200 rounded px-2 py-1 text-sm text-gray-500 flex items-center gap-2 shadow-sm">
+            <LoaderCircle className="w-4 h-4 animate-spin" />
+            <span>Saving...</span>
+          </div>
+        )}
+        {/* Add BlockMenu portal */}
+        {blockMenuState.isOpen && blockMenuState.anchorEl && (
+          <div
+            className="fixed z-50"
+            style={{
+              top: blockMenuState.anchorEl.getBoundingClientRect().bottom + 8,
+              left: blockMenuState.anchorEl.getBoundingClientRect().left,
+            }}>
+            <BlockMenu
+              onSelect={handleBlockMenuSelect}
+              onClose={() =>
+                setBlockMenuState({
+                  isOpen: false,
+                  anchorEl: null,
+                  triggerBlockIndex: -1,
+                })
+              }
+            />
+          </div>
+        )}
+      </main>
+    </ErrorBoundary>
   );
 };
 

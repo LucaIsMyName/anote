@@ -243,8 +243,9 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
 
       case "paragraph":
         return <div className="text-gray-700">{cleanContent(reference.content)}</div>;
-
-      case "code":
+        case "quote":
+          return <div className="text-gray-700 pl-2 border-l-2 text-md"><i>{cleanContent(reference.content.replace('>', ''))}</i></div>;
+        case "code":
         return (
           <pre className="border-2 border-gray-100 bg-gray-50 text-black p-3 rounded">
             <code>{reference.content}</code>

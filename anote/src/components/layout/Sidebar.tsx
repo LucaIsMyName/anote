@@ -3,6 +3,7 @@ import { FolderPlus, Download, PanelRightClose, Plus, ChevronRight, ChevronDown,
 import { FileService } from "../../services/FileService.ts";
 import { ImportExportService } from "../../services/ImportExportService.ts";
 import Input from "../blocks/utils/Input.tsx";
+import ErrorBoundary from "../blocks/utils/ErrorBoundary.tsx";
 
 const EXPANDED_PATHS_KEY = "anote_expanded_paths";
 const SIDEBAR_WIDTH_KEY = "sidebar_width";
@@ -460,101 +461,83 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
         transition: "max-width 0.3s",
       }}
       className={`z-[1000] p-2 h-screen fixed inset-0 right-10 z-50 flex flex-col ${isOpen ? "  peer-[main]:ml-[60px]" : ""}`}>
-      <div className="bg-white/90 backdrop-blur-md backdrop-saturate-150 border-2 rounded-lg border-gray-200 overflow-y-scroll h-full ">
-        <div className="flex items-center justify-between w-full p-2 border-b-2 mb-2">
-          {isOpen ? (
-            <div className="flex truncate items-center leading-1">
-              <h1 className="font-bold text-lg">
-                <i>anote</i>
-              </h1>
-              <span className="text-gray-300">/</span>
-              <span className="text-gray-300">{currentPath ? `${currentPath}` : ""}</span>
-            </div>
-          ) : (
-            ""
-          )}
-          <button
-            onClick={toggleSidebar}
-            className="text-sm text-gray-500 hover:text-gray-700 focus:outline-none">
-            {isOpen ? <PanelRightOpen /> : <PanelRightClose />}
-          </button>
-        </div>
+      <ErrorBoundary>
+        <div className="bg-white/90 backdrop-blur-md backdrop-saturate-150 border-2 rounded-lg border-gray-200 overflow-y-scroll h-full ">
+          <div className="flex items-center justify-between w-full p-2 border-b-2 mb-2">
+            {isOpen ? (
+              <div className="flex gap-[2px] truncate items-center leading-1">
+                <h1 className="font-bold text-lg">
+                  <i>anote</i>
+                </h1>
+                <span className="text-gray-300"> / </span>
+                <span className="text-gray-300">{currentPath ? `${currentPath}` : ""}</span>
+              </div>
+            ) : (
+              ""
+            )}
+            <button
+              onClick={toggleSidebar}
+              className="text-sm text-gray-500 hover:text-gray-700 focus:outline-none">
+              {isOpen ? <PanelRightOpen /> : <PanelRightClose />}
+            </button>
+          </div>
 
-        {isOpen && (
-          <aside className="px-2 space-y-2 ">
-            <div className={`transition-all w-full border-2 border-sky-600 rounded text-white ${isCreatingPage && !newPageParentPath ? " bg-sky-500" : " bg-sky-400"}`}>
-              {isCreatingPage && !newPageParentPath ? (
-                <div className="p-2 w-full">
-                  <PageCreationDialog
-                    workspace={workspace}
-                    onSubmit={(name) => {
-                      handleCreatePage(name);
-                    }}
-                    onClose={() => {
-                      setIsCreatingPage(false);
+          {isOpen && (
+            <aside className="px-2 space-y-2 ">
+              <div className={`transition-all w-full border-2 border-sky-600 rounded text-white ${isCreatingPage && !newPageParentPath ? " bg-sky-500" : " bg-sky-400"}`}>
+                {isCreatingPage && !newPageParentPath ? (
+                  <div className="p-2 w-full">
+                    <PageCreationDialog
+                      workspace={workspace}
+                      onSubmit={(name) => {
+                        handleCreatePage(name);
+                      }}
+                      onClose={() => {
+                        setIsCreatingPage(false);
+                        setNewPageParentPath("");
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setIsCreatingPage(true);
                       setNewPageParentPath("");
                     }}
+                    className="flex items-center space-x-2 w-full px-2 py-2">
+                    <Plus className="w-4 h-4" />
+                    <span>New Page</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="flex-1 overflow-auto space-y-2">
+                {pages.map((page) => (
+                  <PageItem
+                    key={page.name}
+                    page={page}
                   />
-                </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    setIsCreatingPage(true);
-                    setNewPageParentPath("");
-                  }}
-                  className="flex items-center space-x-2 w-full px-2 py-2">
-                  <Plus className="w-4 h-4" />
-                  <span>New Page</span>
-                </button>
-              )}
-            </div>
+                ))}
+                {pages.length === 0 && <div className="text-center text-gray-500 mt-4">No pages yet. Create your first page using the button above!</div>}
+              </div>
 
-            <div className="flex-1 overflow-auto space-y-2">
-              {pages.map((page) => (
-                <PageItem
-                  key={page.name}
-                  page={page}
-                />
-              ))}
-              {pages.length === 0 && <div className="text-center text-gray-500 mt-4">No pages yet. Create your first page using the button above!</div>}
-            </div>
-
-            <div
-              onMouseDown={handleMouseDown}
-              style={{
-                width: "5px",
-                cursor: "col-resize",
-                position: "absolute",
-                top: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: "rgba(0,0,0,0)",
-              }}
-            />
-          </aside>
-        )}
-        {/* <div className="border-t border-gray-200 p-3 space-y-2">
-        <div className="flex justify-between items-center">
-          <button
-            onClick={async () => {
-              const workspaceJson = await ImportExportService.exportWorkspaceToJson(workspace);
-              const blob = new Blob([JSON.stringify(workspaceJson, null, 2)], {
-                type: "application/json",
-              });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = "anote-workspace.json";
-              a.click();
-              URL.revokeObjectURL(url);
-            }}
-            className="flex items-center space-x-2 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-            <Download className="w-4 h-4" />
-            <span>Export Workspace</span>
-          </button>
+              <div
+                onMouseDown={handleMouseDown}
+                className={`
+                  w-1
+                  cursor-col-resize
+                  absolute
+                  -top-4
+                  right-0
+                  bottom-0
+                  bg-[rgba(0,0,0,0.033)]
+                  blur-[2px]
+                `}
+              />
+            </aside>
+          )}
         </div>
-      </div> */}
-      </div>
+      </ErrorBoundary>
     </div>
   );
 };

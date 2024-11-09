@@ -1,16 +1,18 @@
 import React, { useState } from "react";
-import { Plus, Link, Type, Code, List, Heading1, Table, Image, FileText, ListTodo } from "lucide-react";
+import { Plus, Link, Type, Code, Minus, MessageSquareQuote, List, Heading1, Table, Image, FileText, ListTodo } from "lucide-react";
 import Tooltip from "./utils/Tooltip.tsx";
 
 export const BlockType = {
   PARAGRAPH: "paragraph",
   HEADING: "heading",
+  QUOTE: "quote",
   TABLE: "table",
   IMAGE: "image",
   FILE: "file",
   LIST: "list",
   CODE: "code",
   REFERENCE: "reference",
+  DIVIDER: "divider",
 };
 
 export interface BlockMenuProps {
@@ -24,12 +26,14 @@ export const BlockMenu = ({ onSelect, trigger = undefined }: BlockMenuProps) => 
   const blockTypes = [
     { type: BlockType.PARAGRAPH, icon: Type, label: "Text" },
     { type: BlockType.HEADING, icon: Heading1, label: "Heading" },
+    { type: BlockType.QUOTE, icon: MessageSquareQuote, label: "Quote" },
     { type: BlockType.TABLE, icon: Table, label: "Table" },
     { type: BlockType.IMAGE, icon: Image, label: "Image" },
     { type: BlockType.FILE, icon: FileText, label: "File" },
     { type: BlockType.LIST, icon: List, label: "List" },
     { type: BlockType.CODE, icon: Code, label: "Code Block" }, // Add this line
     { type: BlockType.REFERENCE, icon: Link, label: "Reference" },
+    { type: BlockType.DIVIDER, icon: Minus, label: "Divider" },
   ];
 
   const MenuContent = (

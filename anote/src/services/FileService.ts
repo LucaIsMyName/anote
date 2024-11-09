@@ -257,6 +257,11 @@ export class FileService {
         replacement: "$1<strong>$2</strong>$3",
       },
       {
+        // Bold with asterisks - preserve spaces around
+        pattern: /(\s|^)\*\*\*([^*]+)\*\*\*(\s|$)/g,
+        replacement: "$1<strong><i>$2</i></strong>$3",
+      },
+      {
         // Bold with underscores - preserve spaces around
         pattern: /(\s|^)__([^_]+)__(\s|$)/g,
         replacement: "$1<strong>$2</strong>$3",
@@ -323,6 +328,11 @@ export class FileService {
         replacement: "$1**$3**$4",
       },
       {
+        // Bold & Italic - preserve spaces around
+        pattern: /(\s|^)<(strong|b)><i>([^<]*)<\/i><\/\2>(\s|$)/g,
+        replacement: "$1***$3***$4",
+      },
+      {
         // Italic - preserve spaces around
         pattern: /(\s|^)<(em|i)>([^<]*)<\/\2>(\s|$)/g,
         replacement: "$1*$3*$4",
@@ -383,6 +393,9 @@ export class FileService {
             break;
           case "paragraph":
             content += `${block.content}\n`;
+            break;
+          case "quote":
+            content += `> ${block.content}\n`;
             break;
           case "todo":
             content += block.items?.map((item) => `- [${item.completed ? "x" : " "}] ${item.text}`).join("\n") + "\n";
@@ -475,6 +488,10 @@ export class FileService {
                 block.content = headingMatch[2];
               }
               break;
+            case "quote":
+              if (block.content.startsWith(">")) {
+                block.content = block.content.replace(">", "");
+              }
             case "paragraph":
               block.content = blockContent;
               break;
@@ -721,6 +738,14 @@ export class FileService {
               referenceId: referenceMatch[1],
             });
           }
+        } else if (metadata.type === "quote") {
+          const cleanContent = content.replace(/^>\s*/, "").trim();
+
+          // Handle quote blocks
+          blocks.push({
+            ...metadata,
+            content: cleanContent,
+          });
         } else {
           // Handle other block types
           blocks.push({
@@ -790,14 +815,6 @@ export class FileService {
       };
 
       const initialBlocks = [
-        {
-          id: Date.now(),
-          type: "heading",
-          level: 1,
-          content: pathParts[pathParts.length - 1],
-          createdAt: timestamp,
-          lastEdited: timestamp,
-        },
         {
           id: Date.now() + 1,
           type: "paragraph",
@@ -905,6 +922,17 @@ export class FileService {
               break;
             case "paragraph":
               content += `${block.content || ""}\n\n`;
+              break;
+            case "divider":
+              content += `---\n\n`;
+              break;
+            case "quote":
+              // content += `> ${block.content || ""}\n\n`;
+              if (block.content?.startsWith(">")) {
+                content += `${block.content || ""}\n\n`;
+              } else {
+                content += `> ${block.content || ""}\n\n`;
+              }
               break;
             case "code":
               if (block.isMultiline) {
@@ -1042,11 +1070,19 @@ export class FileService {
       // Add block content
       switch (block.type) {
         case "paragraph":
-          markdown += `${block.content || ""}\n\n`;
+          markdown += `${this.transformInlineHtmlToMarkdown(block.content) || ""}\n\n`;
           break;
 
         case "heading":
-          markdown += `${"#".repeat(block.level || 1)} ${block.content || ""}\n\n`;
+          markdown += `${"#".repeat(parseInt(block.level) + 1 || 1)} ${this.transformInlineHtmlToMarkdown(block.content) || ""}\n\n`;
+          break;
+
+        case "quote":
+          markdown += `> ${this.transformInlineHtmlToMarkdown(block.content) || ""}\n\n`;
+          break;
+
+        case "divider":
+          markdown += `---\n\n`;
           break;
 
         case "todo":

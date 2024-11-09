@@ -86,28 +86,21 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ workspace }) => {
 
   return (
     <div className="flex h-screen bg-white">
-      <ErrorBoundary>
-        <Sidebar
+      <Sidebar
+        workspace={workspace}
+        currentPath={currentPath}
+        onPageSelect={handlePageSelect}
+      />
+      <div className="flex-1 overflow-auto">
+        <ContentEditor
           workspace={workspace}
           currentPath={currentPath}
-          onPageSelect={handlePageSelect}
+          onPathChange={handlePageSelect}
         />
-      </ErrorBoundary>
-      <ErrorBoundary>
-        <div className="flex-1 overflow-auto">
-          <ContentEditor
-            workspace={workspace}
-            currentPath={currentPath}
-            onPathChange={handlePageSelect}
-          />
-        </div>
-      </ErrorBoundary>
+      </div>
       <ModalDialog
         isOpen={false}
-        title="Settings"
-        >
-        
-      </ModalDialog>
+        title=""></ModalDialog>
     </div>
   );
 };
