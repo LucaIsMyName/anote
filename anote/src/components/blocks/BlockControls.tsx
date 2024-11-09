@@ -38,7 +38,7 @@ const BlockControls = memo(({ block, index, onAddBlock, onCopyBlock, onDeleteBlo
         title="Delete Block">
         <Trash2 className="w-4 h-4" />
       </button>
-      <section className=" text-[13px] text-gray-200 -bottom-0 right-0">#{block.id}</section>
+      <section className=" text-[13px] text-gray-300 -bottom-0 right-0">#{block.id}</section>
     </div>
   </div>
 ));

@@ -429,7 +429,19 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
         const newPagePath = await FileService.deletePage(workspace, currentPath);
         // If newPagePath is returned, it means a new initial page was created
         // Update the current path to the new page
-        onPathChange(newPagePath || null);
+
+        // find a new page to navigate to
+        try {
+          const pages = await FileService.listPages(workspace);
+          const newPage = findFirstPage(pages);
+          if (newPage) {
+            onPathChange(newPage);
+          }
+        } catch (error) {
+          console.error("Error finding new page:", error);
+        }
+
+        // onPathChange(newPagePath || null);
       } catch (error) {
         console.error("Error deleting page:", error);
       }
@@ -578,6 +590,9 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
               <Input
                 name="title"
                 defaultValue={pageTitle}
+                onChange={
+                  (e) => setPageTitle(e.target.value)
+                }
                 className="text-4xl w-full focus:outline-none bg-transparent "
                 onBlur={(e) => handleTitleChange(e.target.value)}
                 onKeyDown={(e) => {
@@ -651,7 +666,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
             </span>
           </div>
           <div className="flex items-center space-x-1 mb-2 md:mb-0">
-          {isShowingSavingIndicator ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {isShowingSavingIndicator ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             <span className="truncate">{isShowingSavingIndicator ? "Saving ..." : <RelativeTime date={pageMetadata.lastEdited} />}</span>
           </div>
         </div>
