@@ -59,7 +59,7 @@ export const BlockMenu = ({ onSelect, trigger = undefined }: BlockMenuProps) => 
       theme="light"
       placement="bottom-start"
       arrow={false}
-      className="block-menu-tooltip">
+      className="block-menu-tooltip z-[100]">
       <div onClick={() => setIsOpen(!isOpen)}>
         {trigger || (
           <button className="">

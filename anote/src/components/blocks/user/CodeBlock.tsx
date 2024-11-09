@@ -13,6 +13,7 @@ import "prismjs/components/prism-rust";
 import "prismjs/components/prism-sql";
 import "prismjs/components/prism-json";
 import "prismjs/components/prism-yaml";
+// import "prismjs/components/prism-php";
 import { Copy, Check, ToggleLeft } from "lucide-react";
 import Tooltip from "../utils/Tooltip.tsx";
 
@@ -191,7 +192,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, la
   document.head.appendChild(styleSheet);
 
   return (
-    <div className="relative group rounded-lg border-2 border-gray-200 bg-gray-50">
+    <div className="relative group rounded-lg  max-w-3xl max-w-3xl border-2 border-gray-200 bg-gray-50">
       <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-white rounded-t-lg">
         <div className="flex items-center space-x-2">
           <Tooltip

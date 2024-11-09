@@ -120,7 +120,7 @@ export const ListBlock: React.FC<ListBlockProps> = ({ items = [], type: initialT
   );
 
   return (
-    <div className="relative">
+    <div className="relative max-w-3xl">
       <div className="flex flex-row-reverse">
         <div className="flex items-start">
           <Tooltip
@@ -130,7 +130,8 @@ export const ListBlock: React.FC<ListBlockProps> = ({ items = [], type: initialT
             interactive={true}
             trigger="click"
             theme="light"
-            placement="bottom-start">
+            placement="bottom-start"
+            className="z-[150]">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center space-x-2 px-2 py-1 opacity-25 hover:opacity-100 rounded hover:bg-gray-100 text-gray-600">
@@ -155,8 +156,8 @@ export const ListBlock: React.FC<ListBlockProps> = ({ items = [], type: initialT
                   className="rounded accent-sky-400"
                 />
               )}
-              {listType === "ordered" && <span className="w-4 text-right text-gray-500">{index + 1}.</span>}
-              {listType === "unordered" && <span className="w-4 text-center text-gray-500">•</span>}
+              {listType === "ordered" && <span className="w-auto truncate text-right text-gray-400">{index + 1}.</span>}
+              {listType === "unordered" && <span className="w-4 text-right text-gray-500">•</span>}
               <input
                 ref={(el) => {
                   inputRefs.current[item.id] = el;
@@ -180,7 +181,7 @@ export const ListBlock: React.FC<ListBlockProps> = ({ items = [], type: initialT
       </div>
       <button
         onClick={() => addItem()}
-        className={`${listType === "todo" ? "ml-[20px]" : "ml-[24px]"} text-xl mt-2 flex gap-4 text-gray-300 hover:text-gray-700`}>
+        className={`${listType === "todo" ? "ml-[20px]" : "ml-[24px]"} text-xl mt-2 flex gap-4 sr-only text-gray-300 hover:text-gray-700`}>
         Add item
       </button>
     </div>

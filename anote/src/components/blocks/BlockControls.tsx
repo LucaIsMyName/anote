@@ -5,14 +5,15 @@ import { Plus, Copy, Trash2 } from "lucide-react";
 import { BlockMenu } from "./BlockMenu.tsx";
 
 export interface BlockControlsProps {
+  block: { id: string };
   index: number;
   onAddBlock: (type: string, index: number) => void;
   onCopyBlock: (index: number) => void;
   onDeleteBlock: (index: number) => void;
 }
 
-const BlockControls = memo(({ index, onAddBlock, onCopyBlock, onDeleteBlock }: BlockControlsProps) => (
-  <div className="absolute bg-white/80 rounded-lg -bottom-8 flex opacity-0 group-hover:opacity-100">
+const BlockControls = memo(({ block, index, onAddBlock, onCopyBlock, onDeleteBlock }: BlockControlsProps) => (
+  <div className="absolute -bottom-8 w-full flex opacity-0 group-hover:opacity-100">
     {/* Add block button */}
     <div className="flex items-center gap-4">
       <BlockMenu
@@ -37,6 +38,7 @@ const BlockControls = memo(({ index, onAddBlock, onCopyBlock, onDeleteBlock }: B
         title="Delete Block">
         <Trash2 className="w-4 h-4" />
       </button>
+      <section className=" text-[13px] text-gray-200 -bottom-0 right-0">#{block.id}</section>
     </div>
   </div>
 ));

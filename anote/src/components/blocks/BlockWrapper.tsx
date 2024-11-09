@@ -68,9 +68,12 @@ const BlockWrapper = forwardRef<HTMLDivElement, BlockWrapperProps>(({ block, ind
         </button>
       </div>
 
-      <div className={`relative ${isDragging ? "pointer-events-none" : ""}`}>{children}</div>
+      <div className={`relative z-[100] ${isDragging ? "pointer-events-none" : ""}`}>
+        {children}
+      </div>
 
-      <div>{renderBlockControls(index)}</div>
+      <div className="z-50">{renderBlockControls(index)}</div>
+      <section className="absolute -inset-4 w-[calc(100%+theme(spacing.4)*2)] h-[calc(100%+theme(spacing.4)*2)] hover:bg-[rgba(0,0,10,0.02)] rounded-lg "></section>
     </div>
   );
 });

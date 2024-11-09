@@ -80,7 +80,7 @@ const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, level: initialLeve
   };
 
   return (
-    <div className="flex items-start flex-row-reverse relative">
+    <div className="flex items-start flex-row-reverse relative max-w-3xl">
       <Tooltip
         content={HeadingLevelMenu}
         visible={isDropdownOpen}
@@ -90,11 +90,11 @@ const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, level: initialLeve
         theme="light"
         placement="bottom-start"
         offset={[10, 0]}
-        className="">
+        className="z-[1000]">
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           className="flex items-center space-x-1 px-2 pt-[0.1em] rounded text-gray-700 hover:bg-gray-100 opacity-25 hover:opacity-100 transition-opacity ml-2">
-          <span>{`h${headingLevel}`}</span>
+          <span>{`${headingLevel}`}</span>
           <ChevronDown className="w-4 h-4" />
         </button>
       </Tooltip>
@@ -103,7 +103,7 @@ const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, level: initialLeve
         content={localContent}
         onChange={handleContentChange}
         onKeyDown={handleKeyDown} // Add this prop
-        className={`m-0 w-full bg-transparent focus:ring-1 focus:ring-sky-400 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded ${getFontSize()}`}
+        className={`m-0 w-full break-words bg-transparent focus:ring-1 focus:ring-sky-400 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded ${getFontSize()}`}
         placeholder="Heading text..."
       />
     </div>

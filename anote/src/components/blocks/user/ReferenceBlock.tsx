@@ -154,24 +154,26 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
   document.head.appendChild(styleSheet);
 
   const renderSearchResults = () => (
-    <div className="mt-2 space-y-2">
+    <div className="mt-2 space-y-2 max-w-3xl">
       {searchResults.length === 0 && searchTerm.length > 2 && <div className="p-4 text-sm text-gray-500 bg-gray-50 rounded">No blocks found matching your search.</div>}
       {searchResults.map((result) => (
         <div
           key={result.id}
           onClick={() => handleSelectReference(result)}
           className="p-3 hover:bg-gray-50 rounded cursor-pointer border border-gray-200">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex gap-3 items-center">
-              <NotepadText className="size-4 text-gray-500" />
-              <div className="text-sm font-medium text-gray-900">{cleanContent(result.pageTitle)}</div>
+          <section className="flex gap-4">
+            <div className="flex flex-1 gap-3 items-center justify-between">
+              <div className="flex gap-3 flex-1 items-center">
+                <NotepadText className="size-4 text-gray-500" />
+                <div className="text-sm truncate font-medium text-gray-900">{cleanContent(result.pagePath)}</div>
+                <div className="text-[10px] flex-1 text-gray-500">{new Date(result.lastEdited).toLocaleDateString()}</div>
+              </div>
             </div>
-            <div className="text-xs text-gray-500">{new Date(result.lastEdited).toLocaleDateString()}</div>
-          </div>
-          <div className="text-sm text-gray-600 flex items-center gap-3">
-            <Cuboid className="size-4 text-gray-500" /> {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
-          </div>
-          {result.type !== "file" ? <div className="text-sm text-gray-600 truncate mt-3">{cleanContent(result.content)}</div> : ""}
+            <div className="text-sm text-gray-600 flex items-center gap-3">
+              <Cuboid className="size-4 text-gray-500" /> {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
+            </div>
+          </section>
+          {result.type !== "file" ? <div className="text-sm text-gray-600 mt-3">{cleanContent(result.content)}</div> : ""}
         </div>
       ))}
     </div>
@@ -198,7 +200,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
     }
 
     return (
-      <div className="border-2 border-gray-100 rounded-lg p-4">
+      <div className={`border-2 border-gray-100 rounded-lg p-4 max-w-3xl`}>
         <div className="prose prose-sm max-w-none mb-4">{renderReferencedBlock(selectedReference)}</div>
         <div className="flex items-center justify-between mt-2 pt-2 border-t-2 border-gray-100 text-xs">
           <div className="flex items-center gap-2 truncate">
@@ -295,9 +297,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
         return (
           <div className="overflow-x-auto border-2 rounded">
             <table className="min-w-full divide-y divide-gray-200">
-              <tbody>
-                {tableData}
-              </tbody>
+              <tbody>{tableData}</tbody>
             </table>
           </div>
         );
@@ -331,7 +331,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Search for a block to reference..."
-          className="w-full p-2 pb-1 pt-2 border border-gray-300 rounded focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+          className="w-full p-2 pb-1 max-w-3xl pt-2 border border-gray-300 rounded focus:ring-2 focus:ring-sky-500 focus:border-transparent"
         />
         {renderSearchResults()}
       </div>

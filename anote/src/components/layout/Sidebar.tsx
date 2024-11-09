@@ -32,7 +32,7 @@ const PageCreationDialog = ({ workspace, parentPath = "", onSubmit, onClose }) =
   };
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center justify-start gap-2 w-full">
       <Plus className="w-4 h-4" />
       <form onSubmit={handleSubmit}>
         <Input
@@ -40,7 +40,7 @@ const PageCreationDialog = ({ workspace, parentPath = "", onSubmit, onClose }) =
           value={pageName}
           onChange={(e) => setPageName(e.target.value)}
           placeholder="Enter page name..."
-          className="w-full flex-1 text-white placeholder:text-white bg-transparent"
+          className="flex-1 text-white min-w-full placeholder:text-white bg-transparent focus:ring-offset-2 focus:outline-1 outline-offset-4 rounded block w-full"
           autoFocus
           onKeyDown={(e) => {
             if (e.key === "Escape") {
@@ -308,15 +308,17 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
     };
 
     const isLastPageInTree = () => {
-      let isLast = true;
+      let isLast = false;
       let parent = parentPath;
+      console.log(parent);
       pages.forEach((page) => {
         if (page.name === parent) {
           isLast = false;
         }
       });
+      console.log(isLast);
       return isLast;
-    }
+    };
 
     return (
       <div
@@ -326,9 +328,9 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
         onDragOver={(e) => handleDragOver(e, fullPath)}
         onDragEnter={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e, fullPath)}
-        className={`relative group space-y-2 ${isDragging ? "opacity-50" : ""} ${dropIndicatorClass}`}>
+        className={`relative group ${isDragging ? "opacity-50" : ""} ${dropIndicatorClass}`}>
         <div
-          className={`flex items-center rounded border-2 border-sky p-1 ${isLastPageInTree() ? 'mb-2' : ''} hover:bg-sky-50 ${currentPath === fullPath ? "bg-sky-50" : ""}`}
+          className={`flex items-center border-2 border-transparent p-1 rounded ${currentPath === fullPath ? "bg-sky-50/10 backdrop-blur-sm border-sky-200/90 border-2 " : ""}`}
           style={{ marginLeft: `${level * 1}rem` }}>
           <button
             disabled={isLastPageInTree()}
@@ -338,7 +340,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
                 [fullPath]: !prev[fullPath],
               }));
             }}
-            className={`p-1 hover:bg-gray-200 rounded ${isLastPageInTree() ? 'sr-only':''}`}>
+            className={`p-1 hover:bg-gray-200 rounded`}>
             {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
           </button>
 
@@ -383,25 +385,25 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
               onClick={() => setRenamingPage(fullPath)}
               className="p-1 hover:bg-gray-200 rounded"
               title="Rename page">
-              <Edit2 className="w-3.5 h-3.5 text-gray-500" />
+              <Edit2 className="w-3.5 h-3.5 text-gray-400" />
             </button>
             <button
               onClick={handleCreateSubpage}
               className="p-1 hover:bg-gray-200 rounded"
               title="Create subpage">
-              <FolderPlus className="w-3.5 h-3.5 text-sky-400" />
+              <FolderPlus className="w-3.5 h-3.5 text-gray-400" />
             </button>
             <button
               onClick={() => handleDelete(fullPath)}
               className="p-1 hover:bg-gray-200 rounded"
               title="Delete page">
-              <Trash2 className="w-3.5 h-3.5 text-red-500" />
+              <Trash2 className="w-3.5 h-3.5 text-gray-400" />
             </button>
           </div>
         </div>
 
         {/* Child pages and creation dialog */}
-        <div className={isExpanded ? "" : "hidden after:content-['end'] pb-2"}>
+        <div className={isExpanded ? "" : "hidden after:content-['end'] space-y-2"}>
           {page.children?.map((child) => (
             // if it's the last level of a tree)
             <PageItem
@@ -412,7 +414,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
             />
           ))}
           {isCreatingPage && newPageParentPath === fullPath && (
-            <div className="ml-8">
+            <div className={`ml-[${level + 1}rem]`}>
               <PageCreationDialog
                 workspace={workspace}
                 parentPath={fullPath}
@@ -453,16 +455,21 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
     <div
       style={{
         maxWidth: isOpen ? `${width}px` : "60px",
+        minWidth: isOpen ? `240px` : "60px",
         width: isOpen ? `100%` : "60px",
         transition: "max-width 0.3s",
       }}
-      className={`p-2 h-screen  flex flex-col ${isOpen ? "fixed inset-0 right-10 md:relative z-50 peer-[main]:ml-[60px]" : "relative"}`}>
-      <div className="bg-white/90 backdrop-blur-sm border-2 rounded-lg border-gray-200 overflow-y-scroll h-full ">
-        <div className="flex items-center justify-between w-full p-2">
+      className={`z-[1000] p-2 h-screen fixed inset-0 right-10 z-50 flex flex-col ${isOpen ? "  peer-[main]:ml-[60px]" : ""}`}>
+      <div className="bg-white/90 backdrop-blur-md backdrop-saturate-150 border-2 rounded-lg border-gray-200 overflow-y-scroll h-full ">
+        <div className="flex items-center justify-between w-full p-2 border-b-2 mb-2">
           {isOpen ? (
-            <h1 className="font-bold text-lg">
-              <i>anote</i>
-            </h1>
+            <div className="flex truncate items-center leading-1">
+              <h1 className="font-bold text-lg">
+                <i>anote</i>
+              </h1>
+              <span className="text-gray-300">/</span>
+              <span className="text-gray-300">{currentPath ? `${currentPath}` : ""}</span>
+            </div>
           ) : (
             ""
           )}
@@ -474,10 +481,10 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
         </div>
 
         {isOpen && (
-          <aside className="px-2 space-y-2">
-            <div className="border-2 border-sky-600 rounded bg-sky-400 text-white">
+          <aside className="px-2 space-y-2 ">
+            <div className={`transition-all w-full border-2 border-sky-600 rounded text-white ${isCreatingPage && !newPageParentPath ? " bg-sky-500" : " bg-sky-400"}`}>
               {isCreatingPage && !newPageParentPath ? (
-                <div className="px-3 py-2">
+                <div className="p-2 w-full">
                   <PageCreationDialog
                     workspace={workspace}
                     onSubmit={(name) => {

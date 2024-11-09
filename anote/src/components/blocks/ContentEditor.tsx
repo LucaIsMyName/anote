@@ -553,6 +553,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
   const renderBlockControls = useCallback(
     (index: number) => (
       <BlockControls
+        block={blocks[index]}
         index={index}
         onAddBlock={addBlock}
         onCopyBlock={handleCopyBlock}
@@ -563,7 +564,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
   );
 
   return (
-    <main className="absolute inset-0 left-[45px] md:left-[100px] mx-auto p-8">
+    <main className="absolute inset-0 left-[60px] md:left-[100px] mx-auto p-8">
       {/* Page Header */}
       <div className="mb-8 space-y-2 md:px-6">
         <div className="flex items-center justify-between group my-4">
@@ -577,7 +578,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
               <Input
                 name="title"
                 defaultValue={pageTitle}
-                className="text-5xl w-full focus:outline-none bg-transparent "
+                className="text-4xl w-full focus:outline-none bg-transparent "
                 onBlur={(e) => handleTitleChange(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") setIsEditingTitle(false);
@@ -586,7 +587,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
             </form>
           ) : (
             <h1
-              className="text-5xl lg:text-6xl font-bold flex-1 cursor-pointer hover:text-sky-600"
+              className="text-4xl lg:text-6xl font-bold flex-1 cursor-pointer hover:text-sky-600"
               onClick={() => setIsEditingTitle(true)}>
               {pageTitle}
             </h1>
@@ -658,7 +659,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
       {/* Blocks */}
       <div className=" mx-auto md:px-6 relative">
         <div className="flex flex-col-reverse justify-between lg:flex-row gap-8">
-          <div className="flex-1 max-w-3xl">
+          <div className="flex-1 max-w-[1660px]">
             {blocks.length === 0 ? (
               <EmptyPageBlock onAddBlock={addBlock} />
             ) : (

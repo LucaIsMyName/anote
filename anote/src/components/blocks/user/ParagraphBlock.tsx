@@ -107,7 +107,7 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick, onEn
   };
 
   return (
-    <div className="relative">
+    <div className="relative max-w-3xl">
       <SwitchableEditor
         content={localContent}
         onChange={handleChange}
