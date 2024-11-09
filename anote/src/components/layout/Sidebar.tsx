@@ -330,7 +330,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
         onDrop={(e) => handleDrop(e, fullPath)}
         className={`relative group ${isDragging ? "opacity-50" : ""} ${dropIndicatorClass}`}>
         <div
-          className={`flex items-center border-2 border-transparent p-1 rounded ${currentPath === fullPath ? "bg-sky-50/10 backdrop-blur-sm border-sky-200/90 border-2 " : ""}`}
+          className={`flex items-center border-2  p-1 rounded ${currentPath === fullPath ? "bg-sky-50/10 backdrop-blur-sm border-gray-200/90 border-2 shadow-inset shadow-xs" : "border-transparent"}`}
           style={{ marginLeft: `${level * 1}rem` }}>
           <button
             disabled={isLastPageInTree()}

@@ -57,5 +57,5 @@
   - `<QuoteBlock />`: `<quote>` component
   - `<DataBlock />`: have kanban board, data-table or calendar view
 - Undo/Redo Button
-- More solid routes handling (navigates `history.back()` on same page when i deleted or added a block)
+- More solid routes handling (navigates `history.back()` on same page when i deleted or added a block) -> should only push to history the 
 - 
