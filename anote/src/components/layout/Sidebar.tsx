@@ -463,10 +463,10 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
       className={`z-[1000] transition-all p-2 h-screen fixed inset-0 right-10 z-50 flex flex-col ${isOpen ? "peer-[main]:ml-[64px]" : ""}`}>
       <ErrorBoundary>
         <div className="bg-white/90 backdrop-blur-md backdrop-saturate-150 border-2 rounded-lg border-gray-200 overflow-y-scroll h-full ">
-          <div className="flex items-center justify-between w-full p-2 border-b-2 mb-2">
+          <div className="flex items-center justify-between w-full p-[calc(theme(spacing.2)+1px)] border-b-2 mb-2">
             {isOpen ? (
               <div className="flex gap-[2px] truncate items-center leading-1">
-                <h1 className="font-bold text-lg mr-1 text-sky-600">
+                <h1 className="font-bold text-lg mr-1 text-gray-600 pl-2">
                   <svg
                     className="w-6"
                     viewBox="0 0 166 133"
@@ -482,14 +482,14 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
                     />
                   </svg>
                 </h1>
-                <span className="text-gray-300">{currentPath ? `${currentPath}` : ""}</span>
+                <span className="text-gray-300 truncate">{currentPath ? `${currentPath}` : ""}</span>
               </div>
             ) : (
               ""
             )}
             <button
               onClick={toggleSidebar}
-              className={`text-sm  focus:outline-none p-[calc(theme(spacing.1)/2-1px)] rounded border-2 ${isOpen ? 'border-gray-200':'border-gray-300 bg-gray-100 text-gray-800'}`}>
+              className={`text-sm  focus:outline-none p-[calc(theme(spacing.1)/2-1px)] rounded `}>
               {isOpen ? <PanelRightOpen strokeWidth={1.5}/> : <PanelRightClose strokeWidth={1.5}/>}
             </button>
           </div>
