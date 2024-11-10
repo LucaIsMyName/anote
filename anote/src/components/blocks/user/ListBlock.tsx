@@ -167,7 +167,7 @@ export const ListBlock: React.FC<ListBlockProps> = ({ items = [], type: initialT
                 value={item.text}
                 onChange={(e) => updateItem(item.id, { text: e.target.value })}
                 onKeyDown={(e) => handleKeyDown(e, item)}
-                className="flex-1 p-0 bg-transparent truncate"
+                className="flex-1 text-sm md:text-lg p-0 bg-transparent truncate"
                 placeholder={index === 0 ? "1st Item" : "List item..."}
               />
               <button

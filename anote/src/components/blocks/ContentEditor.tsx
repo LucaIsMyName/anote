@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo, useRef, useCallback } from "react";
+import React, { Suspense, useState, useEffect, memo, useRef, useCallback } from "react";
 import { Plus, Download, FileText, Trash2, Edit2, Copy, FolderPlus, Calendar, Save, GripVertical, LoaderCircle } from "lucide-react";
 
 import TableBlock from "./user/TableBlock.tsx";
@@ -16,6 +16,7 @@ import { BlockMenu, BlockType } from "./BlockMenu.tsx";
 import BlockControls from "./BlockControls.tsx";
 import BlockWrapper from "./BlockWrapper.tsx";
 import TableOfContents from "./TableOfContents.tsx";
+import StickyNav from "./utils/StickyNav.tsx";
 
 import Input from "./utils/Input.tsx";
 import Tooltip from "./utils/Tooltip.tsx";
@@ -592,9 +593,11 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
 
   return (
     <ErrorBoundary>
-      <main className="absolute inset-0 left-[60px] md:left-[100px] mx-auto p-8">
+      <main className="absolute inset-0 left-[60px] md:left-[100px] mx-auto pl-8 p-4 md:p-8">
         {/* Page Header */}
-        <div className="mb-8 space-y-2 md:px-6">
+        <StickyNav pageTitle={pageTitle} />
+
+        <header className="mb-8 space-y-2 md:px-6">
           <div className="flex items-center justify-between group my-4">
             {isEditingTitle ? (
               <form
@@ -616,7 +619,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
               </form>
             ) : (
               <h1
-                className="text-4xl lg:text-6xl font-bold flex-1 cursor-pointer hover:text-sky-600"
+                className="text-4xl md:text-6xl font-bold flex-1 cursor-pointer hover:text-sky-600 break-all"
                 onClick={() => setIsEditingTitle(true)}>
                 {pageTitle}
               </h1>
@@ -684,54 +687,56 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
               <span className="truncate">{isShowingSavingIndicator ? "Saving ..." : <RelativeTime date={pageMetadata.lastEdited} />}</span>
             </div>
           </div>
-        </div>
-        {/* Blocks */}
-        <div className=" mx-auto md:px-6 relative">
-          <div className="flex flex-col-reverse justify-between lg:flex-row gap-8">
-            <div className="flex-1 max-w-[1660px]">
-              {blocks.length === 0 ? (
-                <EmptyPageBlock onAddBlock={addBlock} />
-              ) : (
-                blocks.map((block, index) => (
-                  <BlockWrapper
-                    key={block.id}
-                    ref={(node) => {
-                      if (node) {
-                        blockRefs.current.set(block.id, node);
-                      } else {
-                        blockRefs.current.delete(block.id);
-                      }
-                    }}
-                    block={block}
-                    index={index}
-                    isDragging={isDragging}
-                    draggedBlockIndex={draggedBlockIndex}
-                    dragOverBlockIndex={dragOverBlockIndex}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onMoveBlock={handleMoveBlock} // Add this line
-                    renderBlockControls={renderBlockControls}>
-                    {renderBlock(block, index)}
-                  </BlockWrapper>
-                ))
-              )}
-            </div>
-            <div className="block w-full h-full overlow-y-scroll lg:max-w-48 flex-shrink-0 lg:mr-6">
-              <TableOfContents
-                blocks={blocks}
-                onHeadingClick={scrollToHeading}
-              />
-            </div>
-          </div>
-        </div>
+        </header>
 
+        {/* Blocks */}
+        <Suspense fallback={<div>Loading</div>}>
+          <article className=" mx-auto md:px-6 relative">
+            <div className="flex flex-col-reverse justify-between lg:flex-row gap-8">
+              <div className="flex-1 max-w-[1660px]">
+                {blocks.length === 0 ? (
+                  <EmptyPageBlock onAddBlock={addBlock} />
+                ) : (
+                  blocks.map((block, index) => (
+                    <BlockWrapper
+                      key={block.id}
+                      ref={(node) => {
+                        if (node) {
+                          blockRefs.current.set(block.id, node);
+                        } else {
+                          blockRefs.current.delete(block.id);
+                        }
+                      }}
+                      block={block}
+                      index={index}
+                      isDragging={isDragging}
+                      draggedBlockIndex={draggedBlockIndex}
+                      dragOverBlockIndex={dragOverBlockIndex}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onMoveBlock={handleMoveBlock} // Add this line
+                      renderBlockControls={renderBlockControls}>
+                      {renderBlock(block, index)}
+                    </BlockWrapper>
+                  ))
+                )}
+              </div>
+              <div className="block w-full h-full overlow-y-scroll lg:max-w-48 flex-shrink-0 lg:mr-6">
+                <TableOfContents
+                  blocks={blocks}
+                  onHeadingClick={scrollToHeading}
+                />
+              </div>
+            </div>
+          </article>
+        </Suspense>
         {/* Saving indicator */}
         {isShowingSavingIndicator && (
-          <div className="fixed top-8 right-12 bg-white/80 backdrop-blur-sm border border-gray-200 rounded px-2 py-1 text-sm text-gray-500 flex items-center gap-2 shadow-sm">
+          <div className="z-[999] fixed top-4 right-14 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded px-2 py-1 text-sm text-gray-500 flex items-center gap-2">
             <LoaderCircle className="w-4 h-4 animate-spin" />
-            <span>Saving...</span>
+            <i>Saving...</i>
           </div>
         )}
         {/* Add BlockMenu portal */}

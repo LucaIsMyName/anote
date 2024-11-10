@@ -112,7 +112,7 @@ export const ParagraphBlock = ({ content, onChange, workspace, onPageClick, onEn
         content={localContent}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        className="w-full focus:ring-1 focus:ring-sky-400 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded p-1 text-gray-700"
+        className="w-full text-xs md:text-base focus:ring-1 focus:ring-sky-400 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded p-1 text-gray-700"
         placeholder="Type something..."
       />
 

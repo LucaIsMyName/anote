@@ -50,7 +50,7 @@ const ImageBlock = ({ src, caption, onChange }: ImageBlockProps) => {
   };
 
   return (
-    <div className="mb-4">
+    <div className="">
       {src ? (
         <div className="space-y-2">
           <img

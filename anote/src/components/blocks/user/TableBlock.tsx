@@ -154,23 +154,23 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
   }
 
   return (
-    <div className="mb-4 overflow-x-auto">
+    <div className="overflow-x-auto">
       <div
-        className="inline-block min-w-full border-2 rounded-lg"
+        className="inline-block min-w-full border-2 "
         ref={tableRef}>
-        <table className="min-w-full divide-y divide-gray-200 rounded-lg">
-          <thead className="rounded-t-lg">
-            <tr>
+        <table className="font-mono min-w-full divide-y divide-gray-200 rounded-lg">
+          <thead className="">
+            <tr className="border-b-2">
               {headers.map((header, colIndex) => (
                 <th
                   key={colIndex}
-                  className="relative border-b bg-gray-50 rounded-l-lg border-r-2"
+                  className="relative border-b bg-gray-50 border-r-2"
                   style={{ width: columnWidths[colIndex] || 150 }}>
                   <Input
                     type="text"
                     value={header}
                     onChange={(e) => updateHeader(colIndex, e.target.value)}
-                    className=" px-4 py-2 text-sm font-semibold bg-transparent focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded"
+                    className=" px-4 py-2 text-xs font-semibold bg-transparent focus:ring-offset-2 focus:outline-4 outline-offset-2"
                     placeholder="Column name..."
                   />
                   <button
@@ -191,28 +191,30 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {data.map((row, rowIndex) => (
-              <tr key={rowIndex} className="relative">
+              <tr
+                key={rowIndex}
+                className={'border-b-2'}>
                 {row.map((cell, colIndex) => (
                   <td
                     key={colIndex}
-                    className="relative"
+                    className={`${colIndex === 0 ? 'border-l-0' : 'border-l-2 border-r-2 relative'}`}
                     style={{ width: columnWidths[colIndex] || "auto" }}>
                     <Input
                       type="text"
                       value={cell}
                       onChange={(e) => updateCell(rowIndex, colIndex, e.target.value)}
-                      className="block w-full px-4 py-2 text-sm border-l-1 border-r-1"
+                      className="block text-xs w-full  px-4 py-2 text-sm border-l-1 border-r-1"
                       placeholder="Type something..."
                     />
                   </td>
                 ))}
-                <div className="absolute right-0 size-[38px] bg-gray-100 flex items-center justify-center">
+                <td className="absolute right-0 h-[36px] w-[40px]  border-gray-200 flex items-center justify-center border-b-2">
                   <button
                     onClick={() => deleteRow(rowIndex)}
                     className=" flex justify-center items-center size-[24px] text-gray-400 hover:text-red-500">
                     <Trash className="w-[12px] h-[12px]" />
                   </button>
-                </div>
+                </td>
               </tr>
             ))}
           </tbody>

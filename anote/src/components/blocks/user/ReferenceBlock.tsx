@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, Suspense } from "react";
 import { Link, Hash, Cuboid, NotepadText, RefreshCcw, ExternalLink, AlertTriangle, FileIcon } from "lucide-react";
 import { FileService } from "../../../services/FileService.ts";
 import Prism from "prismjs";
@@ -25,6 +25,9 @@ export interface BlockReference {
   pageTitle: string;
   createdAt: string;
   lastEdited: string;
+  items?: any[];
+  listType?: string;
+  level?: number;
 }
 
 interface ReferenceBlockProps {
@@ -154,36 +157,38 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
   document.head.appendChild(styleSheet);
 
   const renderSearchResults = () => (
-    <div className="mt-2 space-y-2 max-w-3xl">
-      {searchResults.length === 0 && searchTerm.length > 2 && <div className="p-4 text-sm text-gray-500 bg-gray-50 rounded">No blocks found matching your search.</div>}
-      {searchResults.map((result) => (
-        <div
-          key={result.id}
-          onClick={() => handleSelectReference(result)}
-          className="p-3 hover:bg-gray-50 rounded cursor-pointer border border-gray-200">
-          <section className="flex gap-4">
-            <div className="flex flex-1 gap-3 items-center justify-between">
-              <div className="flex gap-3 flex-1 items-center">
-                <NotepadText className="size-4 text-gray-500" />
-                <div className="text-sm truncate font-medium text-gray-900">{cleanContent(result.pagePath)}</div>
-                <div className="text-[10px] flex-1 text-gray-500">{new Date(result.lastEdited).toLocaleDateString()}</div>
+    <Suspense fallback={<div className="p-4 text-sm text-gray-500 bg-gray-50 rounded">Searching...</div>}>
+      <div className="mt-2 space-y-2 max-w-3xl">
+        {searchResults.length === 0 && searchTerm.length > 2 && <div className="p-4 text-sm text-gray-500 bg-gray-50 rounded">No blocks found matching your search.</div>}
+        {searchResults.map((result) => (
+          <div
+            key={result.id}
+            onClick={() => handleSelectReference(result)}
+            className="p-3 hover:bg-gray-50 rounded cursor-pointer border border-gray-200">
+            <section className="flex gap-4">
+              <div className="flex flex-1 gap-3 items-center justify-between">
+                <div className="flex gap-3 flex-1 items-center">
+                  <NotepadText className="size-4 text-gray-500" />
+                  <div className="text-sm truncate font-medium text-gray-900">{cleanContent(result.pagePath)}</div>
+                  <div className="text-[10px] flex-1 text-gray-500">{new Date(result.lastEdited).toLocaleDateString()}</div>
+                </div>
               </div>
-            </div>
-            <div className="text-sm text-gray-600 flex items-center gap-3">
-              <Cuboid className="size-4 text-gray-500" /> {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
-            </div>
-          </section>
-          {result.type !== "file" ? <div className="text-sm text-gray-600 mt-3">{cleanContent(result.content)}</div> : ""}
-        </div>
-      ))}
-    </div>
+              <div className="text-sm text-gray-600 flex items-center gap-3">
+                <Cuboid className="size-4 text-gray-500" /> {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
+              </div>
+            </section>
+            {result.type !== "file" ? <div className="text-sm text-gray-600 mt-3">{cleanContent(result.content)}</div> : ""}
+          </div>
+        ))}
+      </div>
+    </Suspense>
   );
 
   // In ReferenceBlock.tsx
   const renderReference = () => {
     if (!isReferenceValid || !selectedReference) {
       return (
-        <div className="p-4 border-2 border-yellow-300 bg-yellow-50 rounded-lg">
+        <div className="p-4 border-2 border-yellow-300 bg-yellow-50 rounded-lg max-w-3xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <AlertTriangle className="w-5 h-5 text-yellow-500" />
@@ -200,29 +205,31 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
     }
 
     return (
-      <div className={`border-2 border-gray-100 rounded-lg p-4 max-w-3xl`}>
-        <div className="prose prose-sm max-w-none mb-4">{renderReferencedBlock(selectedReference)}</div>
-        <div className="flex items-center justify-between mt-2 pt-2 border-t-2 border-gray-100 text-xs">
-          <div className="flex items-center gap-2 truncate">
-            <Link className="w-4 h-4 text-gray-400" />
-            <span className="text-sm leading-3 truncate text-gray-400">{selectedReference.pageTitle}</span>
-            <Hash className="w-4 h-4 text-gray-400" />
-            <span className="text-sm leading-3	truncate text-gray-400">{selectedReference.id}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsSearching(true)}
-              className="p-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-              <RefreshCcw className="size-4 text-gray-400" />
-            </button>
-            <button
-              onClick={handleNavigate}
-              className="p-1 hover:bg-gray-100 rounded">
-              <ExternalLink className="w-4 h-4 text-gray-400" />
-            </button>
+      <Suspense fallback={<div>Loading</div>}>
+        <div className={`border-2 border-gray-100 rounded-lg p-4 max-w-3xl`}>
+          <div className="prose prose-sm max-w-none mb-4">{renderReferencedBlock(selectedReference)}</div>
+          <div className="flex items-center justify-between mt-2 pt-2 border-t-2 border-gray-100 text-xs">
+            <div className="flex items-center gap-2 truncate">
+              <Link className="w-4 h-4 text-gray-400" />
+              <span className="text-sm leading-3 truncate text-gray-400">{selectedReference.pageTitle}</span>
+              <Hash className="w-4 h-4 text-gray-400" />
+              <span className="text-sm leading-3	truncate text-gray-400">{selectedReference.id}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsSearching(true)}
+                className="p-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
+                <RefreshCcw className="size-4 text-gray-400" />
+              </button>
+              <button
+                onClick={handleNavigate}
+                className="p-1 hover:bg-gray-100 rounded">
+                <ExternalLink className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </Suspense>
     );
   };
 
@@ -242,10 +249,14 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
         return <div className={`font-bold ${reference.level === 1 ? "text-2xl" : reference.level === 2 ? "text-xl" : reference.level === 3 ? "text-lg" : "text-base"}`}>{cleanContent(reference.content)}</div>;
 
       case "paragraph":
-        return <div className="text-gray-700">{cleanContent(reference.content)}</div>;
-        case "quote":
-          return <div className="text-gray-700 pl-2 border-l-2 text-md"><i>{cleanContent(reference.content.replace('>', ''))}</i></div>;
-        case "code":
+        return <div className="text-gray-700 text-xs md:text-base">{cleanContent(FileService.transformInlineMarkdownToHtml(reference.content))}</div>;
+      case "quote":
+        return (
+          <div className="text-gray-700 pl-2 border-l-2 text-sm md:text-lg">
+            <i>{reference.content.replace(">", "")}</i>
+          </div>
+        );
+      case "code":
         return (
           <pre className="border-2 border-gray-100 bg-gray-50 text-black p-3 rounded">
             <code>{reference.content}</code>
@@ -254,6 +265,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
 
       case "list":
         const items = reference.items || [];
+        console.log("items", reference);
         const listType = reference.listType || "unordered";
 
         if (listType === "todo") {
@@ -293,6 +305,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
 
       case "table":
         const tableData = reference.content || [];
+        console.log("tableData", reference);
         if (tableData.length === 0) return null;
 
         return (

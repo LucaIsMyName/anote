@@ -93,7 +93,7 @@ export const QuoteBlock = ({ content, onChange, workspace, onPageClick, onEnterK
         content={localContent}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        className="w-auto text-xl italic focus:ring-1 focus:ring-sky-400 focus:ring-offset-2 focus:outline-4 outline-offset-2 p-1 text-gray-700"
+        className="w-auto text-sm md:text-xl italic focus:ring-1 focus:ring-sky-400 focus:ring-offset-2 focus:outline-4 outline-offset-2 p-1 text-gray-700"
         placeholder="Type a quote..."
       />
 

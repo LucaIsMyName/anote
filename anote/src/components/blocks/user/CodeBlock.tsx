@@ -166,7 +166,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ content = "", onChange, la
   };
 
   const sharedStyles = {
-    fontSize: "0.875rem", // text-sm
+    fontSize: "0.775rem", // text-sm
     lineHeight: "1.5",
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
     whiteSpace: "pre" as const,

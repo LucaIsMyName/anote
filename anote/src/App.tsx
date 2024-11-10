@@ -85,7 +85,7 @@ const PageWrapper: React.FC<PageWrapperProps> = ({ workspace }) => {
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen">
       <Sidebar
         workspace={workspace}
         currentPath={currentPath}
@@ -115,15 +115,15 @@ const App: React.FC = () => {
 
   const SettingsContent = (
     <div className="w-72 py-3 px-4">
-      <h2 className="text-lg font-semibold text-gray-800 mb-3">Workspace Settings</h2>
-      <div className="text-sm text-gray-600 mb-3 truncate">Current workspace: {workspace?.name}</div>
+      <h2 className="text-lg font-semibold text-gray-800">Workspace Settings</h2>
+      <div className="text-sm text-gray-600 my-4 truncate">Current workspace:<br></br> <span className="font-mono text-[0.8em] inline-block px-[7px] rounded bg-gray-100 border-2">{workspace?.name}</span></div>
       <button
         onClick={() => {
           WorkspaceService.clearStoredWorkspace();
           setWorkspace(null);
           setIsSettingsOpen(false);
         }}
-        className="bg-red-50 text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors text-sm font-medium">
+        className="bg-red-50 border-2 border-red-300 text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors text-sm font-medium">
         Change Workspace
       </button>
     </div>
@@ -171,8 +171,8 @@ const App: React.FC = () => {
           offset={[0, 10]}>
           <button
             onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-            className={`p-2 bg-white rounded-full shadow-lg hover:shadow-xl transition-all ${isSettingsOpen ? "ring-2 ring-sky-400 ring-offset-2" : ""}`}>
-            <Settings className={`w-5 h-5 ${isSettingsOpen ? "text-sky-400" : "text-gray-600"}`} />
+            className={`p-2 bg-white rounded-lg border-2 shadow-lg hover:shadow-xl transition-all ${isSettingsOpen ? "ring-2 ring-sky-400 ring-offset-2" : ""}`}>
+            <Settings className={`w-5 h-5 ${isSettingsOpen ? "text-gray-700" : "text-gray-400"}`} />
           </button>
         </Tooltip>
       </div>

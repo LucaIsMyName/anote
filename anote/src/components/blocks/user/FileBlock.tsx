@@ -89,7 +89,7 @@ const FileBlock: React.FC<FileBlockProps> = ({ src, caption = "", onChange }) =>
     return (
       <div className="max-w-3xl">
         <div className="border-2 rounded-lg p-2 bg-gray-50">
-          <div className="space-y-2">
+          <div className="space-y-2 md:py-2">
             <div className="md:flex  space-y-2 items-center truncate">
               <FileIcon className="w-14 h-14 text-gray-300" strokeWidth={1} />
               <div className="">
@@ -105,7 +105,7 @@ const FileBlock: React.FC<FileBlockProps> = ({ src, caption = "", onChange }) =>
               value={caption || ""}
               onChange={(e) => onChange({ src, caption: e.target.value })}
               placeholder="Add a caption..."
-              className="my-2 w-full bg-transparent text-sm text-gray-600 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded"
+              className="my-2 md:px-2 w-full bg-transparent text-sm text-gray-600 focus:ring-offset-2 focus:outline-4 outline-offset-2 rounded"
             />
             <button
               onClick={() => {
@@ -116,7 +116,7 @@ const FileBlock: React.FC<FileBlockProps> = ({ src, caption = "", onChange }) =>
                 link.click();
                 document.body.removeChild(link);
               }}
-              className="px-3 py-1 min-w-[120px] w-full text-sm border-2 border-sky-600 bg-sky-400 text-white hover:bg-sky-500 rounded-md transition-colors">
+              className="md:mx-2 font-bold py-2 px-4 md:min-w-[180px] w-auto text-sm border-2 border-sky-600 bg-sky-400 text-white hover:bg-sky-500 rounded-md transition-colors">
               Download
             </button>
           </div>
