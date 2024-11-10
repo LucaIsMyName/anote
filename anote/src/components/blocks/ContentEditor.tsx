@@ -593,7 +593,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
 
   return (
     <ErrorBoundary>
-      <main className="absolute inset-0 left-[60px] md:left-[100px] mx-auto pl-8 p-4 md:p-8">
+      <main className="absolute inset-0 left-[64px] md:left-[100px] mx-auto pl-8 p-4 md:p-8">
         {/* Page Header */}
         <StickyNav pageTitle={pageTitle} />
 

@@ -164,20 +164,20 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
           <div
             key={result.id}
             onClick={() => handleSelectReference(result)}
-            className="p-3 hover:bg-gray-50 rounded cursor-pointer border border-gray-200">
+            className="p-3 bg-gray-50 rounded cursor-pointer border-2 border-gray-200 hover:bg-sky-400 transition-colors hover:border-sky-700 hover:text-white">
             <section className="flex gap-4">
               <div className="flex flex-1 gap-3 items-center justify-between">
                 <div className="flex gap-3 flex-1 items-center">
-                  <NotepadText className="size-4 text-gray-500" />
-                  <div className="text-sm truncate font-medium text-gray-900">{cleanContent(result.pagePath)}</div>
-                  <div className="text-[10px] flex-1 text-gray-500">{new Date(result.lastEdited).toLocaleDateString()}</div>
+                  <NotepadText className="size-4 " />
+                  <div className="text-sm truncate font-medium ">{cleanContent(result.pagePath)}</div>
+                  <div className="text-[10px] flex-1 ">{new Date(result.lastEdited).toLocaleDateString()}</div>
                 </div>
               </div>
-              <div className="text-sm text-gray-600 flex items-center gap-3">
-                <Cuboid className="size-4 text-gray-500" /> {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
+              <div className="text-sm flex items-center gap-3">
+                <Cuboid className="size-4 " /> {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
               </div>
             </section>
-            {result.type !== "file" ? <div className="text-sm text-gray-600 mt-3">{cleanContent(result.content)}</div> : ""}
+            {result.type !== "file" ? <div className="text-sm mt-3">{cleanContent(result.content)}</div> : ""}
           </div>
         ))}
       </div>
@@ -188,7 +188,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
   const renderReference = () => {
     if (!isReferenceValid || !selectedReference) {
       return (
-        <div className="p-4 border-2 border-yellow-300 bg-yellow-50 rounded-lg max-w-3xl">
+        <div className="p-4 border-2 border-dotted border-yellow-300 bg-yellow-50 rounded-lg max-w-3xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <AlertTriangle className="w-5 h-5 text-yellow-500" />
@@ -206,7 +206,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
 
     return (
       <Suspense fallback={<div>Loading</div>}>
-        <div className={`border-2 border-gray-100 rounded-lg p-4 max-w-3xl`}>
+        <div className={`border-2 border-dotted border-gray-100 rounded-lg p-4 max-w-3xl`}>
           <div className="prose prose-sm max-w-none mb-4">{renderReferencedBlock(selectedReference)}</div>
           <div className="flex items-center justify-between mt-2 pt-2 border-t-2 border-gray-100 text-xs">
             <div className="flex items-center gap-2 truncate">
@@ -345,7 +345,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Search for a block to reference..."
-          className="w-full p-2 pb-1 max-w-3xl pt-2 border border-gray-300 rounded focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+          className="w-full p-2 pb-1 max-w-3xl pt-2 border-2 border-dotted border-gray-300 rounded "
         />
         {renderSearchResults()}
       </div>

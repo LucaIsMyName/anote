@@ -56,17 +56,17 @@ const BlockWrapper = forwardRef<HTMLDivElement, BlockWrapperProps>(({ block, ind
             onClick={handleMoveUp}
             className={`${index === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={index === 0}>
-            <ChevronUp className="w-4 h-4 text-gray-400" />
+            <ChevronUp className="w-4 h-4 text-gray-300" />
           </button>
 
           <div className="cursor-grab active:cursor-grabbing">
-            <GripVertical className="w-4 h-4 text-gray-400" />
+            <GripVertical className="w-4 h-4 text-gray-300" />
           </div>
 
           <button
             onClick={handleMoveDown}
             className="">
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-gray-300" />
           </button>
         </div>
 
