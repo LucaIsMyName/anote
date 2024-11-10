@@ -1,5 +1,5 @@
 import React, { Suspense, useState, useEffect, memo, useRef, useCallback } from "react";
-import { Plus, Download, FileText, Trash2, Edit2, Copy, FolderPlus, Calendar, Save, GripVertical, LoaderCircle } from "lucide-react";
+import { Plus, Info, Download, FileText, Trash2, Edit2, Copy, FolderPlus, Calendar, Save, GripVertical, LoaderCircle } from "lucide-react";
 
 import TableBlock from "./user/TableBlock.tsx";
 import HeadingBlock from "./user/HeadingBlock.tsx";
@@ -11,6 +11,7 @@ import CodeBlock from "./user/CodeBlock.tsx";
 import ListBlock from "./user/ListBlock.tsx";
 import ReferenceBlock from "./user/ReferenceBlock.tsx";
 import DividerBlock from "./user/DividerBlock.tsx";
+import FrameBlock from "./user/FrameBlock.tsx";
 
 import { BlockMenu, BlockType } from "./BlockMenu.tsx";
 import BlockControls from "./BlockControls.tsx";
@@ -22,6 +23,8 @@ import Input from "./utils/Input.tsx";
 import Tooltip from "./utils/Tooltip.tsx";
 import RelativeTime from "./utils/RelativeTime.tsx";
 import ErrorBoundary from "./utils/ErrorBoundary.tsx";
+import Skeleton from "./utils/Skeleton.tsx";
+import SkeletonStack from "./utils/SkeletonStack.tsx";
 
 import { FileService } from "../../services/FileService.ts";
 import { ImportExportService } from "../../services/ImportExportService.ts";
@@ -34,7 +37,7 @@ export interface ContentEditorProps {
   onPathChange?: (path: string) => void;
 }
 
-const EmptyPageBlock = ({ onAddBlock: any }) => {
+const EmptyPageBlock = ({ onAddBlock }) => {
   const [showMenu, setShowMenu] = useState(false);
   const buttonRef = useRef(null);
 
@@ -45,22 +48,34 @@ const EmptyPageBlock = ({ onAddBlock: any }) => {
 
   return (
     <div className="text-left py-4">
-      <div className="relative inline-block">
-        <button
-          ref={buttonRef}
-          onClick={() => setShowMenu(!showMenu)}
-          className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded border border-gray-300 transition-colors">
-          <Plus className="w-4 h-4" />
-          <span>Add Block</span>
-        </button>
-
-        {showMenu && (
+      <div className="relative block">
+        <div className="mb-8 space-y-4">
+          <Skeleton
+            size={"2xl"}
+            width={"lg"}
+            lines={1}
+          />
+          <div className="flex flex-col gap-4">
+            <SkeletonStack
+              size={"sm"}
+              width={"xl"}
+              lines={4}
+            />
+          </div>
+        </div>
+        <div className="flex gap-2 items-center mb-4">
+          <Info className="size-4 text-gray-600" />
+          <span className="text-gray-400"><i>No Blocks on this page. The last Block on this page is still saved.</i></span>
+        </div>
+        <div className="flex gap-2 items-center">
           <BlockMenu
+            onClick={onAddBlock}
             anchorEl={buttonRef.current}
             onClose={() => setShowMenu(false)}
             onSelect={handleAddBlock}
           />
-        )}
+          <span className="mb-1 text-gray-400">Add Block</span>
+        </div>
       </div>
     </div>
   );
@@ -163,7 +178,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
   const handleCopyBlock = useCallback(
     (index: number) => {
       const blockToCopy = blocks[index];
-      const copiedBlock = { ...blockToCopy, id: Date.now() };
+      const copiedBlock = { ...blockToCopy, id: Date.now(), createdAt: new Date().toISOString() };
       const newBlocks = [...blocks];
       newBlocks.splice(index + 1, 0, copiedBlock);
       setBlocks(newBlocks);
@@ -565,6 +580,12 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
             onChange={(referenceId) => updateBlock(block.id, { referenceId })}
           />
         );
+        case BlockType.FRAME:
+          return (
+            <FrameBlock
+            initialSrc={block.src}
+            />
+          );
       default:
         return null;
     }
@@ -619,7 +640,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
               </form>
             ) : (
               <h1
-                className="text-4xl md:text-6xl font-bold flex-1 cursor-pointer hover:text-sky-600 break-all"
+                className="select-none text-4xl md:text-6xl font-bold flex-1 cursor-pointer hover:text-sky-600 break-all"
                 onClick={() => setIsEditingTitle(true)}>
                 {pageTitle}
               </h1>
@@ -675,7 +696,7 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
           </section>
 
           {/* Page Metadata */}
-          <div className="md:flex items-center md:space-x-4 text-sm text-gray-500 pb-6 border-b-2">
+          <div className="select-none md:flex items-center md:space-x-4 text-sm text-gray-500 pb-6 border-b-2">
             <div className="flex items-center space-x-1 mb-2 md:mb-0">
               <Calendar className="w-4 h-4" />
               <span className="truncate">
@@ -690,9 +711,16 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
         </header>
 
         {/* Blocks */}
-        <Suspense fallback={<div>Loading</div>}>
-          <article className=" mx-auto md:px-6 relative">
-            <div className="flex flex-col-reverse justify-between lg:flex-row gap-8">
+
+        <article className=" mx-auto md:px-6 relative">
+          <div className="flex flex-col-reverse justify-between lg:flex-row gap-8">
+            <Suspense
+              fallback={
+                <Skeleton
+                  lines={2}
+                  size={"xl"}
+                />
+              }>
               <div className="flex-1 max-w-[1660px]">
                 {blocks.length === 0 ? (
                   <EmptyPageBlock onAddBlock={addBlock} />
@@ -723,15 +751,16 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
                   ))
                 )}
               </div>
+
               <div className="block w-full h-full overlow-y-scroll lg:max-w-48 flex-shrink-0 lg:mr-6">
                 <TableOfContents
                   blocks={blocks}
                   onHeadingClick={scrollToHeading}
                 />
               </div>
-            </div>
-          </article>
-        </Suspense>
+            </Suspense>
+          </div>
+        </article>
         {/* Saving indicator */}
         {isShowingSavingIndicator && (
           <div className="z-[999] fixed top-4 right-14 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded px-2 py-1 text-sm text-gray-500 flex items-center gap-2">

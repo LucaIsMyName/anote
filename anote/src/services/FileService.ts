@@ -405,6 +405,9 @@ export class FileService {
               content += block.data.map((row) => `| ${row.join(" | ")} |`).join("\n") + "\n";
             }
             break;
+          case "frame":
+            content += `[FRAME]${block.content}[/FRAME]\n`;
+            break;
           case "image":
             content += `![${block.caption || ""}](${block.src})\n`;
             break;
@@ -746,6 +749,14 @@ export class FileService {
             ...metadata,
             content: cleanContent,
           });
+        } else if (metadata.type === "frame") {
+          const frameMatch = content.match(/\[FRAME\](.*?)\[\/FRAME\]/);
+          if (frameMatch) {
+            blocks.push({
+              ...metadata,
+              src: frameMatch[1],
+            });
+          }
         } else {
           // Handle other block types
           blocks.push({
@@ -754,6 +765,8 @@ export class FileService {
             level: undefined,
             items: metadata.type === "todo" ? [] : undefined,
             data: metadata.type === "table" ? [] : undefined,
+            src: metadata.type === "image" ? "" : undefined,
+            caption: metadata.type === "image" ? "" : undefined,
           });
         }
       } catch (e) {
@@ -903,6 +916,14 @@ export class FileService {
               lastEdited: new Date().toISOString(),
               listType: block.listType || "unordered", // Include list type in metadata
             };
+          } else if (block.type === "frame") {
+            blockMetadata = {
+              type: block.type,
+              id: block.id,
+              createdAt: block.createdAt || new Date().toISOString(),
+              lastEdited: new Date().toISOString(),
+              src: block.src,
+            };
           } else {
             blockMetadata = {
               type: block.type,
@@ -923,6 +944,9 @@ export class FileService {
             case "paragraph":
               content += `${block.content || ""}\n\n`;
               break;
+            case "frame":
+              content += `[FRAME]${block.src}[/FRAME]\n\n`;
+              break;
             case "divider":
               content += `---\n\n`;
               break;
@@ -941,7 +965,6 @@ export class FileService {
                 content += `\`${block.content || ""}\`\n\n`;
               }
               break;
-
             case "image":
               content += `![${block.caption || ""}](${block.src})\n\n`;
               break;
@@ -1072,31 +1095,29 @@ export class FileService {
         case "paragraph":
           markdown += `${this.transformInlineHtmlToMarkdown(block.content) || ""}\n\n`;
           break;
-
         case "heading":
           markdown += `${"#".repeat(parseInt(block.level) + 1 || 1)} ${this.transformInlineHtmlToMarkdown(block.content) || ""}\n\n`;
+          break;
+        case "frame":
+          markdown += `[FRAME]${block.src}[/FRAME]\n\n`;
           break;
 
         case "quote":
           markdown += `> ${this.transformInlineHtmlToMarkdown(block.content) || ""}\n\n`;
           break;
-
         case "divider":
           markdown += `---\n\n`;
           break;
-
         case "todo":
           if (block.items && Array.isArray(block.items)) {
             markdown += block.items.map((item) => `- [${item.completed ? "x" : " "}] ${item.text}`).join("\n") + "\n\n";
           }
           break;
-
         case "table":
           if (block.data && block.data.length > 0) {
             markdown += block.data.map((row) => "| " + row.map((cell) => cell || "").join(" | ") + " |").join("\n") + "\n\n";
           }
           break;
-
         case "image":
           if (block.src) {
             markdown += `![${block.caption || ""}](${block.src})\n\n`;

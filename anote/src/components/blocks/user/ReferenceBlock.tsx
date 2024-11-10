@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, Suspense } from "react";
 import { Link, Hash, Cuboid, NotepadText, RefreshCcw, ExternalLink, AlertTriangle, FileIcon } from "lucide-react";
 import { FileService } from "../../../services/FileService.ts";
+import Skeleton from "../utils/Skeleton.tsx";
 import Prism from "prismjs";
 import "prismjs/themes/prism.css";
 import "prismjs/components/prism-typescript";
@@ -157,7 +158,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
   document.head.appendChild(styleSheet);
 
   const renderSearchResults = () => (
-    <Suspense fallback={<div className="p-4 text-sm text-gray-500 bg-gray-50 rounded">Searching...</div>}>
+    <Suspense fallback={<Skeleton />}>
       <div className="mt-2 space-y-2 max-w-3xl">
         {searchResults.length === 0 && searchTerm.length > 2 && <div className="p-4 text-sm text-gray-500 bg-gray-50 rounded">No blocks found matching your search.</div>}
         {searchResults.map((result) => (

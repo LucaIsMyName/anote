@@ -1,27 +1,42 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { FolderPlus, Download, PanelRightClose, Plus, ChevronRight, ChevronDown, Edit2, Trash2, PanelRightOpen } from "lucide-react";
 import { FileService } from "../../services/FileService.ts";
 import { ImportExportService } from "../../services/ImportExportService.ts";
 import Input from "../blocks/utils/Input.tsx";
 import ErrorBoundary from "../blocks/utils/ErrorBoundary.tsx";
+import Skeleton from "../blocks/utils/Skeleton.tsx";
 
 const EXPANDED_PATHS_KEY = "anote_expanded_paths";
 const SIDEBAR_WIDTH_KEY = "sidebar_width";
 const SIDEBAR_OPEN_KEY = "sidebar_open";
 
-interface DragItem {
+/**
+ * INTERFACES
+ */
+export interface DragItem {
   type: string;
   path: string;
   name: string;
 }
 
-interface SidebarProps {
+export interface SidebarProps {
   workspace: string;
   onPageSelect: (path: string) => void;
   currentPath: string;
   onPageNameChange: (oldName: string, newName: string) => void;
 }
-const PageCreationDialog = ({ workspace, parentPath = "", onSubmit, onClose }) => {
+
+export interface PageCreationDialogProps {
+  workspace: string;
+  parentPath?: string;
+  onSubmit: (name: string) => void;
+  onClose: () => void;
+}
+
+/**
+ * COMPONENTS
+ */
+const PageCreationDialog = ({ workspace, parentPath = "", onSubmit, onClose }: PageCreationDialogProps) => {
   const [pageName, setPageName] = useState("");
 
   const handleSubmit = (e: any) => {
@@ -61,6 +76,7 @@ const PageCreationDialog = ({ workspace, parentPath = "", onSubmit, onClose }) =
     </div>
   );
 };
+
 /**
  *
  * @param {string} workspace
@@ -79,16 +95,17 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
       return {};
     }
   });
+
   const [width, setWidth] = useState(localStorage.getItem(SIDEBAR_WIDTH_KEY) || 250);
-  const [isOpen, setIsOpen] = useState(localStorage.getItem(SIDEBAR_OPEN_KEY) === "true");
-  const [isResizing, setIsResizing] = useState(false);
-  const [draggedItem, setDraggedItem] = useState<DragItem | null>(null);
-  const [dropTarget, setDropTarget] = useState<string | null>(null);
-  const [dropPosition, setDropPosition] = useState<"inside" | "above" | "below">("inside");
-  const [renamingPage, setRenamingPage] = useState(null);
-  const [isCreatingPage, setIsCreatingPage] = useState(false);
-  const [newPageParentPath, setNewPageParentPath] = useState("");
-  const [pages, setPages] = useState([]);
+  const [isOpen, setIsOpen]: any[] = useState(localStorage.getItem(SIDEBAR_OPEN_KEY) === "true");
+  const [isResizing, setIsResizing]: any[] = useState(false);
+  const [draggedItem, setDraggedItem]: any[] = useState<DragItem | null>(null);
+  const [dropTarget, setDropTarget]: any[] = useState<string | null>(null);
+  const [dropPosition, setDropPosition]: any[] = useState<"inside" | "above" | "below">("inside");
+  const [renamingPage, setRenamingPage]: any[] = useState(null);
+  const [isCreatingPage, setIsCreatingPage]: any[] = useState(false);
+  const [newPageParentPath, setNewPageParentPath]: any[] = useState("");
+  const [pages, setPages]: any[] = useState([]);
 
   useEffect(() => {
     if (workspace) {
@@ -110,7 +127,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
     setIsResizing(true);
   };
 
-  const handleCreatePage = async (name, parentPath = "") => {
+  const handleCreatePage = async (name: string, parentPath: string = "") => {
     try {
       const fullPath = parentPath ? `${parentPath}/${name}` : name;
       await FileService.createPage(workspace, fullPath);
@@ -132,7 +149,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
 
   const handleMouseMove = (e) => {
     if (isResizing) {
-      const newWidth = Math.max(96, e.clientX);
+      const newWidth: number = Math.max(96, e.clientX);
       setWidth(newWidth);
       localStorage.setItem("sidebar_width", newWidth); // Store the updated width in localStorage
     }
@@ -171,7 +188,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
     if (onPageNameChange) onPageNameChange(handlePageNameChange);
   }, [onPageNameChange]);
 
-  const handleRename = async (oldPath, newName) => {
+  const handleRename = async (oldPath: string, newName: string) => {
     try {
       await FileService.renamePage(workspace, oldPath, newName);
       await loadPages();
@@ -188,7 +205,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
     }
   };
 
-  const handleDelete = async (path) => {
+  const handleDelete = async (path: string | null) => {
     if (window.confirm(`Are you sure you want to delete "${path}"?`)) {
       try {
         await FileService.deletePage(workspace, path);
@@ -202,7 +219,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
     }
   };
 
-  const PageItem = ({ page, level = 0, parentPath = "" }) => {
+  const PageItem = ({ page, level = 0, parentPath = "" }: { page: any; level: number; parentPath: string }) => {
     const fullPath = parentPath ? `${parentPath}/${page.name}` : page.name;
     const isExpanded = expandedPaths[fullPath];
     const isDragging = draggedItem?.path === fullPath;
@@ -223,7 +240,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
     }
     const handleCreateSubpage = () => {
       // First ensure the parent page is expanded
-      setExpandedPaths((prev) => ({
+      setExpandedPaths((prev: Object) => ({
         ...prev,
         [fullPath]: true,
       }));
@@ -312,7 +329,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
       let isLast = false;
       let parent = parentPath;
       console.log(parent);
-      pages.forEach((page) => {
+      pages.forEach((page: { name: any }) => {
         if (page.name === parent) {
           isLast = false;
         }
@@ -375,7 +392,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
               onClick={() => {
                 onPageSelect(fullPath);
               }}
-              className="flex-1 px-2 py-1 cursor-pointer truncate">
+              className="flex-1 px-2 py-1 cursor-pointer truncate text-sm">
               {page.name}
             </span>
           )}
@@ -386,26 +403,26 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
               onClick={() => setRenamingPage(fullPath)}
               className="p-1 hover:bg-gray-200 rounded"
               title="Rename page">
-              <Edit2 className="w-3.5 h-3.5 text-gray-400" />
+              <Edit2 className="w-3 h-3 text-gray-400" />
             </button>
             <button
               onClick={handleCreateSubpage}
               className="p-1 hover:bg-gray-200 rounded"
               title="Create subpage">
-              <FolderPlus className="w-3.5 h-3.5 text-gray-400" />
+              <FolderPlus className="w-3 h-3 text-gray-400" />
             </button>
             <button
               onClick={() => handleDelete(fullPath)}
               className="p-1 hover:bg-gray-200 rounded"
               title="Delete page">
-              <Trash2 className="w-3.5 h-3.5 text-gray-400" />
+              <Trash2 className="w-3 h-3 text-gray-400" />
             </button>
           </div>
         </div>
 
         {/* Child pages and creation dialog */}
         <div className={isExpanded ? "" : "hidden after:content-['end'] space-y-2"}>
-          {page.children?.map((child) => (
+          {page.children?.map((child: { name: string }) => (
             // if it's the last level of a tree)
             <PageItem
               key={child.name}
@@ -432,7 +449,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
     );
   };
 
-  const createNewPage = async (name, parentPath = "") => {
+  const createNewPage = async (name: any, parentPath: string = "") => {
     try {
       const fullPath = parentPath ? `${parentPath}/${name}` : name;
       await FileService.createPage(workspace, fullPath);
@@ -440,7 +457,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
       onPageSelect(fullPath);
 
       if (parentPath) {
-        setExpandedPaths((prev) => ({
+        setExpandedPaths((prev: Object) => ({
           ...prev,
           [parentPath]: true,
         }));
@@ -456,13 +473,12 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
     <div
       style={{
         maxWidth: isOpen ? `${width}px` : "64px",
-        minWidth: isOpen ? `240px` : "64px",
+        minWidth: isOpen ? `clamp(120px,15vw,240px)` : "64px",
         width: isOpen ? `100%` : "64px",
-        transition: "max-width 0.3s",
       }}
       className={`z-[1000] transition-all p-2 h-screen fixed inset-0 right-10 z-50 flex flex-col ${isOpen ? "peer-[main]:ml-[64px]" : ""}`}>
       <ErrorBoundary>
-        <div className="bg-white/90 backdrop-blur-md backdrop-saturate-150 border-2 rounded-lg border-gray-200 overflow-y-scroll h-full ">
+        <div className="select-none bg-white/90 backdrop-blur-md backdrop-saturate-150 border-2 rounded-lg border-gray-200 overflow-y-scroll h-full ">
           <div className="flex items-center justify-between w-full p-[calc(theme(spacing.2)+1px)] border-b-2 mb-2">
             {isOpen ? (
               <div className="flex gap-[2px] truncate items-center leading-1">
@@ -490,7 +506,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
             <button
               onClick={toggleSidebar}
               className={`text-sm  focus:outline-none p-[calc(theme(spacing.1)/2-1px)] rounded `}>
-              {isOpen ? <PanelRightOpen strokeWidth={1.5}/> : <PanelRightClose strokeWidth={1.5}/>}
+              {isOpen ? <PanelRightOpen strokeWidth={1.5} /> : <PanelRightClose strokeWidth={1.5} />}
             </button>
           </div>
 
@@ -501,7 +517,7 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
                   <div className="p-2 w-full">
                     <PageCreationDialog
                       workspace={workspace}
-                      onSubmit={(name) => {
+                      onSubmit={(name: string) => {
                         handleCreatePage(name);
                       }}
                       onClose={() => {
@@ -518,18 +534,27 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
                     }}
                     className="flex items-center space-x-2 w-full px-2 py-2">
                     <Plus className="w-4 h-4" />
-                    <span>New Page</span>
+                    <span className="truncate">New Page</span>
                   </button>
                 )}
               </div>
 
               <div className="flex-1 overflow-auto space-y-2">
-                {pages.map((page) => (
-                  <PageItem
-                    key={page.name}
-                    page={page}
-                  />
-                ))}
+                <Suspense
+                  fallback={
+                    <Skeleton
+                      size={"md"}
+                      width={"sm"}
+                      lines={3}
+                    />
+                  }>
+                  {pages.map((page: any) => (
+                    <PageItem
+                      key={page.name}
+                      page={page}
+                    />
+                  ))}
+                </Suspense>
                 {pages.length === 0 && <div className="text-center text-gray-500 mt-4">No pages yet. Create your first page using the button above!</div>}
               </div>
 

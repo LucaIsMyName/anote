@@ -46,7 +46,7 @@ const StickyNav = ({ pageTitle }: any) => {
   return (
     <nav
       className={`z-50 fixed top-0 right-0 pt-2 px-2 left-[calc(60px)] 
-      md:left-[calc(60px)]
+      md:left-[calc(64px)]
       backdrop-blur-sm bg-white/80
       transition-transform duration-300
       ${show ? "translate-y-0" : "-translate-y-full"}`}>

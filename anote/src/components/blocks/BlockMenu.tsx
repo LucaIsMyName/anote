@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Link, Type, Code, Minus, MessageSquareQuote, List, Heading1, Table, Image, FileText, ListTodo } from "lucide-react";
+import { Plus, Link, Type, Code, Frame, Minus, MessageSquareQuote, List, Heading1, Table, Image, FileText, ListTodo } from "lucide-react";
 import Tooltip from "./utils/Tooltip.tsx";
 
 export const BlockType = {
@@ -11,6 +11,7 @@ export const BlockType = {
   FILE: "file",
   LIST: "list",
   CODE: "code",
+  FRAME: "frame",
   REFERENCE: "reference",
   DIVIDER: "divider",
 };
@@ -18,9 +19,10 @@ export const BlockType = {
 export interface BlockMenuProps {
   onSelect: (type: string) => void;
   trigger?: React.ReactNode;
+  className?: string;
 }
 
-export const BlockMenu = ({ onSelect, trigger = undefined }: BlockMenuProps) => {
+export const BlockMenu = ({ onSelect, trigger = undefined, className = "" }: BlockMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const blockTypes = [
@@ -28,6 +30,7 @@ export const BlockMenu = ({ onSelect, trigger = undefined }: BlockMenuProps) => 
     { type: BlockType.HEADING, icon: Heading1, label: "Heading" },
     { type: BlockType.QUOTE, icon: MessageSquareQuote, label: "Quote" },
     { type: BlockType.TABLE, icon: Table, label: "Table" },
+    { type: BlockType.FRAME, icon: Frame, label: "Frame" },
     { type: BlockType.IMAGE, icon: Image, label: "Image" },
     { type: BlockType.FILE, icon: FileText, label: "File" },
     { type: BlockType.LIST, icon: List, label: "List" },
@@ -41,12 +44,12 @@ export const BlockMenu = ({ onSelect, trigger = undefined }: BlockMenuProps) => 
       {blockTypes.map(({ type, icon: Icon, label }) => (
         <button
           key={type}
-          className="w-full px-4 py-2 flex items-center space-x-2 hover:bg-gray-100 text-left"
+          className={`w-full px-4 py-2 flex items-center space-x-2 hover:bg-gray-100 text-left ${className}`}
           onClick={() => {
             onSelect(type);
             setIsOpen(false);
           }}>
-          <Icon className="w-4 h-4 text-gray-600" />
+          <Icon className={`w-4 h-4 text-gray-600`} />
           <span>{label}</span>
         </button>
       ))}

@@ -158,7 +158,7 @@ const App: React.FC = () => {
         />
       </Routes>
 
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-4 right-4 z-[1000]">
         <Tooltip
           content={SettingsContent}
           visible={isSettingsOpen}
@@ -171,8 +171,8 @@ const App: React.FC = () => {
           offset={[0, 10]}>
           <button
             onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-            className={`p-2 bg-white rounded-lg border-2 shadow-lg hover:shadow-xl transition-all ${isSettingsOpen ? "ring-2 ring-sky-400 ring-offset-2" : ""}`}>
-            <Settings className={`w-5 h-5 ${isSettingsOpen ? "text-gray-700" : "text-gray-400"}`} />
+            className={`p-2 rounded-lg border-2 shadow-sm transition-all ${isSettingsOpen ? "border-sky-600 bg-sky-400 text-white scale-125" : "bg-white "}`}>
+            <Settings className={`w-5 h-5 ${isSettingsOpen ? "text-white" : "text-gray-400"}`} strokeWidth={isSettingsOpen ? 2.5 : 1.5} />
           </button>
         </Tooltip>
       </div>
