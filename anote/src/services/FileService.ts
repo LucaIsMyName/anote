@@ -23,6 +23,8 @@ interface Block {
   language?: string;
   isMultiline?: boolean;
   listType?: "unordered" | "ordered" | "todo";
+  aspect?: string; // Add this
+  isFullWidth?: boolean; // Add this
 }
 
 interface TodoItem {
@@ -535,6 +537,14 @@ export class FileService {
                 block.caption = fileMatch[1];
                 block.data = fileMatch[2];
               }
+
+            case "frame":
+              const frameMatch = blockContent.match(/\[FRAME\](.*?)\[\/FRAME\]/);
+              if (frameMatch) {
+                block.src = frameMatch[1];
+              } else {
+                block.content = blockContent;
+              }
               break;
           }
 
@@ -755,6 +765,8 @@ export class FileService {
             blocks.push({
               ...metadata,
               src: frameMatch[1],
+              aspect: metadata.aspect || "16/9", // Include aspect from metadata
+              isFullWidth: metadata.isFullWidth || false, // Include isFullWidth from metadata
             });
           }
         } else {
@@ -923,6 +935,8 @@ export class FileService {
               createdAt: block.createdAt || new Date().toISOString(),
               lastEdited: new Date().toISOString(),
               src: block.src,
+              aspect: block.aspect || "16/9", // Include aspect ratio
+              isFullWidth: block.isFullWidth || false, // Include full width setting
             };
           } else {
             blockMetadata = {

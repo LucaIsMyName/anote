@@ -65,7 +65,9 @@ const EmptyPageBlock = ({ onAddBlock }) => {
         </div>
         <div className="flex gap-2 items-center mb-4">
           <Info className="size-4 text-gray-600" />
-          <span className="text-gray-400"><i>No Blocks on this page. The last Block on this page is still saved.</i></span>
+          <span className="text-gray-400">
+            <i>No Blocks on this page. The last Block on this page is still saved.</i>
+          </span>
         </div>
         <div className="flex gap-2 items-center">
           <BlockMenu
@@ -583,7 +585,10 @@ const ContentEditor = ({ workspace, currentPath, onPathChange = () => {} }: Cont
         case BlockType.FRAME:
           return (
             <FrameBlock
-            initialSrc={block.src}
+              initialSrc={block.src || ""}
+              initialAspect={block.aspect || "16/9"}
+              initialIsFullWidth={block.isFullWidth || false}
+              onChange={(updates) => updateBlock(block.id, updates)}
             />
           );
       default:

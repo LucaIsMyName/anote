@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, Suspense } from "react";
-import { Link, Hash, Cuboid, NotepadText, RefreshCcw, ExternalLink, AlertTriangle, FileIcon } from "lucide-react";
+import { Link, Link2, ImageIcon, Hash, Cuboid, NotepadText, RefreshCcw, ExternalLink, AlertTriangle, FileIcon } from "lucide-react";
 import { FileService } from "../../../services/FileService.ts";
 import Skeleton from "../utils/Skeleton.tsx";
 import Prism from "prismjs";
@@ -26,9 +26,28 @@ export interface BlockReference {
   pageTitle: string;
   createdAt: string;
   lastEdited: string;
-  items?: any[];
-  listType?: string;
+
+  // List properties
+  items?: Array<{
+    id: number;
+    text: string;
+    completed?: boolean;
+  }>;
+  listType?: "unordered" | "ordered" | "todo";
+
+  // Heading property
   level?: number;
+
+  // Table property
+  data?: Array<Array<string>>;
+
+  // Image and File properties
+  src?: string;
+  caption?: string;
+
+  // Frame properties
+  aspect?: string;
+  isFullWidth?: boolean;
 }
 
 interface ReferenceBlockProps {
@@ -244,6 +263,8 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
       .replace(/&gt;/g, ">"); // Replace &gt; with >
   };
 
+  // Inside ReferenceBlock.tsx, update the renderReferencedBlock function
+
   const renderReferencedBlock = (reference: BlockReference) => {
     switch (reference.type) {
       case "heading":
@@ -251,12 +272,14 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
 
       case "paragraph":
         return <div className="text-gray-700 text-xs md:text-base">{cleanContent(FileService.transformInlineMarkdownToHtml(reference.content))}</div>;
+
       case "quote":
         return (
           <div className="text-gray-700 pl-2 border-l-2 text-sm md:text-lg">
             <i>{reference.content.replace(">", "")}</i>
           </div>
         );
+
       case "code":
         return (
           <pre className="border-2 border-gray-100 bg-gray-50 text-black p-3 rounded">
@@ -264,71 +287,149 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
           </pre>
         );
 
-      case "list":
-        const items = reference.items || [];
-        console.log("items", reference);
-        const listType = reference.listType || "unordered";
+      case "list": {
+        // Check for both items and content as items may come in different formats
+        const listItems = reference.items || [];
 
-        if (listType === "todo") {
-          return (
-            <ul className="space-y-1">
-              {items.map((item, i) => (
-                <li
-                  key={i}
-                  className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={item.completed}
-                    readOnly
-                    disabled
-                    className="rounded accent-sky-400"
-                  />
-                  <span className="text-gray-700">{item.text}</span>
-                </li>
-              ))}
-            </ul>
-          );
+        if (listItems.length === 0) {
+          return <div className="text-gray-500 text-sm">List reference not available</div>;
         }
 
         return (
-          <ul
-            className={listType === "ordered" ? "list-decimal" : "list-disc"}
-            style={{ paddingLeft: "1.5rem" }}>
-            {items.map((item, i) => (
-              <li
-                key={i}
-                className="text-gray-700">
-                {item.text}
-              </li>
-            ))}
-          </ul>
+          <div className="pl-4">
+            {reference.listType === "todo" ? (
+              <ul className="space-y-1">
+                {listItems.map((item, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={item.completed}
+                      readOnly
+                      disabled
+                      className="rounded accent-sky-400"
+                    />
+                    <span className={`text-gray-700 ${item.completed ? "line-through" : ""}`}>{item.text}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : reference.listType === "ordered" ? (
+              <ol className="list-decimal list-inside">
+                {listItems.map((item, idx) => (
+                  <li
+                    key={idx}
+                    className="text-gray-700">
+                    {item.text}
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <ul className="list-disc list-inside">
+                {listItems.map((item, idx) => (
+                  <li
+                    key={idx}
+                    className="text-gray-700">
+                    {item.text}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         );
+      }
 
-      case "table":
-        const tableData = reference.content || [];
-        console.log("tableData", reference);
-        if (tableData.length === 0) return null;
+      case "table": {
+        // Check for both data and content as table data may come in different formats
+        const tableData = reference.data || [];
+
+        if (tableData.length === 0) {
+          return <div className="text-gray-500 text-sm">Table reference not available</div>;
+        }
 
         return (
-          <div className="overflow-x-auto border-2 rounded">
+          <div className="overflow-x-auto border rounded">
             <table className="min-w-full divide-y divide-gray-200">
-              <tbody>{tableData}</tbody>
+              <tbody className="divide-y divide-gray-200 text-sm">
+                {tableData.map((row, rowIndex) => (
+                  <tr
+                    key={rowIndex}
+                    className={rowIndex === 0 ? "bg-gray-50" : ""}>
+                    {row.map((cell, cellIndex) => (
+                      <td
+                        key={cellIndex}
+                        className={`px-3 py-2 ${rowIndex === 0 ? "font-medium text-gray-700" : "text-gray-500"}`}>
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
         );
-
-      case "image":
+      }
+      case "reference": {
         return (
-          <div className="p-3 bg-gray-50 truncate rounded border-2 border-gray-200 text-sm text-gray-500">
-            {reference.pagePath}/#{reference.id}
+          <div className="border-l-4 border-sky-400 bg-sky-50 p-4 rounded-r-lg">
+            <div className="flex items-center gap-2 text-sky-600 text-sm mb-2">
+              <Hash className="w-4 h-4" />
+              <span className="font-medium">Referenced Block</span>
+            </div>
+            <div className="pl-2">{reference.content ? <div className="text-gray-600">{reference.content}</div> : <div className="text-gray-500 text-sm italic">Reference content not available</div>}</div>
+            <div className="mt-2 text-xs text-gray-400 flex items-center gap-2">
+              <Link className="w-3 h-3" />
+              <span>{reference.pageTitle || "Unknown page"}</span>
+            </div>
           </div>
         );
+      }
+      case "image": {
+        // For image blocks, check both src directly and potentially nested data
+        const imageSource = reference.src || reference.content;
+
+        return (
+          <div className="space-y-2 border rounded-lg overflow-hidden bg-gray-50">
+            <div className="aspect-video bg-gray-100 flex items-center justify-center">
+              {imageSource ? (
+                <img
+                  src={imageSource}
+                  alt={reference.caption || "Referenced image"}
+                  className="max-h-full rounded object-contain"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-gray-400">
+                  <ImageIcon className="w-8 h-8" />
+                  <span className="text-sm">Image reference not available</span>
+                </div>
+              )}
+            </div>
+            {reference.caption && <div className="px-3 py-2 text-sm text-gray-500 border-t">{reference.caption}</div>}
+          </div>
+        );
+      }
+
       case "file":
         return (
-          <div className="p-3 bg-gray-50 truncate rounded border-2 border-gray-200 text-sm text-gray-500">
-            {reference.pagePath}/#{reference.id}
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded border-2">
+            <FileIcon className="w-5 h-5 text-gray-400" />
+            <div className="flex-1">
+              <div className="text-sm font-medium text-gray-700">{reference.caption || "Attached file"}</div>
+              <div className="text-xs text-gray-500 truncate">{reference.src || "File reference"}</div>
+            </div>
           </div>
         );
+
+      case "frame":
+        return (
+          <div className="border-2 rounded-lg p-4 bg-gray-50">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Link2 className="w-4 h-4" />
+              <span className="truncate">{reference.src}</span>
+            </div>
+          </div>
+        );
+
       default:
         return (
           <div className="p-3 bg-gray-50 truncate rounded border-2 border-gray-200 text-sm text-gray-500">
