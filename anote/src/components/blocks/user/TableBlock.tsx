@@ -193,11 +193,13 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
             {data.map((row, rowIndex) => (
               <tr
                 key={rowIndex}
-                className={'border-b-2'}>
+                data-table-row-index={`${id}-${rowIndex}`}
+                className={"border-b-2"}>
                 {row.map((cell, colIndex) => (
                   <td
+                    data-table-row-col-matrix={`${id}-${rowIndex}-${colIndex}`}
                     key={colIndex}
-                    className={`${colIndex === 0 ? 'border-l-0' : 'border-l-2 border-r-2 relative'}`}
+                    className={`${colIndex === 0 ? "border-l-0" : "border-l-2 border-r-2 relative"}`}
                     style={{ width: columnWidths[colIndex] || "auto" }}>
                     <Input
                       type="text"

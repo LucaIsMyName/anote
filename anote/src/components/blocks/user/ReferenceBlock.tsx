@@ -339,10 +339,11 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
         );
       }
 
+      /** NOT WORKING */
       case "table": {
         // Check for both data and content as table data may come in different formats
         const tableData = reference.data || [];
-        console.log("tableData", reference)
+        console.log("tableData", reference);
         if (tableData.length === 0) {
           return <div className="text-gray-500 text-sm">Table reference not available</div>;
         }
@@ -369,6 +370,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
           </div>
         );
       }
+      /** NOT WORKING */
       case "reference": {
         return (
           <div className="border-l-4 border-sky-400 bg-sky-50 p-4 rounded-r-lg">
@@ -384,10 +386,11 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
           </div>
         );
       }
+      /** NOT WORKING */
       case "image": {
         // For image blocks, check both src directly and potentially nested data
         const imageSource = reference.src || reference.content;
-        console.log("imageSource", reference)
+        console.log("imageSource", reference);
         return (
           <div className="space-y-2 border rounded-lg overflow-hidden bg-gray-50">
             <div className="aspect-video bg-gray-100 flex items-center justify-center">
@@ -408,7 +411,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
           </div>
         );
       }
-
+      /** NOT WORKING */
       case "file":
         return (
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded border-2">
@@ -419,7 +422,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
             </div>
           </div>
         );
-
+      /** NOT WORKING */
       case "frame":
         return (
           <div className="border-2 rounded-lg p-4 bg-gray-50">

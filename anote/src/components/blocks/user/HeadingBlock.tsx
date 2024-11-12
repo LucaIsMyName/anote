@@ -75,7 +75,7 @@ const HeadingBlock: React.FC<HeadingBlockProps> = ({ content, level: initialLeve
       case 6:
         return "text-xs md:text-base";
       default:
-        return "text-2xl md:text-3xl";
+        return "text-xl md:text-3xl";
     }
   };
 
