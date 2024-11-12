@@ -213,7 +213,7 @@ const TableBlock = ({ data, onChange, id }: TableBlockProps) => {
                 <td className="absolute right-0 h-[36px] w-[40px]  border-gray-200 flex items-center justify-center border-b-2">
                   <button
                     onClick={() => deleteRow(rowIndex)}
-                    className=" flex justify-center items-center size-[24px] text-gray-400 hover:text-red-500">
+                    className="flex justify-center items-center size-[24px] text-gray-400 hover:text-red-500">
                     <Trash className="w-[12px] h-[12px]" />
                   </button>
                 </td>

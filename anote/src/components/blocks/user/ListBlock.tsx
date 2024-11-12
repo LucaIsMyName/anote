@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { List, X, ListOrdered, CheckSquare, ChevronDown } from "lucide-react";
 import Tooltip from "../utils/Tooltip.tsx";
+import SwitchableEditor from "../utils/SwitchableEditor.tsx";
+import Textarea from "../utils/Textarea.tsx";
 
 interface ListItem {
   id: number;
@@ -158,16 +160,15 @@ export const ListBlock: React.FC<ListBlockProps> = ({ items = [], type: initialT
               )}
               {listType === "ordered" && <span className="w-auto truncate text-right text-gray-400">{index + 1}.</span>}
               {listType === "unordered" && <span className="w-4 text-right text-gray-500">•</span>}
-              <input
+              <Textarea
                 ref={(el) => {
                   inputRefs.current[item.id] = el;
                   if (index === 0) firstInputRef.current = el;
                 }}
-                type="text"
                 value={item.text}
                 onChange={(e) => updateItem(item.id, { text: e.target.value })}
                 onKeyDown={(e) => handleKeyDown(e, item)}
-                className="flex-1 text-sm md:text-lg p-0 bg-transparent truncate"
+                className="flex-1 text-sm md:text-lg p-0 bg-transparent"
                 placeholder={index === 0 ? "1st Item" : "List item..."}
               />
               <button

@@ -1174,16 +1174,88 @@ export class FileService {
     }
   }
 
+  // static async renamePage(dirHandle: string, oldPath: string, newName: string) {
+  //   try {
+  //     const pathParts = oldPath.split("/").filter(Boolean);
+  //     const newPath = [...pathParts.slice(0, -1), newName].join("/");
+
+  //     // First, create the new directory structure
+  //     await this.createPage(dirHandle, newPath);
+
+  //     // Copy all content from old to new
+  //     await this.copyDirectory(await this.getDirectoryHandle(dirHandle, oldPath), await this.getDirectoryHandle(dirHandle, newPath));
+
+  //     // Delete the old directory
+  //     const result = await this.deletePage(dirHandle, oldPath);
+
+  //     // If result is not null, it means a new initial page was created
+  //     // In this case, we should keep the renamed page instead
+  //     if (result) {
+  //       await this.deletePage(dirHandle, result);
+  //     }
+
+  //     return newPath;
+  //   } catch (error) {
+  //     console.error("Error renaming page:", error);
+  //     throw error;
+  //   }
+  // }
+  
+  // Helper method to serialize block content
+  private static serializeBlockContent(block: Block): string {
+    switch (block.type) {
+      case "heading":
+        return `${block.content || ""}\n`;
+      case "paragraph":
+        return `${block.content || ""}\n`;
+      case "frame":
+        return `[FRAME]${block.src}[/FRAME]\n`;
+      case "quote":
+        return block.content?.startsWith(">") ? 
+          `${block.content}\n` : 
+          `> ${block.content || ""}\n`;
+      case "code":
+        return block.isMultiline ?
+          `\`\`\`${block.language || "javascript"}\n${block.content || ""}\n\`\`\`\n` :
+          `\`${block.content || ""}\`\n`;
+      case "image":
+        return `![${block.caption || ""}](${block.src})\n`;
+      case "list":
+        if (block.items && Array.isArray(block.items)) {
+          return block.items.map((item, index) => {
+            switch (block.listType) {
+              case "todo":
+                return `- [${item.completed ? "x" : " "}] ${item.text}`;
+              case "ordered":
+                return `${index + 1}. ${item.text}`;
+              default:
+                return `- ${item.text}`;
+            }
+          }).join("\n") + "\n";
+        }
+        return "";
+      default:
+        return "";
+    }
+  }
   static async renamePage(dirHandle: string, oldPath: string, newName: string) {
     try {
       const pathParts = oldPath.split("/").filter(Boolean);
       const newPath = [...pathParts.slice(0, -1), newName].join("/");
 
-      // First, create the new directory structure
-      await this.createPage(dirHandle, newPath);
+      // Read existing page content
+      const { blocks, metadata } = await this.readPage(dirHandle, oldPath);
 
-      // Copy all content from old to new
-      await this.copyDirectory(await this.getDirectoryHandle(dirHandle, oldPath), await this.getDirectoryHandle(dirHandle, newPath));
+      // Create new page with updated metadata
+      const newMetadata = {
+        ...metadata,
+        title: newName,
+        lastEdited: new Date().toISOString()
+      };
+
+      // Create new directory and write page with updated metadata
+      await this.createPage(dirHandle, newPath);
+      await this.writePage(dirHandle, newPath, blocks, newMetadata);
 
       // Delete the old directory
       const result = await this.deletePage(dirHandle, oldPath);
@@ -1201,14 +1273,64 @@ export class FileService {
     }
   }
 
+  // static async copyDirectory(sourceDir: string, targetDir: string) {
+  //   for await (const entry of sourceDir.values()) {
+  //     if (entry.kind === "file") {
+  //       const file = await entry.getFile();
+  //       const writer = await targetDir.getFileHandle(entry.name, { create: true });
+  //       const writable = await writer.createWritable();
+  //       await writable.write(await file.arrayBuffer());
+  //       await writable.close();
+  //     } else if (entry.kind === "directory") {
+  //       const newDir = await targetDir.getDirectoryHandle(entry.name, { create: true });
+  //       await this.copyDirectory(await sourceDir.getDirectoryHandle(entry.name), newDir);
+  //     }
+  //   }
+  // }
   static async copyDirectory(sourceDir: string, targetDir: string) {
     for await (const entry of sourceDir.values()) {
       if (entry.kind === "file") {
-        const file = await entry.getFile();
-        const writer = await targetDir.getFileHandle(entry.name, { create: true });
-        const writable = await writer.createWritable();
-        await writable.write(await file.arrayBuffer());
-        await writable.close();
+        if (entry.name === "index.md") {
+          // Special handling for index.md files to ensure unique page IDs
+          const file = await entry.getFile();
+          const content = await file.text();
+          
+          // Parse the existing content
+          const { blocks, metadata } = await this.parseMarkdownToBlocks(content);
+          
+          // Generate new metadata with a new UUID while preserving other metadata
+          const newMetadata = {
+            ...metadata,
+            id: uuidv4(), // Generate new UUID for the copied page
+            title: targetDir.name, // Use the new directory name as title
+            lastEdited: new Date().toISOString()
+          };
+
+          // Write the page with new metadata
+          const writer = await targetDir.getFileHandle(entry.name, { create: true });
+          const writable = await writer.createWritable();
+          
+          // Create the new content with updated metadata
+          let newContent = `<page-metadata>\n${JSON.stringify(newMetadata, null, 2)}\n</page-metadata>\n\n`;
+          
+          // Add all blocks
+          for (const block of blocks) {
+            newContent += `<block-metadata>${JSON.stringify({
+              ...block,
+              lastEdited: new Date().toISOString()
+            })}</block-metadata>\n${this.serializeBlockContent(block)}\n`;
+          }
+          
+          await writable.write(newContent);
+          await writable.close();
+        } else {
+          // Handle non-index.md files normally
+          const file = await entry.getFile();
+          const writer = await targetDir.getFileHandle(entry.name, { create: true });
+          const writable = await writer.createWritable();
+          await writable.write(await file.arrayBuffer());
+          await writable.close();
+        }
       } else if (entry.kind === "directory") {
         const newDir = await targetDir.getDirectoryHandle(entry.name, { create: true });
         await this.copyDirectory(await sourceDir.getDirectoryHandle(entry.name), newDir);

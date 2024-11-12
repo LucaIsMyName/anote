@@ -13,6 +13,7 @@ import Tooltip from "./components/blocks/utils/Tooltip.tsx";
 import { ModalDialog } from "./components/blocks/ModalDialog.tsx";
 
 import "./App.css";
+import LoadingDots from "./components/blocks/utils/LoadingDots.tsx";
 
 interface PageWrapperProps {
   workspace: any;

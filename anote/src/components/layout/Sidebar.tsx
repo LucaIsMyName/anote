@@ -5,6 +5,8 @@ import { ImportExportService } from "../../services/ImportExportService.ts";
 import Input from "../blocks/utils/Input.tsx";
 import ErrorBoundary from "../blocks/utils/ErrorBoundary.tsx";
 import Skeleton from "../blocks/utils/Skeleton.tsx";
+import Logo from "../blocks/utils/Logo.tsx";
+import LoadingDots from "../blocks/utils/LoadingDots.tsx";
 
 const EXPANDED_PATHS_KEY = "anote_expanded_paths";
 const SIDEBAR_WIDTH_KEY = "sidebar_width";
@@ -351,7 +353,6 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
           className={`flex items-center border-2  p-1 rounded ${currentPath === fullPath ? "bg-sky-50/10 backdrop-blur-sm border-gray-200/90 border-2 shadow-inset shadow-xs" : "border-transparent"}`}
           style={{ marginLeft: `${level * 1}rem` }}>
           <button
-            disabled={isLastPageInTree()}
             onClick={() => {
               setExpandedPaths((prev) => ({
                 ...prev,
@@ -482,23 +483,11 @@ const Sidebar = ({ workspace, onPageSelect, currentPath, onPageNameChange }: Sid
           <div className="flex items-center justify-between w-full p-[calc(theme(spacing.2)+1px)] border-b-2 mb-2">
             {isOpen ? (
               <div className="flex gap-[2px] truncate items-center leading-1">
-                <h1 className="font-bold text-lg mr-1 text-gray-600 pl-2">
-                  <svg
-                    className="w-6"
-                    viewBox="0 0 166 133"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M27.6591 117.295C22.3693 117.295 17.6913 116.432 13.625 114.705C9.59468 112.941 6.42802 110.278 4.12499 106.716C1.82196 103.153 0.670441 98.6193 0.670441 93.1136C0.670441 88.5795 1.44411 84.7112 2.99146 81.5085C4.53881 78.2699 6.6979 75.625 9.46874 73.5739C12.2396 71.5227 15.4602 69.9574 19.1307 68.8778C22.8371 67.7983 26.8314 67.0966 31.1136 66.7727C35.7557 66.4129 39.4801 65.9811 42.2869 65.4773C45.1297 64.9375 47.1809 64.1998 48.4403 63.2642C49.6998 62.2926 50.3295 61.0152 50.3295 59.4318V59.2159C50.3295 57.0568 49.5019 55.4015 47.8466 54.25C46.1913 53.0985 44.0682 52.5227 41.4773 52.5227C38.6345 52.5227 36.3134 53.1525 34.5142 54.4119C32.7509 55.6354 31.6894 57.5246 31.3295 60.0795H3.90908C4.26893 55.0417 5.87025 50.3996 8.71305 46.1534C11.5918 41.8712 15.7841 38.4527 21.2898 35.8977C26.7954 33.3068 33.6685 32.0114 41.9091 32.0114C47.8466 32.0114 53.1723 32.7131 57.8863 34.1165C62.6004 35.4839 66.6127 37.4091 69.9233 39.892C73.2339 42.339 75.7528 45.2178 77.4801 48.5284C79.2434 51.803 80.125 55.3655 80.125 59.2159V116H52.2727V104.341H51.625C49.9697 107.436 47.9545 109.937 45.5795 111.844C43.2405 113.751 40.5596 115.136 37.5369 116C34.5502 116.864 31.2576 117.295 27.6591 117.295ZM37.375 98.5114C39.642 98.5114 41.7651 98.0436 43.7443 97.108C45.7595 96.1723 47.3968 94.8229 48.6562 93.0597C49.9157 91.2964 50.5454 89.1553 50.5454 86.6364V79.7273C49.7538 80.0511 48.9081 80.357 48.0085 80.6449C47.1449 80.9328 46.2093 81.2026 45.2017 81.4545C44.2301 81.7064 43.1865 81.9403 42.071 82.1562C40.9915 82.3722 39.8579 82.5701 38.6704 82.75C36.3674 83.1098 34.4782 83.7036 33.0028 84.5312C31.5634 85.3229 30.4839 86.3125 29.7642 87.5C29.0805 88.6515 28.7386 89.947 28.7386 91.3864C28.7386 93.6894 29.5483 95.4526 31.1676 96.6761C32.7869 97.8996 34.856 98.5114 37.375 98.5114Z"
-                      fill="currentColor"
-                    />
-                    <path
-                      d="M165.665 0.27272L130.04 132.625H121.026L156.651 0.27272H165.665Z"
-                      fill="currentColor"
-                    />
-                  </svg>
+                <h1 className="font-bold text-lg mr-1 text-gray-600">
+                  <Logo className="size-4" color="black" hasFrame={true} strokeWidth={25} />
                 </h1>
-                <span className="text-gray-300 truncate">{currentPath ? `${currentPath}` : ""}</span>
+                <span className="text-gray-300 truncate">{currentPath ? `${currentPath}` : ""} <LoadingDots /></span>
+
               </div>
             ) : (
               ""

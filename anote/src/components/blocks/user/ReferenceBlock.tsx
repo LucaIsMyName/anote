@@ -1,7 +1,8 @@
 import React, { useRef, useEffect, useState, Suspense } from "react";
-import { Link, Link2, ImageIcon, Hash, Cuboid, NotepadText, RefreshCcw, ExternalLink, AlertTriangle, FileIcon } from "lucide-react";
+import { Link, Link2, Loader2, ImageIcon, Hash, Cuboid, NotepadText, RefreshCcw, ExternalLink, AlertTriangle, FileIcon } from "lucide-react";
 import { FileService } from "../../../services/FileService.ts";
 import Skeleton from "../utils/Skeleton.tsx";
+import LoadingDots from "../utils/LoadingDots.tsx";
 import Prism from "prismjs";
 import "prismjs/themes/prism.css";
 import "prismjs/components/prism-typescript";
@@ -60,20 +61,25 @@ interface ReferenceBlockProps {
 const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace, onNavigate, onChange }) => {
   const [isSearching, setIsSearching] = useState(!referenceId);
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState<BlockReference[]>([]);
-  const [selectedReference, setSelectedReference] = useState<BlockReference | null>(null);
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectedReference, setSelectedReference] = useState(null);
   const [isReferenceValid, setIsReferenceValid] = useState(true);
-  const searchDebounceRef = useRef<NodeJS.Timeout>();
+  const [isLoading, setIsLoading] = useState(!!referenceId);
+  const searchDebounceRef = useRef();
 
   useEffect(() => {
     if (referenceId) {
       loadReference();
+    } else {
+      setIsLoading(false);
     }
   }, [referenceId]);
 
   // In ReferenceBlock.tsx
   const loadReference = async () => {
     try {
+      setIsLoading(true);
+
       if (!referenceId) {
         setSelectedReference(null);
         setIsReferenceValid(false);
@@ -81,6 +87,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
       }
 
       const reference = await FileService.getBlockReference(workspace, referenceId);
+      
       if (!reference) {
         setSelectedReference(null);
         setIsReferenceValid(false);
@@ -93,6 +100,8 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
       console.error("Error loading reference:", error);
       setSelectedReference(null);
       setIsReferenceValid(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -206,17 +215,33 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
 
   // In ReferenceBlock.tsx
   const renderReference = () => {
+    // Loading state
+    if (isLoading) {
+      return (
+        <div className="border-2 border-dotted border-gray-200 bg-gray-50 rounded-lg p-4 max-w-3xl">
+          <div className="flex space-x-2">
+            <Loader2 className="w-5 h-5 text-gray-500 animate-spin" />
+            <span className="text-sm text-gray-400">Loading reference <LoadingDots /></span>
+          </div>
+        </div>
+      );
+    }
+
+    // Invalid reference state
     if (!isReferenceValid || !selectedReference) {
       return (
         <div className="p-4 border-2 border-dotted border-yellow-300 bg-yellow-50 rounded-lg max-w-3xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <AlertTriangle className="w-5 h-5 text-yellow-500" />
-              <p className="text-sm text-yellow-700">{!isReferenceValid ? "This reference is no longer valid." : "No reference selected."}</p>
+              <p className="text-sm text-yellow-700">
+                {!isReferenceValid ? "This reference is no longer valid." : "No reference selected."}
+              </p>
             </div>
             <button
               onClick={() => setIsSearching(true)}
-              className="px-3 py-1 text-sm bg-white border-2 border-yellow-400 rounded hover:bg-yellow-50">
+              className="px-3 py-1 text-sm bg-white border-2 border-yellow-400 rounded hover:bg-yellow-50"
+            >
               {!isReferenceValid ? "Select New Reference" : "Select Reference"}
             </button>
           </div>
@@ -224,32 +249,39 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
       );
     }
 
+    // Valid reference display
     return (
-      <Suspense fallback={<div>Loading</div>}>
-        <div className={`border-2 border-dotted border-gray-100 rounded-lg p-4 max-w-3xl`}>
-          <div className="prose prose-sm max-w-none mb-4">{renderReferencedBlock(selectedReference)}</div>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t-2 border-gray-100 text-xs">
-            <div className="flex items-center gap-2 truncate">
-              <Link className="w-4 h-4 text-gray-400" />
-              <span className="text-sm leading-3 truncate text-gray-400">{selectedReference.pageTitle}</span>
-              <Hash className="w-4 h-4 text-gray-400" />
-              <span className="text-sm leading-3	truncate text-gray-400">{selectedReference.id}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsSearching(true)}
-                className="p-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-                <RefreshCcw className="size-4 text-gray-400" />
-              </button>
-              <button
-                onClick={handleNavigate}
-                className="p-1 hover:bg-gray-100 rounded">
-                <ExternalLink className="w-4 h-4 text-gray-400" />
-              </button>
-            </div>
+      <div className="border-2 border-dotted border-gray-100 rounded-lg p-4 max-w-3xl">
+        <div className="prose prose-sm max-w-none mb-4">
+          {renderReferencedBlock(selectedReference)}
+        </div>
+        <div className="flex items-center justify-between mt-2 pt-2 border-t-2 border-gray-100 text-xs">
+          <div className="flex items-center gap-2 truncate">
+            <Link className="w-4 h-4 text-gray-400" />
+            <span className="text-sm leading-3 truncate text-gray-400">
+              {selectedReference.pageTitle}
+            </span>
+            <Hash className="w-4 h-4 text-gray-400" />
+            <span className="text-sm leading-3 truncate text-gray-400">
+              {selectedReference.id}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsSearching(true)}
+              className="p-1 text-sm text-gray-600 hover:bg-gray-100 rounded"
+            >
+              <RefreshCcw className="size-4 text-gray-400" />
+            </button>
+            <button
+              onClick={handleNavigate}
+              className="p-1 hover:bg-gray-100 rounded"
+            >
+              <ExternalLink className="w-4 h-4 text-gray-400" />
+            </button>
           </div>
         </div>
-      </Suspense>
+      </div>
     );
   };
 
@@ -268,7 +300,8 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
   const renderReferencedBlock = (reference: BlockReference) => {
     switch (reference.type) {
       case "heading":
-        return <div className={`font-bold ${reference.level === 1 ? "text-2xl" : reference.level === 2 ? "text-xl" : reference.level === 3 ? "text-lg" : "text-base"}`}>{cleanContent(reference.content)}</div>;
+              
+              return <div className={`font-bold ${reference.level === 1 ? "text-2xl" : reference.level === 2 ? "text-xl" : reference.level === 3 ? "text-lg" : "text-base"}`}>{cleanContent(reference.content)}</div>;
 
       case "paragraph":
         return <div className="text-gray-700 text-xs md:text-base">{cleanContent(FileService.transformInlineMarkdownToHtml(reference.content))}</div>;
@@ -450,7 +483,7 @@ const ReferenceBlock: React.FC<ReferenceBlockProps> = ({ referenceId, workspace,
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Search for a block to reference..."
-          className="w-full p-2 pb-1 max-w-3xl pt-2 border-2 border-dotted border-gray-300 rounded "
+          className="w-full p-2 pb-1 max-w-3xl pt-2 border-2 border-dotted border-gray-300 rounded"
         />
         {renderSearchResults()}
       </div>
